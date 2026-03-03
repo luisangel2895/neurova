@@ -63,14 +63,11 @@ private struct AppTabShellView: View {
     @State private var selectedTab: NBottomNavItem = .home
     @State private var isShowingScanPlaceholder = false
 
-    @Environment(\.colorScheme) private var colorScheme
-
     let onOpenBootstrap: () -> Void
 
     private enum Layout {
         static let contentBottomInset: CGFloat = 116
         static let navBarBottomPadding: CGFloat = 0
-        static let navBarHeight: CGFloat = 88
     }
 
     var body: some View {
@@ -78,8 +75,6 @@ private struct AppTabShellView: View {
             ZStack(alignment: .bottom) {
                 currentScreen
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-                bottomMaterialSheet(safeAreaBottom: proxy.safeAreaInsets.bottom)
 
                 NBottomNavBar(
                     selectedTab: $selectedTab,
@@ -98,21 +93,6 @@ private struct AppTabShellView: View {
                 .presentationDetents([.medium, .large])
             }
         }
-    }
-
-    private func bottomMaterialSheet(safeAreaBottom: CGFloat) -> some View {
-        Rectangle()
-            .fill(.ultraThinMaterial)
-            .opacity(colorScheme == .light ? 0.8 : 0.74)
-            .overlay(
-                Rectangle()
-                    .fill(
-                        NColors.Neutrals.surface.opacity(colorScheme == .light ? 0.18 : 0.12)
-                    )
-            )
-            .frame(height: safeAreaBottom)
-            .ignoresSafeArea(.container, edges: .bottom)
-            .allowsHitTesting(false)
     }
 
     @ViewBuilder

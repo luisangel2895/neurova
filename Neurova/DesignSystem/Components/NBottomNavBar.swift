@@ -95,7 +95,7 @@ struct NBottomNavBar: View {
         }
         .frame(height: Metrics.barHeight)
         .padding(.horizontal, NSpacing.sm)
-        .padding(.bottom, NSpacing.xs)
+        .padding(.bottom, NSpacing.xs - 5)
     }
 
     private func tabButton(_ item: NBottomNavItem) -> some View {
