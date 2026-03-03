@@ -6,27 +6,177 @@
 //
 
 import SwiftUI
-import SwiftData
 
 @main
 struct NeurovaApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    @State private var launchMode: AppLaunchMode = AppDevConfig.defaultLaunchMode
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppRootView(launchMode: $launchMode)
         }
-        .modelContainer(sharedModelContainer)
+    }
+}
+
+private enum AppDevConfig {
+    // Change this during UI work to jump directly into a screen.
+    static let defaultLaunchMode: AppLaunchMode = .home
+}
+
+private enum AppLaunchMode {
+    case home
+    case bootstrap
+    case brandPreview
+    case designShowcase
+}
+
+private struct AppRootView: View {
+    @Binding var launchMode: AppLaunchMode
+
+    var body: some View {
+        Group {
+            switch launchMode {
+            case .home:
+                AppTabShellView(
+                    onOpenBootstrap: {
+                        launchMode = .bootstrap
+                    }
+                )
+            case .bootstrap:
+                ContentView {
+                    launchMode = .home
+                }
+            case .brandPreview:
+                NavigationStack {
+                    BrandPreviewView()
+                }
+            case .designShowcase:
+                NavigationStack {
+                    DesignSystemShowcaseView()
+                }
+            }
+        }
+    }
+}
+
+private struct AppTabShellView: View {
+    @State private var selectedTab: NBottomNavItem = .home
+    @State private var isShowingScanPlaceholder = false
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    let onOpenBootstrap: () -> Void
+
+    private enum Layout {
+        static let contentBottomInset: CGFloat = 116
+        static let navBarBottomPadding: CGFloat = 0
+        static let navBarHeight: CGFloat = 88
+    }
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .bottom) {
+                currentScreen
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                bottomMaterialSheet(safeAreaBottom: proxy.safeAreaInsets.bottom)
+
+                NBottomNavBar(
+                    selectedTab: $selectedTab,
+                    onSelect: { _ in },
+                    onScanTap: {
+                        isShowingScanPlaceholder = true
+                    }
+                )
+                .padding(.bottom, Layout.navBarBottomPadding)
+            }
+            .ignoresSafeArea(edges: .bottom)
+            .sheet(isPresented: $isShowingScanPlaceholder) {
+                NavigationStack {
+                    ScanPlaceholderView()
+                }
+                .presentationDetents([.medium, .large])
+            }
+        }
+    }
+
+    private func bottomMaterialSheet(safeAreaBottom: CGFloat) -> some View {
+        Rectangle()
+            .fill(.ultraThinMaterial)
+            .opacity(colorScheme == .light ? 0.8 : 0.74)
+            .overlay(
+                Rectangle()
+                    .fill(
+                        NColors.Neutrals.surface.opacity(colorScheme == .light ? 0.18 : 0.12)
+                    )
+            )
+            .frame(height: safeAreaBottom)
+            .ignoresSafeArea(.container, edges: .bottom)
+            .allowsHitTesting(false)
+    }
+
+    @ViewBuilder
+    private var currentScreen: some View {
+        switch selectedTab {
+        case .home:
+            HomeView(
+                onSettingsTap: {},
+                onOpenBootstrap: onOpenBootstrap
+            )
+            .safeAreaPadding(.bottom, Layout.contentBottomInset)
+        case .library:
+            placeholderScreen(title: "Library")
+        case .insights:
+            placeholderScreen(title: "Insights")
+        case .profile:
+            placeholderScreen(title: "Profile")
+        }
+    }
+
+    private func placeholderScreen(title: String) -> some View {
+        NavigationStack {
+            VStack(spacing: NSpacing.sm) {
+                Text(title)
+                    .font(NTypography.title)
+                    .foregroundStyle(NColors.Text.textPrimary)
+
+                Text("Placeholder screen")
+                    .font(NTypography.body)
+                    .foregroundStyle(NColors.Text.textSecondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(NColors.Neutrals.background.ignoresSafeArea())
+            .safeAreaPadding(.bottom, Layout.contentBottomInset)
+        }
+    }
+}
+
+private struct ScanPlaceholderView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: NSpacing.lg) {
+            Image(systemName: "viewfinder.circle.fill")
+                .font(.system(size: 48, weight: .semibold))
+                .foregroundStyle(NColors.neuroGradient)
+
+            Text("Scan")
+                .font(NTypography.title)
+                .foregroundStyle(NColors.Text.textPrimary)
+
+            Text("Scan flow placeholder while the feature is being wired.")
+                .font(NTypography.body)
+                .foregroundStyle(NColors.Text.textSecondary)
+                .multilineTextAlignment(.center)
+
+            Button("Close") {
+                dismiss()
+            }
+            .font(NTypography.bodyEmphasis)
+            .foregroundStyle(NColors.Brand.neuroBlue)
+        }
+        .padding(NSpacing.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(NColors.Neutrals.background.ignoresSafeArea())
     }
 }

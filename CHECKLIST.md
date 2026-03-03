@@ -1,0 +1,8 @@
+- [ ] Build Debug OK
+- [ ] Build Release OK
+- [ ] Sin logica en Views
+- [ ] Arquitectura respetada
+- [ ] Manejo de errores consistente
+- [ ] Archivos listados
+- [ ] Test Plan escrito
+- [ ] No warnings nuevos

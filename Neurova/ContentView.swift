@@ -6,61 +6,89 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    private let onOpenHome: (() -> Void)?
+
+    init(onOpenHome: (() -> Void)? = nil) {
+        self.onOpenHome = onOpenHome
+    }
 
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
+        NavigationStack {
+            VStack(spacing: NSpacing.md) {
+                Text("Neurova")
+                    .font(NTypography.display)
+                    .foregroundStyle(NColors.Text.textPrimary)
+
+                Text("Bootstrap build")
+                    .font(NTypography.body)
+                    .foregroundStyle(NColors.Text.textSecondary)
+
+                NavigationLink {
+                    BrandPreviewView()
+                } label: {
+                    NCard {
+                        VStack(spacing: NSpacing.xs) {
+                            Text("Open Brand Preview")
+                                .font(NTypography.bodyEmphasis)
+                                .foregroundStyle(NColors.Text.textPrimary)
+
+                            Text("Validate colors, logos and mascot in light and dark.")
+                                .font(NTypography.caption)
+                                .foregroundStyle(NColors.Text.textSecondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                NavigationLink {
+                    DesignSystemShowcaseView()
+                } label: {
+                    NCard {
+                        VStack(spacing: NSpacing.xs) {
+                            Text("Open Design Showcase")
+                                .font(NTypography.bodyEmphasis)
+                                .foregroundStyle(NColors.Text.textPrimary)
+
+                            Text("Review typography, controls and reusable components.")
+                                .font(NTypography.caption)
+                                .foregroundStyle(NColors.Text.textSecondary)
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                if let onOpenHome {
+                    Button {
+                        onOpenHome()
                     } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-        } detail: {
-            Text("Select an item")
-        }
-    }
+                        NCard {
+                            VStack(spacing: NSpacing.xs) {
+                                Text("Open Home")
+                                    .font(NTypography.bodyEmphasis)
+                                    .foregroundStyle(NColors.Text.textPrimary)
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+                                Text("Return to the app home vertical slice.")
+                                    .font(NTypography.caption)
+                                    .foregroundStyle(NColors.Text.textSecondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
             }
+            .multilineTextAlignment(.center)
+            .padding(NSpacing.xl)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(NColors.Neutrals.background.ignoresSafeArea())
         }
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }
