@@ -18,11 +18,11 @@ struct NSecondaryButton: View {
                 .frame(height: 38)
                 .background(
                     RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                        .fill(NColors.Neutrals.surfaceAlt)
+                        .fill(NColors.Home.surfaceL2)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                        .stroke(NColors.Neutrals.border, lineWidth: 1)
+                        .stroke(NColors.Home.layeredStroke, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)

@@ -2,16 +2,21 @@ import SwiftUI
 
 enum NColors {
     enum Home {
-        static let backgroundLightTop = Neutrals.surface.opacity(0.92)
+        static let backgroundLightTop = Neutrals.surface.opacity(0.96)
         static let backgroundLightBottom = Neutrals.background
-        static let backgroundDarkTop = Brand.neuroBlueDeep.opacity(0.24)
+        static let backgroundDarkTop = Brand.neuroBlueDeep.opacity(0.28)
         static let backgroundDarkBottom = Neutrals.background
-        static let secondaryTextLight = Text.textSecondary.opacity(0.96)
-        static let secondaryTextDark = Text.textSecondary
-        static let cardBorder = Neutrals.border.opacity(0.78)
+        static let surfaceL0 = Neutrals.background
+        static let surfaceL1 = Neutrals.surface
+        static let surfaceL2 = Neutrals.surfaceAlt
+        static let secondaryTextLight = Text.textPrimary.opacity(0.58)
+        static let secondaryTextDark = Text.textPrimary.opacity(0.72)
+        static let cardBorder = Neutrals.border.opacity(0.74)
+        static let layeredStroke = Neutrals.border.opacity(0.66)
         static let cardInnerBorder = Text.textPrimary.opacity(0.08)
         static let cardTopHighlight = Text.textPrimary.opacity(0.06)
-        static let progressTrack = Neutrals.surfaceAlt.opacity(0.96)
+        static let cardShadowLight = Text.textTertiary.opacity(0.1)
+        static let progressTrack = surfaceL2.opacity(0.96)
     }
 
     enum Brand {

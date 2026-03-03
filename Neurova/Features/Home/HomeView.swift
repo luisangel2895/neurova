@@ -85,51 +85,31 @@ struct HomeView: View {
     }
 
     private var studyCardSection: some View {
-        NCard {
-            VStack(alignment: .leading, spacing: NSpacing.md) {
-                Text(state.studySectionTitle)
-                    .font(NTypography.micro.weight(.bold))
-                    .tracking(0.6)
-                    .foregroundStyle(NColors.Text.textTertiary)
+        NHighlightCard(
+            sectionLabel: state.studySectionTitle,
+            title: state.studyTitle,
+            subtitle: state.progressDetailText,
+            primaryActionTitle: state.primaryActionTitle,
+            secondaryActionTitle: state.secondaryActionTitle,
+            onPrimaryAction: {},
+            onSecondaryAction: {}
+        ) {
+            ZStack {
+                NProgressRing(
+                    progress: state.progress,
+                    lineWidth: NSpacing.xs + 3,
+                    centerText: nil
+                )
+                .frame(width: 68, height: 68)
 
-                HStack(alignment: .center, spacing: NSpacing.md) {
-                    ZStack {
-                        NProgressRing(
-                            progress: state.progress,
-                            lineWidth: NSpacing.xs + 3,
-                            centerText: nil
-                        )
-                        .frame(width: 68, height: 68)
-
-                        Text(state.progressPercentText)
-                            .font(NTypography.headline.weight(.bold))
-                            .foregroundStyle(NColors.Text.textPrimary)
-                    }
-                    .padding(.top, NSpacing.md - 1)
-                    .padding(.leading, NSpacing.md - 1)
-                    .padding(.trailing, NSpacing.md - 1)
-                    .padding(.bottom, 0)
-
-                    VStack(alignment: .leading, spacing: NSpacing.sm) {
-                        Text(state.studyTitle)
-                            .font(NTypography.bodyEmphasis.weight(.bold))
-                            .foregroundStyle(NColors.Text.textPrimary)
-
-                        Text(state.progressDetailText)
-                            .font(NTypography.caption)
-                            .foregroundStyle(secondaryTextColor)
-
-                        Spacer(minLength: 0)
-
-                        NPrimaryButton(state.primaryActionTitle, action: {})
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(height: 72)
-                }
-
-                NSecondaryButton(state.secondaryActionTitle, action: {})
-                    .padding(.top, NSpacing.sm + 1)
+                Text(state.progressPercentText)
+                    .font(NTypography.headline.weight(.bold))
+                    .foregroundStyle(NColors.Text.textPrimary)
             }
+            .padding(.top, NSpacing.md - 1)
+            .padding(.leading, NSpacing.md - 1)
+            .padding(.trailing, NSpacing.md - 1)
+            .padding(.bottom, 0)
         }
     }
 
@@ -139,62 +119,25 @@ struct HomeView: View {
             spacing: NSpacing.sm + NSpacing.xs
         ) {
             ForEach(state.quickStats) { stat in
-                statTile(stat)
+                NStatCard(
+                    systemImage: stat.systemImage,
+                    iconColor: stat.iconColor,
+                    value: stat.value,
+                    label: stat.label
+                )
             }
-        }
-    }
-
-    private func statTile(_ stat: QuickStat) -> some View {
-        NCard {
-            VStack(alignment: .leading, spacing: NSpacing.xs + 2) {
-                Image(systemName: stat.systemImage)
-                    .font(NTypography.bodyEmphasis)
-                    .foregroundStyle(stat.iconColor)
-
-                Spacer(minLength: 0)
-
-                Text(stat.value)
-                    .font(NTypography.title.weight(.bold))
-                    .foregroundStyle(NColors.Text.textPrimary)
-
-                Text(stat.label)
-                    .font(NTypography.caption)
-                    .foregroundStyle(secondaryTextColor)
-            }
-            .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
         }
     }
 
     private var recommendationSection: some View {
-        NCard {
-            VStack(alignment: .leading, spacing: NSpacing.md) {
-                Text(state.recommendationSectionTitle)
-                    .font(NTypography.micro.weight(.bold))
-                    .tracking(0.6)
-                    .foregroundStyle(NColors.Text.textTertiary)
-
-                HStack(spacing: NSpacing.xs) {
-                    ForEach(state.recommendation.tags, id: \.self) { tag in
-                        NChip(tag, isSelected: false)
-                            .scaleEffect(0.9)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Text(state.recommendation.title)
-                    .font(NTypography.caption.weight(.bold))
-                    .foregroundStyle(NColors.Text.textPrimary)
-
-                Text(state.recommendation.message)
-                    .font(NTypography.caption)
-                    .foregroundStyle(secondaryTextColor)
-                    .padding(.top, -2)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                NSecondaryButton(state.recommendation.actionTitle, action: {})
-                    .padding(.top, NSpacing.xs)
-            }
-        }
+        NInfoCard(
+            sectionLabel: state.recommendationSectionTitle,
+            chips: state.recommendation.tags,
+            title: state.recommendation.title,
+            description: state.recommendation.message,
+            actionTitle: state.recommendation.actionTitle,
+            onAction: {}
+        )
     }
 
     private var recentDecksSection: some View {
@@ -207,33 +150,15 @@ struct HomeView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: NSpacing.sm) {
                     ForEach(state.recentDecks) { deck in
-                        recentDeckCard(deck)
+                        NDeckCard(
+                            accentColor: deck.accentColor,
+                            title: deck.title,
+                            cardCountText: deck.cardCountText
+                        )
                     }
                 }
                 .padding(.trailing, NSpacing.xs)
             }
-        }
-    }
-
-    private func recentDeckCard(_ deck: RecentDeck) -> some View {
-        NCard {
-            VStack(alignment: .leading, spacing: NSpacing.xs + 2) {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(deck.accentColor)
-                    .frame(width: 28, height: 28)
-
-                Spacer(minLength: 0)
-
-                Text(deck.title)
-                    .font(NTypography.caption.weight(.bold))
-                    .foregroundStyle(NColors.Text.textPrimary)
-                    .lineLimit(2)
-
-                Text(deck.cardCountText)
-                    .font(NTypography.caption)
-                    .foregroundStyle(secondaryTextColor)
-            }
-            .frame(width: 104, height: 78, alignment: .leading)
         }
     }
 
@@ -268,25 +193,11 @@ struct HomeView: View {
     }
 
     private var tipSection: some View {
-        NCard {
-            HStack(alignment: .center, spacing: NSpacing.sm + NSpacing.xs) {
-                NImages.Brand.logoMark
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 36, height: 36)
-
-                VStack(alignment: .leading, spacing: NSpacing.xs + 2) {
-                    Text(state.tipTitle)
-                        .font(NTypography.caption.weight(.bold))
-                        .foregroundStyle(NColors.Text.textPrimary)
-
-                    Text(state.tipMessage)
-                        .font(NTypography.caption)
-                        .foregroundStyle(secondaryTextColor)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+        NTipCard(title: state.tipTitle, bodyText: state.tipMessage) {
+            NImages.Brand.logoMark
+                .resizable()
+                .scaledToFit()
+                .frame(width: 36, height: 36)
         }
         .frame(maxWidth: .infinity)
     }

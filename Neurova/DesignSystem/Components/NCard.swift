@@ -1,26 +1,51 @@
 import SwiftUI
 
 struct NCard<Content: View>: View {
+    enum SurfaceLevel {
+        case l1
+        case l2
+    }
+
+    enum PaddingStyle {
+        case content
+        case compact
+        case none
+    }
+
     @Environment(\.colorScheme) private var colorScheme
 
+    private let surfaceLevel: SurfaceLevel
+    private let paddingStyle: PaddingStyle
+    private let showsStroke: Bool
+    private let usesShadow: Bool
     private let content: Content
 
-    init(@ViewBuilder content: () -> Content) {
+    init(
+        surfaceLevel: SurfaceLevel = .l1,
+        paddingStyle: PaddingStyle = .content,
+        showsStroke: Bool = true,
+        usesShadow: Bool = true,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.surfaceLevel = surfaceLevel
+        self.paddingStyle = paddingStyle
+        self.showsStroke = showsStroke
+        self.usesShadow = usesShadow
         self.content = content()
     }
 
     var body: some View {
         content
-            .padding(NSpacing.md)
-            .background(NColors.Neutrals.surface)
+            .padding(contentPadding)
+            .background(backgroundColor)
             .overlay(
                 RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                    .stroke(NColors.Home.cardBorder, lineWidth: 1)
+                    .stroke(showsStroke ? NColors.Home.cardBorder : .clear, lineWidth: 1)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
                     .inset(by: 1)
-                    .stroke(colorScheme == .dark ? NColors.Home.cardInnerBorder : .clear, lineWidth: 1)
+                    .stroke(colorScheme == .dark && showsStroke ? NColors.Home.cardInnerBorder : .clear, lineWidth: 1)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
@@ -38,10 +63,30 @@ struct NCard<Content: View>: View {
                 RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
             )
             .shadow(
-                color: colorScheme == .light ? NColors.Text.textTertiary.opacity(0.1) : NColors.Text.textTertiary.opacity(0),
-                radius: colorScheme == .light ? NSpacing.sm + 2 : 0,
+                color: colorScheme == .light && usesShadow ? NColors.Home.cardShadowLight : .clear,
+                radius: colorScheme == .light && usesShadow ? NSpacing.sm + 2 : 0,
                 x: 0,
-                y: colorScheme == .light ? NSpacing.xs + 1 : 0
+                y: colorScheme == .light && usesShadow ? NSpacing.xs + 1 : 0
             )
+    }
+
+    private var backgroundColor: Color {
+        switch surfaceLevel {
+        case .l1:
+            return NColors.Home.surfaceL1
+        case .l2:
+            return NColors.Home.surfaceL2
+        }
+    }
+
+    private var contentPadding: CGFloat {
+        switch paddingStyle {
+        case .content:
+            return NSpacing.md
+        case .compact:
+            return NSpacing.sm + NSpacing.xs
+        case .none:
+            return 0
+        }
     }
 }
