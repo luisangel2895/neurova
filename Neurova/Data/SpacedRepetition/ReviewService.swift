@@ -21,19 +21,25 @@ struct ReviewService {
         at reviewDate: Date = .now,
         in context: ModelContext
     ) throws -> SM2Result {
-        let previousState = SM2Result(
-            repetition: card.repetition,
-            interval: card.interval,
-            easinessFactor: card.easinessFactor,
-            nextReviewDate: card.nextReviewDate,
-            lapses: card.lapses
-        )
+        let result: SM2Result
 
-        let result = engine.review(
-            previous: previousState,
-            quality: quality,
-            reviewDate: reviewDate
-        )
+        if card.isNew, let firstReviewResult = firstReviewResult(for: card, quality: quality, reviewDate: reviewDate) {
+            result = firstReviewResult
+        } else {
+            let previousState = SM2Result(
+                repetition: card.repetition,
+                interval: card.interval,
+                easinessFactor: card.easinessFactor,
+                nextReviewDate: card.nextReviewDate,
+                lapses: card.lapses
+            )
+
+            result = engine.review(
+                previous: previousState,
+                quality: quality,
+                reviewDate: reviewDate
+            )
+        }
 
         card.repetition = result.repetition
         card.interval = result.interval
@@ -66,6 +72,41 @@ struct ReviewService {
         )
 
         return result
+    }
+
+    private func firstReviewResult(
+        for card: Card,
+        quality: ReviewQuality,
+        reviewDate: Date
+    ) -> SM2Result? {
+        switch quality {
+        case .hard:
+            return SM2Result(
+                repetition: 0,
+                interval: 0,
+                easinessFactor: card.easinessFactor,
+                nextReviewDate: reviewDate.addingTimeInterval(10 * 60),
+                lapses: card.lapses
+            )
+        case .good:
+            return SM2Result(
+                repetition: 1,
+                interval: 1,
+                easinessFactor: card.easinessFactor,
+                nextReviewDate: reviewDate.addingTimeInterval(24 * 60 * 60),
+                lapses: card.lapses
+            )
+        case .easy:
+            return SM2Result(
+                repetition: 2,
+                interval: 3,
+                easinessFactor: card.easinessFactor,
+                nextReviewDate: reviewDate.addingTimeInterval(3 * 24 * 60 * 60),
+                lapses: card.lapses
+            )
+        case .again:
+            return nil
+        }
     }
 
     private func defaultXPEventType(for quality: ReviewQuality) -> XPEventType {

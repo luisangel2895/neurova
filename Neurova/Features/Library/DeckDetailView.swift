@@ -183,7 +183,7 @@ struct DeckDetailView: View {
                 systemImage: "calendar",
                 iconColor: NColors.Feedback.warning,
                 value: "\(viewModel.dueTodayCount)",
-                label: "Due"
+                label: "Ready"
             )
 
             NStatCard(

@@ -13,11 +13,11 @@ enum StudyCardFilter: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .due:
-            return "Due"
+            return "Ready"
         case .new:
             return "New"
         case .review:
-            return "Review"
+            return "Needs Review"
         case .all:
             return "All"
         }
@@ -26,11 +26,11 @@ enum StudyCardFilter: String, CaseIterable, Identifiable {
     var subtitle: String {
         switch self {
         case .due:
-            return "Cards scheduled for review now."
+            return "Cards available to study right now."
         case .new:
             return "Brand new cards you have not studied yet."
         case .review:
-            return "Cards whose last rating was Hard."
+            return "Cards that need extra reinforcement."
         case .all:
             return "Every card in this deck."
         }

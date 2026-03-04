@@ -102,11 +102,11 @@ struct InsightsView: View {
     private var streakCard: some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
-                InsightsSectionHeader("Streak", subtitle: "Daily consistency")
+                InsightsSectionHeader("Streak", subtitle: "Consecutive study days")
 
                 HStack(spacing: NSpacing.md) {
-                    streakMetric(value: "\(viewModel.currentStreak)", label: "Current")
-                    streakMetric(value: "\(viewModel.longestStreak)", label: "Longest")
+                    streakMetric(value: "\(viewModel.currentStreak)", label: "Current Streak")
+                    streakMetric(value: "\(viewModel.longestStreak)", label: "Best Streak")
                 }
             }
         }
@@ -188,7 +188,7 @@ struct InsightsView: View {
     private var deckHealthCard: some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
-                InsightsSectionHeader("Deck health", subtitle: "Top decks needing attention")
+                InsightsSectionHeader("Deck Health Score", subtitle: "Health score for each deck")
 
                 if viewModel.topDeckHealth.isEmpty {
                     Text("No recent review data yet.")
@@ -199,6 +199,10 @@ struct InsightsView: View {
                         ForEach(viewModel.topDeckHealth) { deck in
                             HStack(spacing: NSpacing.sm) {
                                 VStack(alignment: .leading, spacing: NSpacing.xs) {
+                                    Text("DECK")
+                                        .font(NTypography.caption.weight(.semibold))
+                                        .foregroundStyle(NColors.Text.textSecondary)
+
                                     Text(deck.deckTitle)
                                         .font(NTypography.bodyEmphasis.weight(.semibold))
                                         .foregroundStyle(NColors.Text.textPrimary)
@@ -210,9 +214,21 @@ struct InsightsView: View {
 
                                 Spacer()
 
-                                Text("\(deck.score)")
-                                    .font(NTypography.bodyEmphasis.weight(.semibold))
-                                    .foregroundStyle(healthScoreColor(for: deck.score))
+                                VStack(alignment: .trailing, spacing: NSpacing.xs) {
+                                    Text("Score")
+                                        .font(NTypography.caption.weight(.semibold))
+                                        .foregroundStyle(NColors.Text.textSecondary)
+
+                                    Text("\(deck.score)")
+                                        .font(NTypography.bodyEmphasis.weight(.semibold))
+                                        .foregroundStyle(healthScoreColor(for: deck.score))
+                                        .padding(.horizontal, NSpacing.sm)
+                                        .padding(.vertical, NSpacing.xs)
+                                        .background(
+                                            Capsule(style: .continuous)
+                                                .fill(healthScoreColor(for: deck.score).opacity(0.14))
+                                        )
+                                }
                             }
                             .padding(.vertical, NSpacing.xs)
                         }
@@ -228,7 +244,7 @@ struct InsightsView: View {
                 systemImage: "clock.arrow.circlepath",
                 iconColor: NColors.Brand.neuroBlue,
                 value: "\(viewModel.totalDueCards)",
-                label: "Due"
+                label: "Ready"
             ),
             .init(
                 systemImage: "sparkles.rectangle.stack",
