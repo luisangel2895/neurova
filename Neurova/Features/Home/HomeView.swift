@@ -1,19 +1,35 @@
+import SwiftData
 import SwiftUI
 
 struct HomeView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.locale) private var locale
+    @Environment(\.colorScheme) private var colorScheme
+
     @StateObject private var viewModel: HomeViewModel
     private let onSettingsTap: () -> Void
     private let onOpenBootstrap: () -> Void
-    @Environment(\.colorScheme) private var colorScheme
+    private let onOpenLibrary: () -> Void
+
+    @State private var selectedDeckForStudy: Deck?
+    @State private var studyOptionCounts: [StudyCardFilter: Int] = [:]
+    @State private var selectedStudyCards: [Card] = []
+    @State private var isPresentingStudyOptions = false
+    @State private var shouldPresentStudyAfterOptionsDismiss = false
+    @State private var isPresentingStudy = false
+    @State private var selectedDeckForDetail: Deck?
+    @State private var noCardsAlertMessage: String?
 
     init(
         viewModel: HomeViewModel = HomeViewModel(),
         onSettingsTap: @escaping () -> Void = {},
-        onOpenBootstrap: @escaping () -> Void = {}
+        onOpenBootstrap: @escaping () -> Void = {},
+        onOpenLibrary: @escaping () -> Void = {}
     ) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.onSettingsTap = onSettingsTap
         self.onOpenBootstrap = onOpenBootstrap
+        self.onOpenLibrary = onOpenLibrary
     }
 
     var body: some View {
@@ -32,6 +48,78 @@ struct HomeView: View {
             .padding(.bottom, NSpacing.xxl)
         }
         .background(homeBackground.ignoresSafeArea())
+        .task {
+            viewModel.load(using: modelContext)
+        }
+        .onChange(of: locale.identifier) { _, _ in
+            viewModel.load(using: modelContext, forceRefresh: true)
+        }
+        .sheet(isPresented: $isPresentingStudyOptions) {
+            if let selectedDeckForStudy {
+                StudyOptionsSheetView(
+                    counts: studyOptionCounts,
+                    onSelect: { filter in
+                        let cards = viewModel.studyCards(
+                            for: selectedDeckForStudy,
+                            filter: filter,
+                            using: modelContext
+                        )
+
+                        guard cards.isEmpty == false else {
+                            noCardsAlertMessage = AppCopy.text(
+                                locale,
+                                en: "No cards available for this mode.",
+                                es: "No hay tarjetas disponibles para este modo."
+                            )
+                            isPresentingStudyOptions = false
+                            return
+                        }
+
+                        selectedStudyCards = cards
+                        shouldPresentStudyAfterOptionsDismiss = true
+                        isPresentingStudyOptions = false
+                    }
+                )
+                .presentationDetents([.fraction(0.48), .medium])
+            }
+        }
+        .onChange(of: isPresentingStudyOptions) { _, isPresented in
+            guard isPresented == false, shouldPresentStudyAfterOptionsDismiss else { return }
+            shouldPresentStudyAfterOptionsDismiss = false
+            isPresentingStudy = true
+        }
+        .sheet(isPresented: $isPresentingStudy) {
+            if let deck = selectedDeckForStudy {
+                NavigationStack {
+                    StudyView(
+                        deckTitle: deck.title,
+                        cards: selectedStudyCards,
+                        frontText: { $0.frontText },
+                        backText: { $0.backText }
+                    )
+                }
+            }
+        }
+        .sheet(item: $selectedDeckForDetail) { deck in
+            NavigationStack {
+                DeckDetailView(deck: deck)
+            }
+        }
+        .alert(
+            AppCopy.text(locale, en: "Study Unavailable", es: "Estudio no disponible"),
+            isPresented: Binding(
+                get: { noCardsAlertMessage != nil },
+                set: { isPresented in
+                    if isPresented == false {
+                        noCardsAlertMessage = nil
+                    }
+                }
+            )
+        ) {
+            Button(AppCopy.text(locale, en: "OK", es: "OK"), role: .cancel) {}
+        } message: {
+            Text(noCardsAlertMessage ?? "")
+        }
     }
 
     private var state: HomeState {
@@ -55,7 +143,7 @@ struct HomeView: View {
     private var headerSection: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: NSpacing.xs) {
-                Text("Hola, \(state.greetingName)\(state.greetingEmoji)")
+                Text("\(AppCopy.text(locale, en: "Hi", es: "Hola")), \(state.greetingName)\(state.greetingEmoji)")
                     .font(NTypography.title.weight(.bold))
                     .foregroundStyle(NColors.Text.textPrimary)
 
@@ -91,8 +179,8 @@ struct HomeView: View {
             subtitle: state.progressDetailText,
             primaryActionTitle: state.primaryActionTitle,
             secondaryActionTitle: state.secondaryActionTitle,
-            onPrimaryAction: {},
-            onSecondaryAction: {}
+            onPrimaryAction: handlePrimaryAction,
+            onSecondaryAction: onOpenLibrary
         ) {
             ZStack {
                 NProgressRing(
@@ -136,7 +224,7 @@ struct HomeView: View {
             title: state.recommendation.title,
             description: state.recommendation.message,
             actionTitle: state.recommendation.actionTitle,
-            onAction: {}
+            onAction: handlePrimaryAction
         )
     }
 
@@ -147,17 +235,33 @@ struct HomeView: View {
                 .tracking(0.6)
                 .foregroundStyle(NColors.Text.textTertiary)
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: NSpacing.sm) {
-                    ForEach(state.recentDecks) { deck in
-                        NDeckCard(
-                            accentColor: deck.accentColor,
-                            title: deck.title,
-                            cardCountText: deck.cardCountText
-                        )
-                    }
+            if state.recentDecks.isEmpty {
+                NEmptyState(
+                    systemImage: "rectangle.stack",
+                    title: AppCopy.text(locale, en: "No decks yet", es: "Aún no hay decks"),
+                    message: AppCopy.text(locale, en: "Create your first deck from Library to start studying.", es: "Crea tu primer deck en Biblioteca para comenzar a estudiar."),
+                    ctaTitle: AppCopy.text(locale, en: "Open Library", es: "Abrir Biblioteca")
+                ) {
+                    onOpenLibrary()
                 }
-                .padding(.trailing, NSpacing.xs)
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: NSpacing.sm) {
+                        ForEach(state.recentDecks) { deck in
+                            Button {
+                                selectedDeckForDetail = deck.deck
+                            } label: {
+                                NDeckCard(
+                                    accentColor: deck.accentColor,
+                                    title: deck.title,
+                                    cardCountText: "\(deck.cardCountText) • \(deck.readyCountText)"
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.trailing, NSpacing.xs)
+                }
             }
         }
     }
@@ -201,14 +305,38 @@ struct HomeView: View {
         }
         .frame(maxWidth: .infinity)
     }
+
+    private func handlePrimaryAction() {
+        guard let highlightedDeck = state.highlightedDeck else {
+            onOpenLibrary()
+            return
+        }
+
+        let counts = viewModel.studyCounts(for: highlightedDeck, using: modelContext)
+        let hasCards = counts.values.contains { $0 > 0 }
+        guard hasCards else {
+            noCardsAlertMessage = AppCopy.text(
+                locale,
+                en: "No cards available for this deck.",
+                es: "No hay tarjetas disponibles para este deck."
+            )
+            return
+        }
+
+        selectedDeckForStudy = highlightedDeck
+        studyOptionCounts = counts
+        isPresentingStudyOptions = true
+    }
 }
 
 #Preview("Light") {
     HomeView()
         .preferredColorScheme(.light)
+        .modelContainer(for: [Subject.self, Deck.self, Card.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self], inMemory: true)
 }
 
 #Preview("Dark") {
     HomeView()
         .preferredColorScheme(.dark)
+        .modelContainer(for: [Subject.self, Deck.self, Card.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self], inMemory: true)
 }

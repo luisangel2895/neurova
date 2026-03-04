@@ -23,6 +23,40 @@ struct HomeState {
     let dailyGoalSummarySymbolName: String
     let tipTitle: String
     let tipMessage: String
+    let highlightedDeck: Deck?
+    let isEmptyState: Bool
+
+    static let placeholder = HomeState(
+        greetingName: "Learner",
+        greetingEmoji: "👋",
+        subtitle: "",
+        studySectionTitle: "STUDY",
+        studyTitle: "Daily goal",
+        progress: 0,
+        progressPercentText: "0%",
+        progressDetailText: "",
+        primaryActionTitle: "Study now",
+        secondaryActionTitle: "Choose deck",
+        settingsSymbolName: "gearshape",
+        quickStats: [],
+        recommendationSectionTitle: "RECOMMENDED",
+        recommendation: Recommendation(
+            tags: [],
+            title: "",
+            message: "",
+            actionTitle: ""
+        ),
+        recentsSectionTitle: "RECENT",
+        recentDecks: [],
+        dailyGoalSummaryTitle: "Daily goal",
+        dailyGoalSummaryProgress: 0,
+        dailyGoalSummaryTrailingText: "0%",
+        dailyGoalSummarySymbolName: "sparkles",
+        tipTitle: "",
+        tipMessage: "",
+        highlightedDeck: nil,
+        isEmptyState: true
+    )
 }
 
 struct QuickStat: Identifiable {
@@ -41,8 +75,10 @@ struct Recommendation {
 }
 
 struct RecentDeck: Identifiable {
-    let id = UUID()
+    let id: UUID
+    let deck: Deck
     let title: String
     let cardCountText: String
+    let readyCountText: String
     let accentColor: Color
 }
