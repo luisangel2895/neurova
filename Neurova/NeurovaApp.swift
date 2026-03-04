@@ -14,7 +14,7 @@ struct NeurovaApp: App {
 
     var body: some Scene {
         WindowGroup {
-            AppRootView(launchMode: $launchMode)
+            AppSceneContainer(launchMode: $launchMode)
                 .modelContainer(for: [Subject.self, Deck.self, Card.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self])
         }
     }
@@ -30,6 +30,26 @@ private enum AppLaunchMode {
     case bootstrap
     case brandPreview
     case designShowcase
+}
+
+private struct AppSceneContainer: View {
+    @Binding var launchMode: AppLaunchMode
+    @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
+    @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
+
+    var body: some View {
+        AppRootView(launchMode: $launchMode)
+            .appTheme(selectedTheme)
+            .environment(\.locale, selectedLanguage.locale)
+    }
+
+    private var selectedTheme: AppTheme {
+        AppTheme(rawValue: appThemeRawValue) ?? .system
+    }
+
+    private var selectedLanguage: AppLanguage {
+        AppLanguage(rawValue: appLanguageRawValue) ?? .spanish
+    }
 }
 
 private struct AppRootView: View {
@@ -62,8 +82,12 @@ private struct AppRootView: View {
 }
 
 private struct AppTabShellView: View {
+    @Environment(\.locale) private var locale
     @State private var selectedTab: NBottomNavItem = .home
     @State private var isShowingScanPlaceholder = false
+    @State private var isShowingSettings = false
+    @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
+    @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
 
     let onOpenBootstrap: () -> Void
 
@@ -94,6 +118,10 @@ private struct AppTabShellView: View {
                 }
                 .presentationDetents([.medium, .large])
             }
+            .fullScreenCover(isPresented: $isShowingSettings) {
+                SettingsView()
+                    .id("settings-\(appThemeRawValue)")
+            }
         }
     }
 
@@ -102,9 +130,13 @@ private struct AppTabShellView: View {
         switch selectedTab {
         case .home:
             HomeView(
-                onSettingsTap: {},
+                viewModel: HomeViewModel(language: selectedLanguage),
+                onSettingsTap: {
+                    isShowingSettings = true
+                },
                 onOpenBootstrap: onOpenBootstrap
             )
+            .id("home-\(selectedLanguage.rawValue)")
             .safeAreaPadding(.bottom, Layout.contentBottomInset)
         case .library:
             NavigationStack {
@@ -117,7 +149,7 @@ private struct AppTabShellView: View {
             }
             .safeAreaPadding(.bottom, Layout.contentBottomInset)
         case .profile:
-            placeholderScreen(title: "Profile")
+            placeholderScreen(title: AppCopy.text(locale, en: "Profile", es: "Perfil"))
         }
     }
 
@@ -128,7 +160,7 @@ private struct AppTabShellView: View {
                     .font(NTypography.title)
                     .foregroundStyle(NColors.Text.textPrimary)
 
-                Text("Placeholder screen")
+                Text(AppCopy.text(locale, en: "Placeholder screen", es: "Pantalla placeholder"))
                     .font(NTypography.body)
                     .foregroundStyle(NColors.Text.textSecondary)
             }
@@ -137,10 +169,15 @@ private struct AppTabShellView: View {
             .safeAreaPadding(.bottom, Layout.contentBottomInset)
         }
     }
+
+    private var selectedLanguage: AppLanguage {
+        AppLanguage(rawValue: appLanguageRawValue) ?? .spanish
+    }
 }
 
 private struct ScanPlaceholderView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.locale) private var locale
 
     var body: some View {
         VStack(spacing: NSpacing.lg) {
@@ -148,16 +185,16 @@ private struct ScanPlaceholderView: View {
                 .font(.system(size: 48, weight: .semibold))
                 .foregroundStyle(NColors.neuroGradient)
 
-            Text("Scan")
+            Text(AppCopy.text(locale, en: "Scan", es: "Escanear"))
                 .font(NTypography.title)
                 .foregroundStyle(NColors.Text.textPrimary)
 
-            Text("Scan flow placeholder while the feature is being wired.")
+            Text(AppCopy.text(locale, en: "Scan flow placeholder while the feature is being wired.", es: "Placeholder del flujo de escaneo mientras se conecta la feature."))
                 .font(NTypography.body)
                 .foregroundStyle(NColors.Text.textSecondary)
                 .multilineTextAlignment(.center)
 
-            Button("Close") {
+            Button(AppCopy.text(locale, en: "Close", es: "Cerrar")) {
                 dismiss()
             }
             .font(NTypography.bodyEmphasis)

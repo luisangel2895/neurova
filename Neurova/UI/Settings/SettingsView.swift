@@ -1,0 +1,205 @@
+import SwiftUI
+
+struct SettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
+
+    @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
+    @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
+
+    var body: some View {
+        settingsContent
+            .id("settings-content-\(selectedTheme.rawValue)-\(selectedLanguage.rawValue)")
+    }
+
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: NSpacing.xs) {
+            Text(titleText)
+                .font(NTypography.title.weight(.bold))
+                .foregroundStyle(NColors.Text.textPrimary)
+
+            Text(subtitleText)
+                .font(NTypography.body)
+                .foregroundStyle(NColors.Text.textSecondary)
+        }
+    }
+
+    private var themeSection: some View {
+        settingsSection(
+            title: appearanceTitle,
+            subtitle: appearanceSubtitle
+        ) {
+            ForEach(AppTheme.allCases) { theme in
+                optionRow(
+                    title: theme.title(for: selectedLanguage),
+                    isSelected: selectedTheme == theme
+                ) {
+                    selectedTheme = theme
+                }
+            }
+        }
+    }
+
+    private var languageSection: some View {
+        settingsSection(
+            title: languageTitle,
+            subtitle: languageSubtitle
+        ) {
+            ForEach(AppLanguage.allCases) { language in
+                optionRow(
+                    title: language.title(for: selectedLanguage),
+                    isSelected: selectedLanguage == language
+                ) {
+                    selectedLanguage = language
+                }
+            }
+        }
+    }
+
+    private func settingsSection<Content: View>(
+        title: String,
+        subtitle: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: NSpacing.sm) {
+            Text(title)
+                .font(NTypography.caption.weight(.semibold))
+                .foregroundStyle(NColors.Text.textSecondary)
+
+            NCard {
+                VStack(alignment: .leading, spacing: NSpacing.sm) {
+                    Text(subtitle)
+                        .font(NTypography.caption)
+                        .foregroundStyle(secondaryTextColor)
+
+                    content()
+                }
+            }
+        }
+    }
+
+    private func optionRow(
+        title: String,
+        isSelected: Bool,
+        action: @escaping () -> Void
+    ) -> some View {
+        HStack(spacing: NSpacing.sm) {
+            Text(title)
+                .font(NTypography.bodyEmphasis.weight(.semibold))
+                .foregroundStyle(NColors.Text.textPrimary)
+
+            Spacer()
+
+            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                .font(NTypography.bodyEmphasis)
+                .foregroundStyle(isSelected ? NColors.Brand.neuroBlue : secondaryTextColor)
+        }
+        .padding(.horizontal, NSpacing.sm)
+        .padding(.vertical, NSpacing.sm)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                .fill(isSelected ? NColors.Brand.neuroBlue.opacity(0.10) : NColors.Home.surfaceL2)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                .stroke(isSelected ? NColors.Brand.neuroBlue.opacity(0.35) : NColors.Home.layeredStroke, lineWidth: 1)
+        )
+        .contentShape(Rectangle())
+        .onTapGesture(perform: action)
+    }
+
+    private var secondaryTextColor: Color {
+        colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark
+    }
+
+    private var selectedTheme: AppTheme {
+        get { AppTheme(rawValue: appThemeRawValue) ?? .system }
+        nonmutating set { appThemeRawValue = newValue.rawValue }
+    }
+
+    private var selectedLanguage: AppLanguage {
+        get { AppLanguage(rawValue: appLanguageRawValue) ?? .spanish }
+        nonmutating set { appLanguageRawValue = newValue.rawValue }
+    }
+
+    private var settingsContent: some View {
+        NavigationStack {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(alignment: .leading, spacing: NSpacing.lg) {
+                    headerSection
+                    themeSection
+                    languageSection
+                }
+                .padding(.horizontal, NSpacing.md)
+                .padding(.vertical, NSpacing.md)
+            }
+            .background(backgroundView.ignoresSafeArea())
+            .navigationTitle(titleText)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(closeText) {
+                        dismiss()
+                    }
+                    .font(NTypography.bodyEmphasis)
+                    .foregroundStyle(NColors.Brand.neuroBlue)
+                }
+            }
+        }
+    }
+
+    private var backgroundView: some View {
+        LinearGradient(
+            colors: colorScheme == .light
+                ? [NColors.Home.backgroundLightTop, NColors.Home.backgroundLightBottom]
+                : [NColors.Home.backgroundDarkTop, NColors.Home.backgroundDarkBottom],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    private var titleText: String {
+        selectedLanguage == .english ? "Settings" : "Ajustes"
+    }
+
+    private var subtitleText: String {
+        selectedLanguage == .english
+            ? "Customize appearance and language."
+            : "Personaliza apariencia e idioma."
+    }
+
+    private var appearanceTitle: String {
+        selectedLanguage == .english ? "Appearance" : "Apariencia"
+    }
+
+    private var appearanceSubtitle: String {
+        selectedLanguage == .english
+            ? "Choose how the app looks."
+            : "Elige como se ve la app."
+    }
+
+    private var languageTitle: String {
+        selectedLanguage == .english ? "Language" : "Idioma"
+    }
+
+    private var languageSubtitle: String {
+        selectedLanguage == .english
+            ? "Choose the app language."
+            : "Elige el idioma de la app."
+    }
+
+    private var closeText: String {
+        selectedLanguage == .english ? "Close" : "Cerrar"
+    }
+}
+
+#Preview("Settings Light") {
+    SettingsView()
+    .preferredColorScheme(.light)
+}
+
+#Preview("Settings Dark") {
+    SettingsView()
+    .preferredColorScheme(.dark)
+}

@@ -41,11 +41,13 @@ struct NCard<Content: View>: View {
             .overlay(
                 RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
                     .stroke(showsStroke ? NColors.Home.cardBorder : .clear, lineWidth: 1)
+                    .allowsHitTesting(false)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
                     .inset(by: 1)
                     .stroke(colorScheme == .dark && showsStroke ? NColors.Home.cardInnerBorder : .clear, lineWidth: 1)
+                    .allowsHitTesting(false)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
@@ -58,6 +60,7 @@ struct NCard<Content: View>: View {
                             endPoint: .bottom
                         )
                     )
+                    .allowsHitTesting(false)
             )
             .clipShape(
                 RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
