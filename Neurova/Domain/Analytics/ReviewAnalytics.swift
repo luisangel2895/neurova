@@ -3,6 +3,7 @@ import Foundation
 struct ReviewAnalytics {
     let hardRate: Double
     let againRate: Double
+    let goodRate: Double
     let easyRate: Double
     let skipRate: Double
     let autoHardRate: Double
@@ -19,6 +20,7 @@ struct ReviewAnalytics {
 
         hardRate = rate(for: .reviewHard)
         againRate = rate(for: .reviewAgain)
+        goodRate = rate(for: .reviewGood)
         easyRate = rate(for: .reviewEasy)
         skipRate = rate(for: .skipHard)
         autoHardRate = rate(for: .autoHardTimeout)

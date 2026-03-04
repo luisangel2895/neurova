@@ -18,7 +18,8 @@ final class InsightsViewModel {
         let totalDueCards: Int
         let totalNewCards: Int
         let hardRate: Double
-        let againRate: Double
+        let goodRate: Double
+        let easyRate: Double
         let skipRate: Double
         let topDeckHealth: [DeckHealthInsight]
         let activityBars: [ActivityBar]
@@ -52,7 +53,8 @@ final class InsightsViewModel {
     private(set) var totalNewCards = 0
 
     private(set) var hardRate: Double = 0
-    private(set) var againRate: Double = 0
+    private(set) var goodRate: Double = 0
+    private(set) var easyRate: Double = 0
     private(set) var skipRate: Double = 0
     private(set) var topDeckHealth: [DeckHealthInsight] = []
 
@@ -100,7 +102,8 @@ final class InsightsViewModel {
                 totalDueCards: try cardRepository.dueCardCount(asOf: .now),
                 totalNewCards: try cardRepository.newCardCount(),
                 hardRate: analytics.analytics.hardRate,
-                againRate: analytics.analytics.againRate,
+                goodRate: analytics.analytics.goodRate,
+                easyRate: analytics.analytics.easyRate,
                 skipRate: analytics.analytics.skipRate,
                 topDeckHealth: analytics.deckHealth,
                 activityBars: try buildActivityBars(using: xpRepository),
@@ -168,7 +171,8 @@ final class InsightsViewModel {
         totalDueCards = snapshot.totalDueCards
         totalNewCards = snapshot.totalNewCards
         hardRate = snapshot.hardRate
-        againRate = snapshot.againRate
+        goodRate = snapshot.goodRate
+        easyRate = snapshot.easyRate
         skipRate = snapshot.skipRate
         topDeckHealth = snapshot.topDeckHealth
         activityBars = snapshot.activityBars

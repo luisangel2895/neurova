@@ -162,14 +162,20 @@ struct InsightsView: View {
                             label: "Hard"
                         ),
                         .init(
-                            systemImage: "arrow.uturn.backward.circle",
-                            iconColor: NColors.Feedback.danger,
-                            value: percentageText(viewModel.againRate),
-                            label: "Again"
+                            systemImage: "checkmark.circle",
+                            iconColor: NColors.Brand.neuroBlue,
+                            value: percentageText(viewModel.goodRate),
+                            label: "Good"
+                        ),
+                        .init(
+                            systemImage: "star",
+                            iconColor: NColors.Feedback.success,
+                            value: percentageText(viewModel.easyRate),
+                            label: "Easy"
                         ),
                         .init(
                             systemImage: "forward",
-                            iconColor: NColors.Brand.neuroBlue,
+                            iconColor: NColors.Text.textSecondary,
                             value: percentageText(viewModel.skipRate),
                             label: "Skip"
                         )
