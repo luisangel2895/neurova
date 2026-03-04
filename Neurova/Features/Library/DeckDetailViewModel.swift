@@ -35,12 +35,27 @@ enum StudyCardFilter: String, CaseIterable, Identifiable {
             return AppCopy.text(locale, en: "Every card in this deck.", es: "Todas las tarjetas de este mazo.")
         }
     }
+
+    var queueFilter: StudyQueueFilter {
+        switch self {
+        case .due:
+            return .ready
+        case .new:
+            return .new
+        case .review:
+            return .markedHard
+        case .all:
+            return .all
+        }
+    }
 }
 
 @MainActor
 @Observable
 final class DeckDetailViewModel {
     private var cardRepository: (any CardRepository)?
+    private let queueEngine = StudyQueueEngine()
+    private var sessionPolicy = StudySessionPolicy.default
 
     private(set) var cards: [Card] = []
     var errorMessage: String?
@@ -51,6 +66,7 @@ final class DeckDetailViewModel {
 
         do {
             cards = try cardRepository?.cards(for: deck) ?? []
+            sessionPolicy = loadSessionPolicy(using: context)
         } catch {
             errorMessage = "Unable to load cards."
         }
@@ -98,11 +114,21 @@ final class DeckDetailViewModel {
     }
 
     var dueTodayCount: Int {
-        cards.filter(\.isDue).count
+        queueEngine.buildQueue(
+            cards: cards,
+            filter: .ready,
+            policy: sessionPolicy,
+            now: .now
+        ).count
     }
 
     var newCardsCount: Int {
-        cards.filter(\.isNew).count
+        queueEngine.buildQueue(
+            cards: cards,
+            filter: .new,
+            policy: sessionPolicy,
+            now: .now
+        ).count
     }
 
     func count(for filter: StudyCardFilter) -> Int {
@@ -110,20 +136,34 @@ final class DeckDetailViewModel {
     }
 
     func filteredCards(for filter: StudyCardFilter) -> [Card] {
-        switch filter {
-        case .due:
-            return cards.filter(\.isDue)
-        case .new:
-            return cards.filter(\.isNew)
-        case .review:
-            return cards.filter { $0.lastReviewQuality == .hard }
-        case .all:
-            return cards
-        }
+        queueEngine.buildQueue(
+            cards: cards,
+            filter: filter.queueFilter,
+            policy: sessionPolicy,
+            now: .now
+        )
     }
 
     private func configureIfNeeded(context: ModelContext) {
         guard cardRepository == nil else { return }
         cardRepository = SwiftDataCardRepository(context: context)
+    }
+
+    private func loadSessionPolicy(using context: ModelContext) -> StudySessionPolicy {
+        let descriptor = FetchDescriptor<UserPreferences>(
+            predicate: #Predicate<UserPreferences> { preferences in
+                preferences.key == "global"
+            }
+        )
+
+        let preferences = try? context.fetch(descriptor).first
+
+        return StudySessionPolicy(
+            newCardsPerDay: preferences?.resolvedNewCardsPerDay ?? StudySessionPolicy.default.newCardsPerDay,
+            maxReviewsPerDay: preferences?.resolvedMaxReviewsPerDay ?? StudySessionPolicy.default.maxReviewsPerDay,
+            sessionTimeCapSeconds: preferences?.resolvedSessionTimeCapSeconds,
+            avoidNewWhenDueBacklogHigh: preferences?.resolvedAvoidNewWhenDueBacklogHigh ?? StudySessionPolicy.default.avoidNewWhenDueBacklogHigh,
+            dueBacklogThreshold: preferences?.resolvedDueBacklogThreshold ?? StudySessionPolicy.default.dueBacklogThreshold
+        )
     }
 }
