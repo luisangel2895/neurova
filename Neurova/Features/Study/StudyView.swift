@@ -32,10 +32,12 @@ struct StudyView: View {
     @State private var cardTravelDistance: CGFloat = 0
     @State private var selectedQuality: ReviewQuality = .good
     @State private var pressedQuality: ReviewQuality?
+    @State private var frontTimerToken = UUID()
     @State private var isPresentingSummary = false
     @State private var sessionSummary: SessionSummary?
     @State private var hasLoadedSession = false
     @State private var isTransitioning = false
+    @State private var isClosingSession = false
 
     init(
         deckTitle: String,
@@ -70,12 +72,14 @@ struct StudyView: View {
         .task {
             loadSessionIfNeeded()
         }
+        .task(id: frontTimerToken) {
+            await armFrontHardFallbackTimer()
+        }
         .fullScreenCover(isPresented: $isPresentingSummary) {
             if let sessionSummary {
                 SummaryView(
                     summary: sessionSummary,
                     onBackToDeck: {
-                        isPresentingSummary = false
                         onBack()
                         dismiss()
                     },
@@ -137,24 +141,26 @@ struct StudyView: View {
                     .zIndex(1)
                 }
 
-                studyCardContainer(
-                    content: {
-                        Group {
-                            if queue.isEmpty && hasLoadedSession && initialCount == 0 {
-                                emptyStudyContent
-                            } else if let currentCard {
-                                studyCardContent(for: currentCard, showsBack: isShowingBack)
-                            } else {
-                                Color.clear
+                if isClosingSession == false || currentCard != nil {
+                    studyCardContainer(
+                        content: {
+                            Group {
+                                if queue.isEmpty && hasLoadedSession && initialCount == 0 {
+                                    emptyStudyContent
+                                } else if let currentCard {
+                                    studyCardContent(for: currentCard, showsBack: isShowingBack)
+                                } else {
+                                    Color.clear
+                                }
                             }
-                        }
-                    },
-                    rotation: cardRotation,
-                    offset: currentCardOffset,
-                    opacity: currentCardOpacity,
-                    allowsInteraction: true
-                )
-                .zIndex(2)
+                        },
+                        rotation: cardRotation,
+                        offset: currentCardOffset,
+                        opacity: currentCardOpacity,
+                        allowsInteraction: true
+                    )
+                    .zIndex(2)
+                }
             }
             .onAppear {
                 updateCardTravelDistance(for: proxy.size.width)
@@ -187,7 +193,7 @@ struct StudyView: View {
                     DragGesture(minimumDistance: 16)
                         .onEnded { value in
                             guard allowsInteraction, value.translation.width < -56 else { return }
-                            advanceWithSelectedQuality()
+                            handlePrimaryAdvanceAction()
                         }
                 )
         }
@@ -266,14 +272,14 @@ struct StudyView: View {
     private var reviewButtons: some View {
         VStack(spacing: NSpacing.sm) {
             HStack(spacing: NSpacing.sm) {
-                NSecondaryButton("Flip") {
+                NSecondaryButton(flipButtonTitle) {
                     flipCard()
                 }
                 .frame(maxWidth: .infinity)
                 .disabled(hasStudyCard == false || isTransitioning)
 
-                NSecondaryButton("Next") {
-                    advanceWithSelectedQuality()
+                NSecondaryButton(primaryAdvanceButtonTitle) {
+                    handlePrimaryAdvanceAction()
                 }
                 .frame(maxWidth: .infinity)
                 .disabled(hasStudyCard == false || isTransitioning)
@@ -293,6 +299,7 @@ struct StudyView: View {
 
         return NSecondaryButton(title) {
             selectedQuality = quality
+            frontTimerToken = UUID()
         }
         .frame(maxWidth: .infinity)
         .scaleEffect(buttonScale(for: quality))
@@ -390,6 +397,7 @@ struct StudyView: View {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.225) {
             isShowingBack.toggle()
+            frontTimerToken = UUID()
             cardRotation = -90
 
             withAnimation(.easeInOut(duration: 0.225)) {
@@ -402,8 +410,20 @@ struct StudyView: View {
         }
     }
 
-    private func advanceWithSelectedQuality() {
-        submitReview(selectedQuality)
+    private var flipButtonTitle: String {
+        isShowingBack ? "Show Front" : "Show Back"
+    }
+
+    private var primaryAdvanceButtonTitle: String {
+        isShowingBack ? "Next" : "Skip"
+    }
+
+    private func handlePrimaryAdvanceAction() {
+        if isShowingBack {
+            submitReview(selectedQuality)
+        } else {
+            submitReview(.hard)
+        }
     }
 
     private func submitReview(_ quality: ReviewQuality) {
@@ -449,9 +469,11 @@ struct StudyView: View {
 
         isShowingBack = false
         selectedQuality = .good
+        frontTimerToken = UUID()
         cardRotation = 0
 
         if queue.isEmpty {
+            isClosingSession = true
             withAnimation(.easeInOut(duration: 0.36)) {
                 outgoingCardOffset = -cardTravelDistance
                 outgoingCardOpacity = 0.2
@@ -492,6 +514,7 @@ struct StudyView: View {
     }
 
     private func restartSession() {
+        isClosingSession = false
         resetSessionState()
         sessionSummary = nil
     }
@@ -506,6 +529,7 @@ struct StudyView: View {
         wrongCount = 0
         xpEarned = 0
         selectedQuality = .good
+        frontTimerToken = UUID()
         isShowingBack = false
         cardRotation = 0
         currentCardOffset = 0
@@ -515,6 +539,7 @@ struct StudyView: View {
         outgoingCardOpacity = 1
         outgoingShowsBack = false
         isTransitioning = false
+        isClosingSession = false
     }
 
     private func updateCardTravelDistance(for width: CGFloat) {
@@ -538,6 +563,25 @@ struct StudyView: View {
             durationSeconds: duration
         )
         isPresentingSummary = true
+    }
+
+    private func armFrontHardFallbackTimer() async {
+        guard hasStudyCard, isShowingBack == false, selectedQuality == .good else { return }
+
+        do {
+            try await Task.sleep(nanoseconds: 10_000_000_000)
+        } catch {
+            return
+        }
+
+        guard Task.isCancelled == false else { return }
+        guard hasStudyCard, isShowingBack == false, selectedQuality == .good else { return }
+
+        await MainActor.run {
+            withAnimation(.easeInOut(duration: 0.18)) {
+                selectedQuality = .hard
+            }
+        }
     }
 
     private func xp(for quality: ReviewQuality) -> Int {
