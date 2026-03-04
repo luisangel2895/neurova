@@ -45,7 +45,16 @@ jobs:
         run: |
           set -euo pipefail
 
-          RUNTIME_ID="$(xcrun simctl list runtimes | sed -nE 's/.*(com\.apple\.CoreSimulator\.SimRuntime\.iOS[^)]*).*\(available\).*/\1/p' | tail -n 1)"
+          echo "Available runtimes:"
+          xcrun simctl list runtimes
+          echo "Available device types:"
+          xcrun simctl list devicetypes
+
+          RUNTIME_ID="$(
+            xcrun simctl list runtimes | \
+            awk -F'[()]' '/com\.apple\.CoreSimulator\.SimRuntime\.iOS/ && $0 !~ /unavailable/ {gsub(/^[ \t]+|[ \t]+$/, "", $2); print $2}' | \
+            tail -n 1
+          )"
           if [ -z "${RUNTIME_ID}" ]; then
             echo "No available iOS runtime found on runner."
             exit 1
