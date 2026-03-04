@@ -5,6 +5,7 @@
 //  Created by Angel Orellana on 2/03/26.
 //
 
+import SwiftData
 import SwiftUI
 
 @main
@@ -14,6 +15,7 @@ struct NeurovaApp: App {
     var body: some Scene {
         WindowGroup {
             AppRootView(launchMode: $launchMode)
+                .modelContainer(for: [Subject.self, Deck.self, Card.self])
         }
     }
 }
@@ -105,7 +107,10 @@ private struct AppTabShellView: View {
             )
             .safeAreaPadding(.bottom, Layout.contentBottomInset)
         case .library:
-            placeholderScreen(title: "Library")
+            NavigationStack {
+                LibraryView()
+            }
+            .safeAreaPadding(.bottom, Layout.contentBottomInset)
         case .insights:
             placeholderScreen(title: "Insights")
         case .profile:
