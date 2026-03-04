@@ -59,7 +59,7 @@ private struct AppRootView: View {
         Group {
             switch launchMode {
             case .home:
-                AppTabShellView(
+                HomeLaunchGateView(
                     onOpenBootstrap: {
                         launchMode = .bootstrap
                     }
@@ -78,6 +78,46 @@ private struct AppRootView: View {
                 }
             }
         }
+    }
+}
+
+private struct HomeLaunchGateView: View {
+    @Environment(\.modelContext) private var modelContext
+    let onOpenBootstrap: () -> Void
+
+    @State private var isLoading = true
+    @State private var hasCompletedOnboarding = false
+
+    var body: some View {
+        Group {
+            if isLoading {
+                ZStack {
+                    NColors.Neutrals.background.ignoresSafeArea()
+                    ProgressView()
+                }
+            } else if hasCompletedOnboarding {
+                AppTabShellView(onOpenBootstrap: onOpenBootstrap)
+            } else {
+                OnboardingView {
+                    hasCompletedOnboarding = true
+                }
+            }
+        }
+        .task {
+            loadOnboardingState()
+        }
+    }
+
+    private func loadOnboardingState() {
+        let descriptor = FetchDescriptor<UserPreferences>(
+            predicate: #Predicate<UserPreferences> { preferences in
+                preferences.key == "global"
+            }
+        )
+
+        let preferences = try? modelContext.fetch(descriptor).first
+        hasCompletedOnboarding = preferences?.hasCompletedOnboarding ?? false
+        isLoading = false
     }
 }
 
