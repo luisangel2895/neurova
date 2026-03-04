@@ -14,6 +14,10 @@ final class Card {
     var lastReviewDate: Date
     var lapses: Int
     var lastReviewQualityRaw: String?
+    var learningStateRaw: String?
+    var learningModeRaw: String?
+    var learningStepIndex: Int?
+    var totalReviews: Int?
 
     init(
         frontText: String = "",
@@ -32,6 +36,10 @@ final class Card {
         self.lastReviewDate = createdAt
         self.lapses = 0
         self.lastReviewQualityRaw = nil
+        self.learningStateRaw = nil
+        self.learningModeRaw = nil
+        self.learningStepIndex = nil
+        self.totalReviews = 0
     }
 
     var isDue: Bool {
@@ -39,15 +47,63 @@ final class Card {
     }
 
     var isNew: Bool {
-        lastReviewQuality == nil
+        learningState == .new
     }
 
     var isLearning: Bool {
-        repetition > 0 && repetition < 3
+        learningState == .learning || learningState == .relearning
     }
 
     var isMature: Bool {
-        repetition >= 3
+        learningState == .review && repetition >= 3
+    }
+
+    var learningState: CardLearningState {
+        get {
+            if let learningStateRaw, let parsed = CardLearningState(rawValue: learningStateRaw) {
+                return parsed
+            }
+
+            if repetition == 0 && resolvedTotalReviews == 0 {
+                return .new
+            }
+
+            if learningMode == .relearning {
+                return .relearning
+            }
+
+            if interval >= 1 {
+                return .review
+            }
+
+            if resolvedTotalReviews > 0 && interval == 0 {
+                return .learning
+            }
+
+            return .new
+        }
+        set {
+            learningStateRaw = newValue.rawValue
+        }
+    }
+
+    var learningMode: CardLearningMode {
+        get {
+            if let learningModeRaw, let parsed = CardLearningMode(rawValue: learningModeRaw) {
+                return parsed
+            }
+            return .none
+        }
+        set {
+            learningModeRaw = newValue.rawValue
+        }
+    }
+
+    var resolvedTotalReviews: Int {
+        if let totalReviews {
+            return totalReviews
+        }
+        return lastReviewQuality == nil ? 0 : 1
     }
 
     var lastReviewQuality: ReviewQuality? {
