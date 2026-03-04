@@ -11,6 +11,7 @@ struct SessionState: Equatable {
 final class StudySessionManager {
     private let reviewService: ReviewService
     private let context: ModelContext
+    private let queueEngine: StudyQueueEngine
 
     private var queue: [Card] = []
     private var initialCount: Int = 0
@@ -24,18 +25,30 @@ final class StudySessionManager {
 
     init(
         context: ModelContext,
-        reviewService: ReviewService = ReviewService()
+        reviewService: ReviewService = ReviewService(),
+        queueEngine: StudyQueueEngine = StudyQueueEngine()
     ) {
         self.context = context
         self.reviewService = reviewService
+        self.queueEngine = queueEngine
     }
 
     func loadSession(with cards: [Card], startDate: Date = .now) {
-        let newCards = cards.filter(\.isNew)
-        let learningCards = cards.filter(\.isLearning)
-        let reviewCards = cards.filter { !$0.isNew && !$0.isLearning && $0.isDue }
+        loadSession(with: cards, filter: .all, startDate: startDate)
+    }
 
-        queue = newCards + learningCards + reviewCards
+    func loadSession(
+        with cards: [Card],
+        filter: StudyQueueFilter,
+        startDate: Date = .now
+    ) {
+        let policy = loadSessionPolicy()
+        queue = queueEngine.buildQueue(
+            cards: cards,
+            filter: filter,
+            policy: policy,
+            now: startDate
+        )
         initialCount = queue.count
 
         correctCount = 0
@@ -111,5 +124,23 @@ final class StudySessionManager {
         case .easy:
             return 15
         }
+    }
+
+    private func loadSessionPolicy() -> StudySessionPolicy {
+        let descriptor = FetchDescriptor<UserPreferences>(
+            predicate: #Predicate<UserPreferences> { preferences in
+                preferences.key == "global"
+            }
+        )
+
+        let preferences = try? context.fetch(descriptor).first
+
+        return StudySessionPolicy(
+            newCardsPerDay: preferences?.resolvedNewCardsPerDay ?? StudySessionPolicy.default.newCardsPerDay,
+            maxReviewsPerDay: preferences?.resolvedMaxReviewsPerDay ?? StudySessionPolicy.default.maxReviewsPerDay,
+            sessionTimeCapSeconds: preferences?.resolvedSessionTimeCapSeconds,
+            avoidNewWhenDueBacklogHigh: preferences?.resolvedAvoidNewWhenDueBacklogHigh ?? StudySessionPolicy.default.avoidNewWhenDueBacklogHigh,
+            dueBacklogThreshold: preferences?.resolvedDueBacklogThreshold ?? StudySessionPolicy.default.dueBacklogThreshold
+        )
     }
 }

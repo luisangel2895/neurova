@@ -5,6 +5,18 @@ struct ReviewService {
     private let engine: any SpacedRepetitionEngine
     private let xpPolicy: any XPPolicy
 
+    private enum LearningSteps {
+        static let learning: [TimeInterval] = [60, 10 * 60]
+        static let relearning: [TimeInterval] = [10 * 60]
+    }
+
+    private struct SchedulingOutcome {
+        let result: SM2Result
+        let learningState: CardLearningState
+        let learningMode: CardLearningMode
+        let learningStepIndex: Int?
+    }
+
     init(
         engine: any SpacedRepetitionEngine = SM2Engine(),
         xpPolicy: any XPPolicy = DefaultXPPolicy()
@@ -21,25 +33,8 @@ struct ReviewService {
         at reviewDate: Date = .now,
         in context: ModelContext
     ) throws -> SM2Result {
-        let result: SM2Result
-
-        if card.isNew, let firstReviewResult = firstReviewResult(for: card, quality: quality, reviewDate: reviewDate) {
-            result = firstReviewResult
-        } else {
-            let previousState = SM2Result(
-                repetition: card.repetition,
-                interval: card.interval,
-                easinessFactor: card.easinessFactor,
-                nextReviewDate: card.nextReviewDate,
-                lapses: card.lapses
-            )
-
-            result = engine.review(
-                previous: previousState,
-                quality: quality,
-                reviewDate: reviewDate
-            )
-        }
+        let outcome = schedule(card: card, quality: quality, reviewDate: reviewDate)
+        let result = outcome.result
 
         card.repetition = result.repetition
         card.interval = result.interval
@@ -48,6 +43,10 @@ struct ReviewService {
         card.lastReviewDate = reviewDate
         card.lapses = result.lapses
         card.lastReviewQuality = quality
+        card.learningState = outcome.learningState
+        card.learningMode = outcome.learningMode
+        card.learningStepIndex = outcome.learningStepIndex
+        card.totalReviews = card.resolvedTotalReviews + 1
 
         let resolvedEventType = eventType ?? defaultXPEventType(for: quality)
         let xpEvent = XPEvent(
@@ -74,39 +73,192 @@ struct ReviewService {
         return result
     }
 
-    private func firstReviewResult(
-        for card: Card,
-        quality: ReviewQuality,
-        reviewDate: Date
-    ) -> SM2Result? {
+    private func schedule(card: Card, quality: ReviewQuality, reviewDate: Date) -> SchedulingOutcome {
+        switch card.learningState {
+        case .new:
+            return scheduleNew(card: card, quality: quality, reviewDate: reviewDate)
+        case .learning:
+            return scheduleLearning(
+                card: card,
+                quality: quality,
+                reviewDate: reviewDate,
+                mode: .learning,
+                steps: LearningSteps.learning
+            )
+        case .relearning:
+            return scheduleLearning(
+                card: card,
+                quality: quality,
+                reviewDate: reviewDate,
+                mode: .relearning,
+                steps: LearningSteps.relearning
+            )
+        case .review:
+            return scheduleReview(card: card, quality: quality, reviewDate: reviewDate)
+        }
+    }
+
+    private func scheduleNew(card: Card, quality: ReviewQuality, reviewDate: Date) -> SchedulingOutcome {
         switch quality {
+        case .again:
+            return startStep(
+                card: card,
+                reviewDate: reviewDate,
+                mode: .learning,
+                steps: LearningSteps.learning,
+                stepIndex: 0,
+                addLapse: true
+            )
         case .hard:
-            return SM2Result(
-                repetition: 0,
-                interval: 0,
-                easinessFactor: card.easinessFactor,
-                nextReviewDate: reviewDate.addingTimeInterval(10 * 60),
-                lapses: card.lapses
+            // Keep the existing product policy: first hard review returns in 10 minutes.
+            return startStep(
+                card: card,
+                reviewDate: reviewDate,
+                mode: .learning,
+                steps: LearningSteps.learning,
+                stepIndex: 1,
+                addLapse: false
             )
         case .good:
-            return SM2Result(
-                repetition: 1,
-                interval: 1,
-                easinessFactor: card.easinessFactor,
-                nextReviewDate: reviewDate.addingTimeInterval(24 * 60 * 60),
-                lapses: card.lapses
-            )
+            return graduateToReview(card: card, reviewDate: reviewDate, intervalDays: 1, repetition: max(card.repetition, 1))
         case .easy:
-            return SM2Result(
-                repetition: 2,
-                interval: 3,
-                easinessFactor: card.easinessFactor,
-                nextReviewDate: reviewDate.addingTimeInterval(3 * 24 * 60 * 60),
-                lapses: card.lapses
-            )
-        case .again:
-            return nil
+            return graduateToReview(card: card, reviewDate: reviewDate, intervalDays: 3, repetition: max(card.repetition, 2))
         }
+    }
+
+    private func scheduleLearning(
+        card: Card,
+        quality: ReviewQuality,
+        reviewDate: Date,
+        mode: CardLearningMode,
+        steps: [TimeInterval]
+    ) -> SchedulingOutcome {
+        let currentIndex = min(max(card.learningStepIndex ?? 0, 0), max(steps.count - 1, 0))
+
+        switch quality {
+        case .again:
+            return startStep(
+                card: card,
+                reviewDate: reviewDate,
+                mode: mode,
+                steps: steps,
+                stepIndex: 0,
+                addLapse: true
+            )
+        case .hard:
+            return startStep(
+                card: card,
+                reviewDate: reviewDate,
+                mode: mode,
+                steps: steps,
+                stepIndex: currentIndex,
+                addLapse: false
+            )
+        case .good, .easy:
+            let nextIndex = currentIndex + 1
+            if nextIndex < steps.count {
+                return startStep(
+                    card: card,
+                    reviewDate: reviewDate,
+                    mode: mode,
+                    steps: steps,
+                    stepIndex: nextIndex,
+                    addLapse: false
+                )
+            }
+
+            return graduateToReview(
+                card: card,
+                reviewDate: reviewDate,
+                intervalDays: quality == .easy ? 3 : 1,
+                repetition: quality == .easy ? max(card.repetition, 2) : max(card.repetition, 1)
+            )
+        }
+    }
+
+    private func scheduleReview(card: Card, quality: ReviewQuality, reviewDate: Date) -> SchedulingOutcome {
+        if quality == .again {
+            return startStep(
+                card: card,
+                reviewDate: reviewDate,
+                mode: .relearning,
+                steps: LearningSteps.relearning,
+                stepIndex: 0,
+                addLapse: true,
+                forceRepetition: 0
+            )
+        }
+
+        let previousState = SM2Result(
+            repetition: card.repetition,
+            interval: card.interval,
+            easinessFactor: card.easinessFactor,
+            nextReviewDate: card.nextReviewDate,
+            lapses: card.lapses
+        )
+
+        let result = engine.review(
+            previous: previousState,
+            quality: quality,
+            reviewDate: reviewDate
+        )
+
+        return SchedulingOutcome(
+            result: result,
+            learningState: .review,
+            learningMode: .none,
+            learningStepIndex: nil
+        )
+    }
+
+    private func startStep(
+        card: Card,
+        reviewDate: Date,
+        mode: CardLearningMode,
+        steps: [TimeInterval],
+        stepIndex: Int,
+        addLapse: Bool,
+        forceRepetition: Int? = nil
+    ) -> SchedulingOutcome {
+        let safeIndex = min(max(stepIndex, 0), max(steps.count - 1, 0))
+        let seconds = steps[safeIndex]
+        let nextDate = reviewDate.addingTimeInterval(seconds)
+        let lapses = addLapse ? card.lapses + 1 : card.lapses
+        let repetition = forceRepetition ?? card.repetition
+
+        return SchedulingOutcome(
+            result: SM2Result(
+                repetition: repetition,
+                interval: 0,
+                easinessFactor: card.easinessFactor,
+                nextReviewDate: nextDate,
+                lapses: lapses
+            ),
+            learningState: mode == .relearning ? .relearning : .learning,
+            learningMode: mode,
+            learningStepIndex: safeIndex
+        )
+    }
+
+    private func graduateToReview(
+        card: Card,
+        reviewDate: Date,
+        intervalDays: Int,
+        repetition: Int
+    ) -> SchedulingOutcome {
+        let nextReviewDate = reviewDate.addingTimeInterval(TimeInterval(intervalDays) * 24 * 60 * 60)
+        return SchedulingOutcome(
+            result: SM2Result(
+                repetition: repetition,
+                interval: intervalDays,
+                easinessFactor: card.easinessFactor,
+                nextReviewDate: nextReviewDate,
+                lapses: card.lapses
+            ),
+            learningState: .review,
+            learningMode: .none,
+            learningStepIndex: nil
+        )
     }
 
     private func defaultXPEventType(for quality: ReviewQuality) -> XPEventType {
