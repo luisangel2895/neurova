@@ -66,7 +66,7 @@ struct LibraryView: View {
         }
         .sheet(isPresented: $isPresentingCreateSubject) {
             CreateSubjectView { name, systemImageName in
-                viewModel.createSubject(
+                try viewModel.createSubject(
                     name: name,
                     systemImageName: systemImageName,
                     using: modelContext
@@ -77,7 +77,7 @@ struct LibraryView: View {
             viewModel.load(using: modelContext)
         }) { subject in
             CreateSubjectView(subject: subject) { name, systemImageName in
-                viewModel.updateSubject(
+                try viewModel.updateSubject(
                     subject,
                     name: name,
                     systemImageName: systemImageName,

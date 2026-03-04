@@ -30,6 +30,24 @@ struct SwiftDataCardRepository: CardRepository {
         return try context.fetch(descriptor)
     }
 
+    func dueCardCount(asOf date: Date = .now) throws -> Int {
+        let descriptor = FetchDescriptor<Card>(
+            predicate: #Predicate<Card> { card in
+                card.nextReviewDate <= date
+            }
+        )
+        return try context.fetchCount(descriptor)
+    }
+
+    func newCardCount() throws -> Int {
+        let descriptor = FetchDescriptor<Card>(
+            predicate: #Predicate<Card> { card in
+                card.lastReviewQualityRaw == nil
+            }
+        )
+        return try context.fetchCount(descriptor)
+    }
+
     func createCard(
         in deck: Deck,
         frontText: String,

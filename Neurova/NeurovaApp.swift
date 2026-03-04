@@ -15,7 +15,7 @@ struct NeurovaApp: App {
     var body: some Scene {
         WindowGroup {
             AppRootView(launchMode: $launchMode)
-                .modelContainer(for: [Subject.self, Deck.self, Card.self])
+                .modelContainer(for: [Subject.self, Deck.self, Card.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self])
         }
     }
 }
@@ -112,7 +112,10 @@ private struct AppTabShellView: View {
             }
             .safeAreaPadding(.bottom, Layout.contentBottomInset)
         case .insights:
-            placeholderScreen(title: "Insights")
+            NavigationStack {
+                InsightsView()
+            }
+            .safeAreaPadding(.bottom, Layout.contentBottomInset)
         case .profile:
             placeholderScreen(title: "Profile")
         }

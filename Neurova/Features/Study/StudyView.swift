@@ -32,6 +32,7 @@ struct StudyView: View {
     @State private var cardTravelDistance: CGFloat = 0
     @State private var selectedQuality: ReviewQuality = .good
     @State private var pressedQuality: ReviewQuality?
+    @State private var didAutoDowngradeToHard = false
     @State private var frontTimerToken = UUID()
     @State private var isPresentingSummary = false
     @State private var sessionSummary: SessionSummary?
@@ -429,11 +430,13 @@ struct StudyView: View {
     private func submitReview(_ quality: ReviewQuality) {
         guard let card = currentCard, isTransitioning == false else { return }
         pressedQuality = nil
+        let eventType = xpEventType(for: quality)
 
         do {
             try reviewService.review(
                 card: card,
                 quality: quality,
+                eventType: eventType,
                 at: .now,
                 in: modelContext
             )
@@ -469,6 +472,7 @@ struct StudyView: View {
 
         isShowingBack = false
         selectedQuality = .good
+        didAutoDowngradeToHard = false
         frontTimerToken = UUID()
         cardRotation = 0
 
@@ -529,6 +533,7 @@ struct StudyView: View {
         wrongCount = 0
         xpEarned = 0
         selectedQuality = .good
+        didAutoDowngradeToHard = false
         frontTimerToken = UUID()
         isShowingBack = false
         cardRotation = 0
@@ -580,8 +585,21 @@ struct StudyView: View {
         await MainActor.run {
             withAnimation(.easeInOut(duration: 0.18)) {
                 selectedQuality = .hard
+                didAutoDowngradeToHard = true
             }
         }
+    }
+
+    private func xpEventType(for quality: ReviewQuality) -> XPEventType? {
+        if isShowingBack == false {
+            return .skipHard
+        }
+
+        if quality == .hard, didAutoDowngradeToHard {
+            return .autoHardTimeout
+        }
+
+        return nil
     }
 
     private func xp(for quality: ReviewQuality) -> Int {

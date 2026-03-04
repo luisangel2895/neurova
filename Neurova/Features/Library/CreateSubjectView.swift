@@ -6,12 +6,13 @@ struct CreateSubjectView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     private let subject: Subject?
-    private let onSave: (String, String?) -> Void
+    private let onSave: (String, String?) throws -> Void
 
     @FocusState private var focusedField: Field?
     @State private var name: String
     @State private var systemImageName: String
     @State private var isSaving = false
+    @State private var errorMessage: String?
 
     private enum Field {
         case name
@@ -20,7 +21,7 @@ struct CreateSubjectView: View {
 
     init(
         subject: Subject? = nil,
-        onSave: @escaping (String, String?) -> Void
+        onSave: @escaping (String, String?) throws -> Void
     ) {
         self.subject = subject
         self.onSave = onSave
@@ -32,6 +33,13 @@ struct CreateSubjectView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: NSpacing.md) {
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(NTypography.caption)
+                            .foregroundStyle(NColors.Feedback.danger)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
                     inputField(
                         title: "Subject name",
                         text: $name,
@@ -157,9 +165,16 @@ struct CreateSubjectView: View {
     private func handleSave() {
         guard canSave else { return }
         isSaving = true
+        errorMessage = nil
         focusedField = nil
-        onSave(trimmedName, trimmedIconName)
-        dismiss()
+
+        do {
+            try onSave(trimmedName, trimmedIconName)
+            dismiss()
+        } catch {
+            isSaving = false
+            errorMessage = "Unable to save subject."
+        }
     }
 
     private var backgroundView: some View {

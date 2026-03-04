@@ -35,19 +35,16 @@ final class LibraryViewModel {
         name: String,
         systemImageName: String?,
         using context: ModelContext
-    ) {
+    ) throws {
         configureIfNeeded(context: context)
+        errorMessage = nil
 
-        do {
-            _ = try subjectRepository?.createSubject(
-                name: name,
-                systemImageName: normalized(systemImageName),
-                colorTokenReference: nil
-            )
-            subjects = try subjectRepository?.listSubjects() ?? []
-        } catch {
-            errorMessage = "Unable to save subject."
-        }
+        _ = try subjectRepository?.createSubject(
+            name: name,
+            systemImageName: normalized(systemImageName),
+            colorTokenReference: nil
+        )
+        subjects = try subjectRepository?.listSubjects() ?? []
     }
 
     func updateSubject(
@@ -55,20 +52,17 @@ final class LibraryViewModel {
         name: String,
         systemImageName: String?,
         using context: ModelContext
-    ) {
+    ) throws {
         configureIfNeeded(context: context)
+        errorMessage = nil
 
-        do {
-            try subjectRepository?.updateSubject(
-                subject,
-                name: name,
-                systemImageName: normalized(systemImageName),
-                colorTokenReference: subject.colorTokenReference
-            )
-            subjects = try subjectRepository?.listSubjects() ?? []
-        } catch {
-            errorMessage = "Unable to update subject."
-        }
+        try subjectRepository?.updateSubject(
+            subject,
+            name: name,
+            systemImageName: normalized(systemImageName),
+            colorTokenReference: subject.colorTokenReference
+        )
+        subjects = try subjectRepository?.listSubjects() ?? []
     }
 
     private func configureIfNeeded(context: ModelContext) {
