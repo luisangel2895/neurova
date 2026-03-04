@@ -5,6 +5,9 @@ import SwiftData
 final class UserPreferences {
     var key: String
     var dailyGoalCards: Int
+    var hasCompletedOnboarding: Bool
+    var preferredThemeRaw: String?
+    var preferredLanguageRaw: String?
     var newCardsPerDay: Int?
     var maxReviewsPerDay: Int?
     var sessionTimeCapSeconds: Int?
@@ -14,6 +17,9 @@ final class UserPreferences {
     init(
         key: String = "global",
         dailyGoalCards: Int = 20,
+        hasCompletedOnboarding: Bool = false,
+        preferredThemeRaw: String? = nil,
+        preferredLanguageRaw: String? = nil,
         newCardsPerDay: Int? = nil,
         maxReviewsPerDay: Int? = nil,
         sessionTimeCapSeconds: Int? = nil,
@@ -22,6 +28,9 @@ final class UserPreferences {
     ) {
         self.key = key
         self.dailyGoalCards = dailyGoalCards
+        self.hasCompletedOnboarding = hasCompletedOnboarding
+        self.preferredThemeRaw = preferredThemeRaw
+        self.preferredLanguageRaw = preferredLanguageRaw
         self.newCardsPerDay = newCardsPerDay
         self.maxReviewsPerDay = maxReviewsPerDay
         self.sessionTimeCapSeconds = sessionTimeCapSeconds
