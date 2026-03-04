@@ -4,6 +4,7 @@ import SwiftData
 struct LibraryView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     @State private var viewModel = LibraryViewModel()
     @State private var isPresentingCreateSubject = false
@@ -20,9 +21,9 @@ struct LibraryView: View {
                 if viewModel.subjects.isEmpty {
                     NEmptyState(
                         systemImage: "books.vertical",
-                        title: "No subjects yet",
-                        message: "Create your first subject to start organizing decks offline.",
-                        ctaTitle: "Create Subject"
+                        title: AppCopy.text(locale, en: "No subjects yet", es: "Aun no hay materias"),
+                        message: AppCopy.text(locale, en: "Create your first subject to start organizing decks offline.", es: "Crea tu primera materia para empezar a organizar mazos offline."),
+                        ctaTitle: AppCopy.text(locale, en: "Create Subject", es: "Crear Materia")
                     ) {
                         isPresentingCreateSubject = true
                     }
@@ -36,7 +37,7 @@ struct LibraryView: View {
                             }
                             .buttonStyle(.plain)
                             .contextMenu {
-                                Button("Edit") {
+                                Button(AppCopy.text(locale, en: "Edit", es: "Editar")) {
                                     editingSubject = subject
                                 }
                             }
@@ -48,7 +49,7 @@ struct LibraryView: View {
             .padding(.vertical, NSpacing.md)
         }
         .background(backgroundView.ignoresSafeArea())
-        .navigationTitle("Library")
+        .navigationTitle(AppCopy.text(locale, en: "Library", es: "Biblioteca"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -101,7 +102,16 @@ struct LibraryView: View {
                     .foregroundStyle(NColors.Text.textPrimary)
                     .multilineTextAlignment(.leading)
 
-                Text(subject.decks.count == 1 ? "1 deck" : "\(subject.decks.count) decks")
+                Text(
+                    AppCopy.countLabel(
+                        locale,
+                        count: subject.decks.count,
+                        singularEn: "deck",
+                        pluralEn: "decks",
+                        singularEs: "mazo",
+                        pluralEs: "mazos"
+                    )
+                )
                     .font(NTypography.caption)
                     .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
             }

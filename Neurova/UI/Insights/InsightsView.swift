@@ -4,6 +4,7 @@ import SwiftData
 struct InsightsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     @State private var viewModel = InsightsViewModel()
 
@@ -16,7 +17,7 @@ struct InsightsView: View {
 
                 dailyGoalCard
 
-                InsightsSectionHeader("Performance")
+                InsightsSectionHeader(AppCopy.text(locale, en: "Performance", es: "Rendimiento"))
                 InsightsStatGrid(items: performanceItems)
 
                 streakCard
@@ -31,7 +32,7 @@ struct InsightsView: View {
             .padding(.vertical, NSpacing.md)
         }
         .background(backgroundView.ignoresSafeArea())
-        .navigationTitle("Insights")
+        .navigationTitle(AppCopy.text(locale, en: "Insights", es: "Insights"))
         .navigationBarTitleDisplayMode(.large)
         .task {
             viewModel.load(using: modelContext)
@@ -40,16 +41,16 @@ struct InsightsView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: NSpacing.xs) {
-            Text("This week")
+            Text(AppCopy.text(locale, en: "This week", es: "Esta semana"))
                 .font(NTypography.caption)
                 .foregroundStyle(NColors.Text.textSecondary)
 
             if viewModel.isEmptyState {
-                Text("No activity yet")
+                Text(AppCopy.text(locale, en: "No activity yet", es: "Aun no hay actividad"))
                     .font(NTypography.bodyEmphasis.weight(.semibold))
                     .foregroundStyle(NColors.Text.textPrimary)
 
-                Text("Start a session to see your progress here.")
+                Text(AppCopy.text(locale, en: "Start a session to see your progress here.", es: "Inicia una sesion para ver tu progreso aqui."))
                     .font(NTypography.caption)
                     .foregroundStyle(NColors.Text.textSecondary)
             }
@@ -65,7 +66,7 @@ struct InsightsView: View {
     private var levelHero: some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
-                InsightsSectionHeader("Level \(viewModel.currentLevel)", subtitle: "Total progress")
+                InsightsSectionHeader("\(AppCopy.text(locale, en: "Level", es: "Nivel")) \(viewModel.currentLevel)", subtitle: AppCopy.text(locale, en: "Total progress", es: "Progreso total"))
 
                 Text("\(viewModel.totalXP) XP")
                     .font(NTypography.title.weight(.bold))
@@ -74,7 +75,7 @@ struct InsightsView: View {
                 NProgressBar(progress: viewModel.levelProgress, height: 8)
                     .frame(height: 8)
 
-                Text("\(viewModel.xpToNextLevel) XP to next level")
+                Text("\(viewModel.xpToNextLevel) \(AppCopy.text(locale, en: "XP to next level", es: "XP para el siguiente nivel"))")
                     .font(NTypography.caption)
                     .foregroundStyle(NColors.Text.textSecondary)
             }
@@ -84,9 +85,14 @@ struct InsightsView: View {
     private var dailyGoalCard: some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
-                InsightsSectionHeader("Daily Goal", subtitle: viewModel.isGoalMet ? "Goal met today" : "Keep going")
+                InsightsSectionHeader(
+                    AppCopy.text(locale, en: "Daily Goal", es: "Meta Diaria"),
+                    subtitle: viewModel.isGoalMet
+                        ? AppCopy.text(locale, en: "Goal met today", es: "Meta cumplida hoy")
+                        : AppCopy.text(locale, en: "Keep going", es: "Sigue asi")
+                )
 
-                Text("\(viewModel.todayProgress)/\(viewModel.dailyGoal) cards")
+                Text("\(viewModel.todayProgress)/\(viewModel.dailyGoal) \(AppCopy.text(locale, en: "cards", es: "tarjetas"))")
                     .font(NTypography.title.weight(.bold))
                     .foregroundStyle(NColors.Text.textPrimary)
 
@@ -102,11 +108,11 @@ struct InsightsView: View {
     private var streakCard: some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
-                InsightsSectionHeader("Streak", subtitle: "Consecutive study days")
+                InsightsSectionHeader(AppCopy.text(locale, en: "Streak", es: "Racha"), subtitle: AppCopy.text(locale, en: "Consecutive study days", es: "Dias consecutivos de estudio"))
 
                 HStack(spacing: NSpacing.md) {
-                    streakMetric(value: "\(viewModel.currentStreak)", label: "Current Streak")
-                    streakMetric(value: "\(viewModel.longestStreak)", label: "Best Streak")
+                    streakMetric(value: "\(viewModel.currentStreak)", label: AppCopy.text(locale, en: "Current Streak", es: "Racha Actual"))
+                    streakMetric(value: "\(viewModel.longestStreak)", label: AppCopy.text(locale, en: "Best Streak", es: "Mejor Racha"))
                 }
             }
         }
@@ -128,7 +134,7 @@ struct InsightsView: View {
     private var activityCard: some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
-                InsightsSectionHeader("Last 7 Days", subtitle: "Review activity")
+                InsightsSectionHeader(AppCopy.text(locale, en: "Last 7 Days", es: "Ultimos 7 Dias"), subtitle: AppCopy.text(locale, en: "Review activity", es: "Actividad de repaso"))
 
                 HStack(alignment: .bottom, spacing: NSpacing.sm) {
                     ForEach(viewModel.activityBars) { bar in
@@ -151,7 +157,7 @@ struct InsightsView: View {
     private var difficultyCard: some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
-                InsightsSectionHeader("Difficulty", subtitle: "Last 7 days")
+                InsightsSectionHeader(AppCopy.text(locale, en: "Difficulty", es: "Dificultad"), subtitle: AppCopy.text(locale, en: "Last 7 days", es: "Ultimos 7 dias"))
 
                 InsightsStatGrid(
                     items: [
@@ -159,25 +165,25 @@ struct InsightsView: View {
                             systemImage: "tortoise",
                             iconColor: NColors.Feedback.warning,
                             value: percentageText(viewModel.hardRate),
-                            label: "Hard"
+                            label: AppCopy.text(locale, en: "Hard", es: "Dificil")
                         ),
                         .init(
                             systemImage: "checkmark.circle",
                             iconColor: NColors.Brand.neuroBlue,
                             value: percentageText(viewModel.goodRate),
-                            label: "Good"
+                            label: AppCopy.text(locale, en: "Good", es: "Bien")
                         ),
                         .init(
                             systemImage: "star",
                             iconColor: NColors.Feedback.success,
                             value: percentageText(viewModel.easyRate),
-                            label: "Easy"
+                            label: AppCopy.text(locale, en: "Easy", es: "Facil")
                         ),
                         .init(
                             systemImage: "forward",
                             iconColor: NColors.Text.textSecondary,
                             value: percentageText(viewModel.skipRate),
-                            label: "Skip"
+                            label: AppCopy.text(locale, en: "Skip", es: "Saltar")
                         )
                     ]
                 )
@@ -188,10 +194,10 @@ struct InsightsView: View {
     private var deckHealthCard: some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
-                InsightsSectionHeader("Deck Health Score", subtitle: "Health score for each deck")
+                InsightsSectionHeader(AppCopy.text(locale, en: "Deck Health Score", es: "Score de Salud del Mazo"), subtitle: AppCopy.text(locale, en: "Health score for each deck", es: "Score de salud de cada mazo"))
 
                 if viewModel.topDeckHealth.isEmpty {
-                    Text("No recent review data yet.")
+                    Text(AppCopy.text(locale, en: "No recent review data yet.", es: "Aun no hay datos recientes de repaso."))
                         .font(NTypography.body)
                         .foregroundStyle(NColors.Text.textSecondary)
                 } else {
@@ -199,7 +205,7 @@ struct InsightsView: View {
                         ForEach(viewModel.topDeckHealth) { deck in
                             HStack(spacing: NSpacing.sm) {
                                 VStack(alignment: .leading, spacing: NSpacing.xs) {
-                                    Text("DECK")
+                                    Text(AppCopy.text(locale, en: "DECK", es: "MAZO"))
                                         .font(NTypography.caption.weight(.semibold))
                                         .foregroundStyle(NColors.Text.textSecondary)
 
@@ -207,7 +213,7 @@ struct InsightsView: View {
                                         .font(NTypography.bodyEmphasis.weight(.semibold))
                                         .foregroundStyle(NColors.Text.textPrimary)
 
-                                    Text(deck.label)
+                                    Text(healthLabel(for: deck.score))
                                         .font(NTypography.caption)
                                         .foregroundStyle(NColors.Text.textSecondary)
                                 }
@@ -215,7 +221,7 @@ struct InsightsView: View {
                                 Spacer()
 
                                 VStack(alignment: .trailing, spacing: NSpacing.xs) {
-                                    Text("Score")
+                                    Text(AppCopy.text(locale, en: "Score", es: "Score"))
                                         .font(NTypography.caption.weight(.semibold))
                                         .foregroundStyle(NColors.Text.textSecondary)
 
@@ -244,13 +250,13 @@ struct InsightsView: View {
                 systemImage: "clock.arrow.circlepath",
                 iconColor: NColors.Brand.neuroBlue,
                 value: "\(viewModel.totalDueCards)",
-                label: "Ready"
+                label: AppCopy.text(locale, en: "Ready", es: "Listo")
             ),
             .init(
                 systemImage: "sparkles.rectangle.stack",
                 iconColor: NColors.Brand.neuralMint,
                 value: "\(viewModel.totalNewCards)",
-                label: "New"
+                label: AppCopy.text(locale, en: "New", es: "Nuevo")
             )
         ]
     }
@@ -277,6 +283,19 @@ struct InsightsView: View {
             return NColors.Feedback.warning
         default:
             return NColors.Feedback.success
+        }
+    }
+
+    private func healthLabel(for score: Int) -> String {
+        switch score {
+        case ..<45:
+            return AppCopy.text(locale, en: "Needs attention", es: "Necesita atencion")
+        case ..<70:
+            return AppCopy.text(locale, en: "Watch closely", es: "Vigilar de cerca")
+        case ..<85:
+            return AppCopy.text(locale, en: "Healthy", es: "Saludable")
+        default:
+            return AppCopy.text(locale, en: "Strong", es: "Fuerte")
         }
     }
 }

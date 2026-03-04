@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SummaryView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     let summary: SessionSummary
     let onBackToDeck: () -> Void
@@ -12,11 +13,11 @@ struct SummaryView: View {
             Spacer(minLength: 0)
 
             VStack(spacing: NSpacing.sm) {
-                Text("Session Complete")
+                Text(AppCopy.text(locale, en: "Session Complete", es: "Sesion Completada"))
                     .font(NTypography.title.weight(.semibold))
                     .foregroundStyle(NColors.Text.textPrimary)
 
-                Text("Great work today.")
+                Text(AppCopy.text(locale, en: "Great work today.", es: "Gran trabajo hoy."))
                     .font(NTypography.body)
                     .foregroundStyle(secondaryTextColor)
             }
@@ -31,28 +32,28 @@ struct SummaryView: View {
                     .font(NTypography.display)
                     .foregroundStyle(NColors.Text.textPrimary)
 
-                Text("earned this session")
+                Text(AppCopy.text(locale, en: "earned this session", es: "ganado en esta sesion"))
                     .font(NTypography.body)
                     .foregroundStyle(secondaryTextColor)
             }
 
             NCard {
                 VStack(spacing: NSpacing.md) {
-                    statsRow(title: "Cards reviewed", value: "\(summary.totalReviewed)")
-                    statsRow(title: "Correct", value: "\(summary.correctCount)")
-                    statsRow(title: "Incorrect", value: "\(summary.wrongCount)")
-                    statsRow(title: "Duration", value: durationText)
+                    statsRow(title: AppCopy.text(locale, en: "Cards reviewed", es: "Tarjetas revisadas"), value: "\(summary.totalReviewed)")
+                    statsRow(title: AppCopy.text(locale, en: "Correct", es: "Correctas"), value: "\(summary.correctCount)")
+                    statsRow(title: AppCopy.text(locale, en: "Incorrect", es: "Incorrectas"), value: "\(summary.wrongCount)")
+                    statsRow(title: AppCopy.text(locale, en: "Duration", es: "Duracion"), value: durationText)
                 }
             }
 
             Spacer(minLength: 0)
 
             VStack(spacing: NSpacing.sm) {
-                NPrimaryButton("Back to Deck") {
+                NPrimaryButton(AppCopy.text(locale, en: "Back to Deck", es: "Volver al Mazo")) {
                     onBackToDeck()
                 }
 
-                NSecondaryButton("Study Again") {
+                NSecondaryButton(AppCopy.text(locale, en: "Study Again", es: "Estudiar de Nuevo")) {
                     onStudyAgain()
                 }
             }
@@ -80,6 +81,9 @@ struct SummaryView: View {
 
     private var durationText: String {
         let minutes = max(1, Int(round(Double(summary.durationSeconds) / 60.0)))
+        if AppCopy.language(for: locale) == .spanish {
+            return "\(minutes) min"
+        }
         return "\(minutes) min"
     }
 

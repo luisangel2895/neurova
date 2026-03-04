@@ -3,6 +3,7 @@ import SwiftUI
 struct CreateDeckView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     private let deck: Deck?
     private let onSave: (String, String?, Bool) -> Void
@@ -29,10 +30,10 @@ struct CreateDeckView: View {
             ScrollView {
                 VStack(spacing: NSpacing.md) {
                     titleField
-                    multilineField(title: "Description (optional)", text: $descriptionText)
+                    multilineField(title: AppCopy.text(locale, en: "Description (optional)", es: "Descripcion (opcional)"), text: $descriptionText)
 
                     Toggle(isOn: $isArchived) {
-                        Text("Archived")
+                        Text(AppCopy.text(locale, en: "Archived", es: "Archivado"))
                             .font(NTypography.body)
                             .foregroundStyle(NColors.Text.textPrimary)
                     }
@@ -47,18 +48,18 @@ struct CreateDeckView: View {
                 .padding(.top, NSpacing.md)
             }
             .background(backgroundView.ignoresSafeArea())
-            .navigationTitle(deck == nil ? "Create Deck" : "Edit Deck")
+            .navigationTitle(deck == nil ? AppCopy.text(locale, en: "Create Deck", es: "Crear Mazo") : AppCopy.text(locale, en: "Edit Deck", es: "Editar Mazo"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(AppCopy.text(locale, en: "Cancel", es: "Cancelar")) {
                         dismiss()
                     }
                     .foregroundStyle(NColors.Text.textSecondary)
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(AppCopy.text(locale, en: "Save", es: "Guardar")) {
                         handleSave()
                     }
                     .disabled(canSave == false)
@@ -85,7 +86,7 @@ struct CreateDeckView: View {
     }
 
     private var titleField: some View {
-        TextField("Deck title", text: $title)
+        TextField(AppCopy.text(locale, en: "Deck title", es: "Titulo del mazo"), text: $title)
             .font(NTypography.body)
             .foregroundStyle(NColors.Text.textPrimary)
             .padding(.horizontal, NSpacing.md)

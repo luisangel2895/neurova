@@ -4,6 +4,7 @@ import SwiftData
 struct SubjectDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     let subject: Subject
 
@@ -17,9 +18,9 @@ struct SubjectDetailView: View {
                 if viewModel.decks.isEmpty {
                     NEmptyState(
                         systemImage: "square.stack.3d.up",
-                        title: "No decks yet",
-                        message: "Create a deck inside this subject to start building cards.",
-                        ctaTitle: "Create Deck"
+                        title: AppCopy.text(locale, en: "No decks yet", es: "Aun no hay mazos"),
+                        message: AppCopy.text(locale, en: "Create a deck inside this subject to start building cards.", es: "Crea un mazo dentro de esta materia para empezar a crear tarjetas."),
+                        ctaTitle: AppCopy.text(locale, en: "Create Deck", es: "Crear Mazo")
                     ) {
                         isPresentingCreateDeck = true
                     }
@@ -33,11 +34,11 @@ struct SubjectDetailView: View {
                             }
                             .buttonStyle(.plain)
                             .contextMenu {
-                                Button("Edit") {
+                                Button(AppCopy.text(locale, en: "Edit", es: "Editar")) {
                                     editingDeck = deck
                                 }
 
-                                Button("Archive") {
+                                Button(AppCopy.text(locale, en: "Archive", es: "Archivar")) {
                                     viewModel.archiveDeck(
                                         deck,
                                         subject: subject,
@@ -124,8 +125,28 @@ struct SubjectDetailView: View {
                 }
 
                 HStack(spacing: NSpacing.sm) {
-                    NChip(metrics.cardCount == 1 ? "1 card" : "\(metrics.cardCount) cards", isSelected: false)
-                    NChip(metrics.dueCount == 1 ? "1 due" : "\(metrics.dueCount) due", isSelected: false)
+                    NChip(
+                        AppCopy.countLabel(
+                            locale,
+                            count: metrics.cardCount,
+                            singularEn: "card",
+                            pluralEn: "cards",
+                        singularEs: "tarjeta",
+                        pluralEs: "tarjetas"
+                        ),
+                        isSelected: false
+                    )
+                    NChip(
+                        AppCopy.countLabel(
+                            locale,
+                            count: metrics.dueCount,
+                            singularEn: "ready",
+                            pluralEn: "ready",
+                            singularEs: "lista",
+                            pluralEs: "listas"
+                        ),
+                        isSelected: false
+                    )
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)

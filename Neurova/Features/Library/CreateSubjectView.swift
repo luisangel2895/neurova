@@ -4,6 +4,7 @@ import UIKit
 struct CreateSubjectView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     private let subject: Subject?
     private let onSave: (String, String?) throws -> Void
@@ -41,7 +42,7 @@ struct CreateSubjectView: View {
                     }
 
                     inputField(
-                        title: "Subject name",
+                        title: AppCopy.text(locale, en: "Subject name", es: "Nombre de la materia"),
                         text: $name,
                         field: .name,
                         submitLabel: .next
@@ -49,13 +50,13 @@ struct CreateSubjectView: View {
 
                     VStack(alignment: .leading, spacing: NSpacing.xs) {
                         inputField(
-                            title: "SF Symbol (optional)",
+                            title: AppCopy.text(locale, en: "SF Symbol (optional)", es: "SF Symbol (opcional)"),
                             text: $systemImageName,
                             field: .symbol,
                             submitLabel: .done
                         )
 
-                        Text("Example: book, leaf, brain, graduationcap")
+                        Text(AppCopy.text(locale, en: "Example: book, leaf, brain, graduationcap", es: "Ejemplo: book, leaf, brain, graduationcap"))
                             .font(NTypography.caption)
                             .foregroundStyle(secondaryTextColor)
 
@@ -65,7 +66,7 @@ struct CreateSubjectView: View {
                                     .font(NTypography.bodyEmphasis)
                                     .foregroundStyle(NColors.Brand.neuroBlue)
 
-                                Text("Preview")
+                                Text(AppCopy.text(locale, en: "Preview", es: "Vista previa"))
                                     .font(NTypography.caption)
                                     .foregroundStyle(secondaryTextColor)
                             }
@@ -81,18 +82,18 @@ struct CreateSubjectView: View {
                 .padding(.top, NSpacing.md)
             }
             .background(backgroundView.ignoresSafeArea())
-            .navigationTitle(subject == nil ? "Create Subject" : "Edit Subject")
+            .navigationTitle(subject == nil ? AppCopy.text(locale, en: "Create Subject", es: "Crear Materia") : AppCopy.text(locale, en: "Edit Subject", es: "Editar Materia"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(AppCopy.text(locale, en: "Cancel", es: "Cancelar")) {
                         dismiss()
                     }
                     .foregroundStyle(NColors.Text.textSecondary)
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(AppCopy.text(locale, en: "Save", es: "Guardar")) {
                         handleSave()
                     }
                     .disabled(canSave == false)
@@ -173,7 +174,7 @@ struct CreateSubjectView: View {
             dismiss()
         } catch {
             isSaving = false
-            errorMessage = "Unable to save subject."
+            errorMessage = AppCopy.text(locale, en: "Unable to save subject.", es: "No se pudo guardar la materia.")
         }
     }
 

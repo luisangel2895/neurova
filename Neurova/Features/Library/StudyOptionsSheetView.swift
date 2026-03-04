@@ -2,6 +2,7 @@ import SwiftUI
 
 struct StudyOptionsSheetView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     let counts: [StudyCardFilter: Int]
     let onSelect: (StudyCardFilter) -> Void
@@ -10,7 +11,7 @@ struct StudyOptionsSheetView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: NSpacing.md) {
-                    Text("Study Options")
+                    Text(AppCopy.text(locale, en: "Study Options", es: "Opciones de Estudio"))
                         .font(NTypography.title)
                         .foregroundStyle(NColors.Text.textPrimary)
 
@@ -40,11 +41,11 @@ struct StudyOptionsSheetView: View {
             NCard {
                 HStack(alignment: .center, spacing: NSpacing.sm) {
                     VStack(alignment: .leading, spacing: NSpacing.xs) {
-                        Text(filter.title)
+                        Text(filter.title(for: locale))
                             .font(NTypography.bodyEmphasis.weight(.semibold))
                             .foregroundStyle(NColors.Text.textPrimary)
 
-                        Text(isEnabled ? filter.subtitle : "No cards available")
+                        Text(isEnabled ? filter.subtitle(for: locale) : AppCopy.text(locale, en: "No cards available", es: "No hay tarjetas disponibles"))
                             .font(NTypography.caption)
                             .foregroundStyle(secondaryTextColor)
                             .multilineTextAlignment(.leading)

@@ -3,6 +3,7 @@ import SwiftUI
 struct CreateCardView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     private let onSave: (String, String) -> Void
 
@@ -17,25 +18,25 @@ struct CreateCardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: NSpacing.md) {
-                    multilineField(title: "Front", text: $frontText)
-                    multilineField(title: "Back", text: $backText)
+                    multilineField(title: AppCopy.text(locale, en: "Front", es: "Frente"), text: $frontText)
+                    multilineField(title: AppCopy.text(locale, en: "Back", es: "Reverso"), text: $backText)
                 }
                 .padding(.horizontal, NSpacing.md)
                 .padding(.top, NSpacing.md)
             }
             .background(backgroundView.ignoresSafeArea())
-            .navigationTitle("Add Card")
+            .navigationTitle(AppCopy.text(locale, en: "Add Card", es: "Agregar Tarjeta"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                    Button(AppCopy.text(locale, en: "Cancel", es: "Cancelar")) {
                         dismiss()
                     }
                     .foregroundStyle(NColors.Text.textSecondary)
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button(AppCopy.text(locale, en: "Save", es: "Guardar")) {
                         onSave(trimmedFront, trimmedBack)
                         dismiss()
                     }

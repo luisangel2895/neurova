@@ -4,6 +4,7 @@ import SwiftData
 struct DeckDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     let deck: Deck
 
@@ -27,9 +28,9 @@ struct DeckDetailView: View {
                 if viewModel.cards.isEmpty {
                     NEmptyState(
                         systemImage: "rectangle.stack",
-                        title: "No cards yet",
-                        message: "Add cards to this deck before starting a study session.",
-                        ctaTitle: "Add Card"
+                        title: AppCopy.text(locale, en: "No cards yet", es: "Aun no hay tarjetas"),
+                        message: AppCopy.text(locale, en: "Add cards to this deck before starting a study session.", es: "Agrega tarjetas a este mazo antes de iniciar una sesion de estudio."),
+                        ctaTitle: AppCopy.text(locale, en: "Add Card", es: "Agregar Tarjeta")
                     ) {
                         isPresentingCreateCard = true
                     }
@@ -60,19 +61,19 @@ struct DeckDetailView: View {
                                     using: modelContext
                                 )
                             } label: {
-                                Label("Delete", systemImage: "trash")
+                                Label(AppCopy.text(locale, en: "Delete", es: "Eliminar"), systemImage: "trash")
                             }
                         }
                     }
                 }
             } header: {
-                Text("Cards")
+                Text(AppCopy.text(locale, en: "Cards", es: "Tarjetas"))
                     .font(NTypography.caption.weight(.semibold))
                     .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
             }
 
             Section {
-                NPrimaryButton("Start Study") {
+                NPrimaryButton(AppCopy.text(locale, en: "Start Study", es: "Iniciar Estudio")) {
                     isPresentingStudyOptions = true
                 }
                 .disabled(viewModel.cards.isEmpty)
@@ -122,7 +123,7 @@ struct DeckDetailView: View {
                 onSelect: { filter in
                     let filteredCards = viewModel.filteredCards(for: filter)
                     guard filteredCards.isEmpty == false else {
-                        noCardsAlertMessage = "No cards available for this mode."
+                        noCardsAlertMessage = AppCopy.text(locale, en: "No cards available for this mode.", es: "No hay tarjetas disponibles para este modo.")
                         isPresentingStudyOptions = false
                         return
                     }
@@ -154,7 +155,7 @@ struct DeckDetailView: View {
             viewModel.load(deck: deck, using: modelContext)
         }
         .alert(
-            "Study Unavailable",
+            AppCopy.text(locale, en: "Study Unavailable", es: "Estudio no disponible"),
             isPresented: Binding(
                 get: { noCardsAlertMessage != nil },
                 set: { isPresented in
@@ -164,7 +165,7 @@ struct DeckDetailView: View {
                 }
             )
         ) {
-            Button("OK", role: .cancel) {}
+            Button(AppCopy.text(locale, en: "OK", es: "OK"), role: .cancel) {}
         } message: {
             Text(noCardsAlertMessage ?? "")
         }
@@ -176,21 +177,21 @@ struct DeckDetailView: View {
                 systemImage: "rectangle.stack",
                 iconColor: NColors.Brand.neuroBlue,
                 value: "\(viewModel.totalCards)",
-                label: "Total"
+                label: AppCopy.text(locale, en: "Total", es: "Total")
             )
 
             NStatCard(
                 systemImage: "calendar",
                 iconColor: NColors.Feedback.warning,
                 value: "\(viewModel.dueTodayCount)",
-                label: "Ready"
+                label: AppCopy.text(locale, en: "Ready", es: "Listo")
             )
 
             NStatCard(
                 systemImage: "sparkles",
                 iconColor: NColors.Brand.neuralMint,
                 value: "\(viewModel.newCardsCount)",
-                label: "New"
+                label: AppCopy.text(locale, en: "New", es: "Nuevo")
             )
         }
         .padding(.horizontal, NSpacing.md)

@@ -10,29 +10,29 @@ enum StudyCardFilter: String, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    var title: String {
+    func title(for locale: Locale) -> String {
         switch self {
         case .due:
-            return "Ready"
+            return AppCopy.text(locale, en: "Ready", es: "Listo")
         case .new:
-            return "New"
+            return AppCopy.text(locale, en: "New", es: "Nuevo")
         case .review:
-            return "Needs Review"
+            return AppCopy.text(locale, en: "Needs Review", es: "Necesita Repaso")
         case .all:
-            return "All"
+            return AppCopy.text(locale, en: "All", es: "Todo")
         }
     }
 
-    var subtitle: String {
+    func subtitle(for locale: Locale) -> String {
         switch self {
         case .due:
-            return "Cards available to study right now."
+            return AppCopy.text(locale, en: "Cards available to study right now.", es: "Tarjetas disponibles para estudiar ahora.")
         case .new:
-            return "Brand new cards you have not studied yet."
+            return AppCopy.text(locale, en: "Brand new cards you have not studied yet.", es: "Tarjetas nuevas que aun no has estudiado.")
         case .review:
-            return "Cards that need extra reinforcement."
+            return AppCopy.text(locale, en: "Cards that need extra reinforcement.", es: "Tarjetas que necesitan refuerzo extra.")
         case .all:
-            return "Every card in this deck."
+            return AppCopy.text(locale, en: "Every card in this deck.", es: "Todas las tarjetas de este mazo.")
         }
     }
 }

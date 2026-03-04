@@ -5,6 +5,7 @@ struct StudyView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     private let deckTitle: String
     private let cards: [Card]
@@ -250,16 +251,16 @@ struct StudyView: View {
         VStack(spacing: NSpacing.md) {
             Spacer(minLength: 0)
 
-            Text("No cards available")
+            Text(AppCopy.text(locale, en: "No cards available", es: "No hay tarjetas disponibles"))
                 .font(NTypography.headline)
                 .foregroundStyle(NColors.Text.textPrimary)
 
-            Text("There are no cards available for the selected study mode.")
+            Text(AppCopy.text(locale, en: "There are no cards available for the selected study mode.", es: "No hay tarjetas disponibles para el modo de estudio seleccionado."))
                 .font(NTypography.body)
                 .foregroundStyle(secondaryTextColor)
                 .multilineTextAlignment(.center)
 
-            NSecondaryButton("Back to Deck") {
+            NSecondaryButton(AppCopy.text(locale, en: "Back to Deck", es: "Volver al Mazo")) {
                 onBack()
                 dismiss()
             }
@@ -287,9 +288,9 @@ struct StudyView: View {
             }
 
             HStack(spacing: NSpacing.sm) {
-                reviewButton(title: "Hard", quality: .hard)
-                reviewButton(title: "Good", quality: .good)
-                reviewButton(title: "Easy", quality: .easy)
+                reviewButton(title: AppCopy.text(locale, en: "Hard", es: "Dificil"), quality: .hard)
+                reviewButton(title: AppCopy.text(locale, en: "Good", es: "Bien"), quality: .good)
+                reviewButton(title: AppCopy.text(locale, en: "Easy", es: "Facil"), quality: .easy)
             }
         }
         .opacity((hasStudyCard || (queue.isEmpty && hasLoadedSession && initialCount == 0)) ? 1 : 0.5)
@@ -343,7 +344,9 @@ struct StudyView: View {
     }
 
     private func cardSideLabel(for showsBack: Bool) -> String {
-        showsBack ? "Back" : "Front"
+        showsBack
+            ? AppCopy.text(locale, en: "Back", es: "Reverso")
+            : AppCopy.text(locale, en: "Front", es: "Frente")
     }
 
     private var secondaryTextColor: Color {
@@ -412,11 +415,15 @@ struct StudyView: View {
     }
 
     private var flipButtonTitle: String {
-        isShowingBack ? "Show Front" : "Show Back"
+        isShowingBack
+            ? AppCopy.text(locale, en: "Show Front", es: "Mostrar Frente")
+            : AppCopy.text(locale, en: "Show Back", es: "Mostrar Reverso")
     }
 
     private var primaryAdvanceButtonTitle: String {
-        isShowingBack ? "Next" : "Skip"
+        isShowingBack
+            ? AppCopy.text(locale, en: "Next", es: "Siguiente")
+            : AppCopy.text(locale, en: "Skip", es: "Saltar")
     }
 
     private func handlePrimaryAdvanceAction() {

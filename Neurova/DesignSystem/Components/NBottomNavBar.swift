@@ -8,16 +8,16 @@ enum NBottomNavItem: CaseIterable, Identifiable {
 
     var id: Self { self }
 
-    var title: String {
+    func title(for locale: Locale) -> String {
         switch self {
         case .home:
-            return "Home"
+            return AppCopy.text(locale, en: "Home", es: "Inicio")
         case .library:
-            return "Library"
+            return AppCopy.text(locale, en: "Library", es: "Biblioteca")
         case .insights:
-            return "Insights"
+            return AppCopy.text(locale, en: "Insights", es: "Insights")
         case .profile:
-            return "Profile"
+            return AppCopy.text(locale, en: "Profile", es: "Perfil")
         }
     }
 
@@ -41,6 +41,7 @@ struct NBottomNavBar: View {
     let onScanTap: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
 
     private enum Metrics {
         static let barHeight: CGFloat = 88
@@ -111,7 +112,7 @@ struct NBottomNavBar: View {
                     .font(.system(size: Metrics.iconSize, weight: .regular))
                     .foregroundStyle(isActive ? NColors.Brand.neuroBlue : NColors.Text.textTertiary)
 
-                Text(item.title)
+                Text(item.title(for: locale))
                     .font(NTypography.micro)
                     .foregroundStyle(isActive ? NColors.Brand.neuroBlue : NColors.Text.textTertiary)
             }
