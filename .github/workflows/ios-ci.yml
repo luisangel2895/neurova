@@ -41,12 +41,44 @@ jobs:
           xcodebuild -version
           swift --version
 
+      - name: Create and boot iOS Simulator
+        run: |
+          set -euo pipefail
+
+          RUNTIME_ID="$(xcrun simctl list runtimes | sed -nE 's/.*(com\.apple\.CoreSimulator\.SimRuntime\.iOS[^)]*).*\(available\).*/\1/p' | tail -n 1)"
+          if [ -z "${RUNTIME_ID}" ]; then
+            echo "No available iOS runtime found on runner."
+            exit 1
+          fi
+
+          DEVICE_TYPE_ID="$(xcrun simctl list devicetypes | sed -nE 's/.*(com\.apple\.CoreSimulator\.SimDeviceType\.iPhone-16-Pro).*/\1/p' | head -n 1)"
+          if [ -z "${DEVICE_TYPE_ID}" ]; then
+            DEVICE_TYPE_ID="$(xcrun simctl list devicetypes | sed -nE 's/.*(com\.apple\.CoreSimulator\.SimDeviceType\.iPhone-15-Pro).*/\1/p' | head -n 1)"
+          fi
+          if [ -z "${DEVICE_TYPE_ID}" ]; then
+            DEVICE_TYPE_ID="$(xcrun simctl list devicetypes | sed -nE 's/.*(com\.apple\.CoreSimulator\.SimDeviceType\.iPhone-14).*/\1/p' | head -n 1)"
+          fi
+          if [ -z "${DEVICE_TYPE_ID}" ]; then
+            echo "No supported iPhone simulator device type found."
+            exit 1
+          fi
+
+          SIM_NAME="Neurova-CI-Simulator"
+          xcrun simctl delete "${SIM_NAME}" || true
+          SIMULATOR_UDID="$(xcrun simctl create "${SIM_NAME}" "${DEVICE_TYPE_ID}" "${RUNTIME_ID}")"
+          xcrun simctl boot "${SIMULATOR_UDID}"
+          xcrun simctl bootstatus "${SIMULATOR_UDID}" -b
+
+          echo "SIMULATOR_UDID=${SIMULATOR_UDID}" >> "$GITHUB_ENV"
+          echo "Using simulator ${SIMULATOR_UDID} (${DEVICE_TYPE_ID}, ${RUNTIME_ID})"
+
       - name: Build for testing
         run: |
           xcodebuild \
             -project "$PROJECT_PATH" \
             -scheme "$SCHEME" \
-            -destination "platform=iOS Simulator,name=iPhone 15,OS=latest" \
+            -sdk iphonesimulator \
+            -destination "id=$SIMULATOR_UDID" \
             -derivedDataPath "$DERIVED_DATA_PATH" \
             -configuration Debug \
             build-for-testing \
@@ -57,7 +89,8 @@ jobs:
           xcodebuild \
             -project "$PROJECT_PATH" \
             -scheme "$SCHEME" \
-            -destination "platform=iOS Simulator,name=iPhone 15,OS=latest" \
+            -sdk iphonesimulator \
+            -destination "id=$SIMULATOR_UDID" \
             -derivedDataPath "$DERIVED_DATA_PATH" \
             test-without-building \
             -only-testing:NeurovaTests \
