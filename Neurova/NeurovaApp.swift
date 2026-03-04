@@ -134,7 +134,10 @@ private struct AppTabShellView: View {
                 onSettingsTap: {
                     isShowingSettings = true
                 },
-                onOpenBootstrap: onOpenBootstrap
+                onOpenBootstrap: onOpenBootstrap,
+                onOpenLibrary: {
+                    selectedTab = .library
+                }
             )
             .id("home-\(selectedLanguage.rawValue)")
             .safeAreaPadding(.bottom, Layout.contentBottomInset)

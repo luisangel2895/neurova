@@ -100,9 +100,19 @@ struct HomeView: View {
                 }
             }
         }
+        .onChange(of: isPresentingStudy) { _, isPresented in
+            if isPresented == false {
+                viewModel.load(using: modelContext, forceRefresh: true)
+            }
+        }
         .sheet(item: $selectedDeckForDetail) { deck in
             NavigationStack {
                 DeckDetailView(deck: deck)
+            }
+        }
+        .onChange(of: selectedDeckForDetail?.id) { _, selectedID in
+            if selectedID == nil {
+                viewModel.load(using: modelContext, forceRefresh: true)
             }
         }
         .alert(
