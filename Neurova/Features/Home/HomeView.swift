@@ -59,7 +59,7 @@ struct HomeView: View {
             StudyCoachView(
                 recommendations: state.studyRecommendations,
                 onSelectDeck: { deck in
-                    beginStudyFlow(with: deck)
+                    beginReadyStudyFlow(with: deck)
                 }
             )
         }
@@ -355,6 +355,24 @@ struct HomeView: View {
         selectedDeckForStudy = deck
         studyOptionCounts = counts
         isPresentingStudyOptions = true
+    }
+
+    private func beginReadyStudyFlow(with deck: Deck) {
+        let readyCards = viewModel.studyCards(for: deck, filter: .due, using: modelContext)
+        guard readyCards.isEmpty == false else {
+            noCardsAlertMessage = AppCopy.text(
+                locale,
+                en: "No ready cards available for this deck right now.",
+                es: "No hay tarjetas listas para este deck en este momento."
+            )
+            return
+        }
+
+        selectedDeckForStudy = deck
+        selectedStudyCards = readyCards
+        shouldPresentStudyAfterOptionsDismiss = false
+        isPresentingStudyOptions = false
+        isPresentingStudy = true
     }
 }
 

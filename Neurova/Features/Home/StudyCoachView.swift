@@ -114,8 +114,19 @@ struct StudyCoachView: View {
                         } label: {
                             HStack(spacing: NSpacing.sm) {
                                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                    .fill(recommendation.accentColor)
-                                    .frame(width: 16, height: 16)
+                                    .fill(
+                                        NColors.SubjectIcon
+                                            .color(for: recommendation.deck.subject.colorTokenReference)
+                                            .opacity(0.16)
+                                    )
+                                    .frame(width: 28, height: 28)
+                                    .overlay {
+                                        Image(systemName: recommendation.deck.subject.systemImageName ?? "book.closed")
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundStyle(
+                                                NColors.SubjectIcon.color(for: recommendation.deck.subject.colorTokenReference)
+                                            )
+                                    }
 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(recommendation.subjectPathText)
