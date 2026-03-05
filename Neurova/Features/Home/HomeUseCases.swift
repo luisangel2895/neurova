@@ -139,9 +139,7 @@ struct HomeUseCases {
             dailyGoalSummaryTrailingText: progressText,
             dailyGoalSummarySymbolName: "sparkles",
             tipTitle: isEnglish ? "Neurova tip" : "Tip de Neurova",
-            tipMessage: isEnglish
-                ? "Focus on ready cards first, then introduce new cards to avoid backlog."
-                : "Prioriza tarjetas listas y luego agrega nuevas para evitar acumulación.",
+            tipMessage: dailyTipMessage(for: now, isEnglish: isEnglish),
             highlightedDeck: recommended?.deck,
             isEmptyState: decks.isEmpty && totalNew == 0 && totalReady == 0
         )
@@ -310,6 +308,81 @@ struct HomeUseCases {
         let secondsPerCard = 10
         return Int(ceil(Double(readyCount * secondsPerCard) / 60.0))
     }
+
+    private func dailyTipMessage(for now: Date, isEnglish: Bool) -> String {
+        let tips = isEnglish ? Self.englishTips : Self.spanishTips
+        guard tips.isEmpty == false else { return "" }
+
+        let dayNumber = Int(Calendar.current.startOfDay(for: now).timeIntervalSinceReferenceDate / 86_400)
+        let index = ((dayNumber % tips.count) + tips.count) % tips.count
+        return tips[index]
+    }
+
+    private static let englishTips: [String] = [
+        "Study ready cards first to keep your queue under control.",
+        "Short sessions beat long sessions. Aim for 10 focused minutes.",
+        "If a card feels vague, split it into two simpler cards.",
+        "Review difficult decks earlier in the day when focus is higher.",
+        "Use active recall: answer before flipping the card.",
+        "One clean deck is better than five messy decks.",
+        "Mark hard cards and revisit them in a second short pass.",
+        "Avoid adding many new cards if your ready queue is large.",
+        "Consistent daily reps build stronger long-term memory.",
+        "Keep card fronts short and specific.",
+        "Add examples on the back side to reinforce understanding.",
+        "If you fail a card often, rewrite it with clearer wording.",
+        "Mix subjects in small blocks to reduce fatigue.",
+        "Use deck descriptions to keep your study goal explicit.",
+        "A good card asks one question and expects one answer.",
+        "Use your streak as momentum, not as pressure.",
+        "Reviewing a little every day beats cramming weekly.",
+        "If attention drops, pause two minutes and resume.",
+        "Prefer simple language over complex phrasing.",
+        "Archive decks you no longer use to keep focus high.",
+        "Track progress by consistency, not only volume.",
+        "When in doubt, study due cards before creating new ones.",
+        "Keep your hardest cards visible and improve them weekly.",
+        "Use the same naming style for subjects and decks.",
+        "A deck with clear scope is easier to finish.",
+        "Don’t memorize noise: keep only useful cards.",
+        "Edit old cards when your understanding improves.",
+        "Study before distractions, not after.",
+        "Small improvements in card quality compound fast.",
+        "Finish today’s ready cards to protect tomorrow’s load."
+    ]
+
+    private static let spanishTips: [String] = [
+        "Prioriza tarjetas listas para mantener tu cola bajo control.",
+        "Sesiones cortas rinden más que sesiones largas.",
+        "Si una tarjeta es ambigua, divídela en dos más simples.",
+        "Repasa decks difíciles temprano cuando tienes más foco.",
+        "Usa recuerdo activo: responde antes de voltear la tarjeta.",
+        "Un deck limpio vale más que cinco decks desordenados.",
+        "Marca tarjetas difíciles y repásalas en una segunda vuelta.",
+        "Evita agregar muchas nuevas si tienes muchas listas.",
+        "La constancia diaria mejora la memoria a largo plazo.",
+        "Haz el frente corto y específico para evitar confusión.",
+        "Agrega ejemplos en el reverso para reforzar comprensión.",
+        "Si fallas mucho una tarjeta, reescríbela más clara.",
+        "Mezcla materias en bloques pequeños para reducir fatiga.",
+        "Usa la descripción del deck para definir el objetivo.",
+        "Una buena tarjeta pregunta una sola cosa.",
+        "La racha es impulso, no presión.",
+        "Repasar diario supera estudiar todo de golpe.",
+        "Si baja tu atención, pausa dos minutos y vuelve.",
+        "Prefiere lenguaje simple en tus tarjetas.",
+        "Archiva decks que ya no uses para enfocarte mejor.",
+        "Mide progreso por constancia, no solo por cantidad.",
+        "Si dudas, estudia listas antes de crear nuevas.",
+        "Ten visibles tus tarjetas más difíciles y mejóralas.",
+        "Mantén un estilo consistente en nombres de decks.",
+        "Un deck con alcance claro se termina más fácil.",
+        "No memorices ruido: deja solo contenido útil.",
+        "Edita tarjetas antiguas cuando entiendas mejor el tema.",
+        "Estudia antes de distraerte, no después.",
+        "Mejorar la calidad de tarjetas acelera todo el sistema.",
+        "Completa las listas de hoy para proteger mañana."
+    ]
 }
 
 private struct DeckSummary {
