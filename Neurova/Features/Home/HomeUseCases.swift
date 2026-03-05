@@ -217,7 +217,7 @@ struct HomeUseCases {
     private func recommendedRecommendation(from summary: DeckSummary?, isEnglish: Bool) -> Recommendation {
         guard let summary else {
             return Recommendation(
-                tags: isEnglish ? ["Getting Started"] : ["Primeros pasos"],
+                tags: isEnglish ? ["Low", "0 min"] : ["Baja", "0 min"],
                 title: isEnglish ? "Create your first deck" : "Crea tu primer deck",
                 message: isEnglish
                     ? "You do not have decks yet. Start by creating one in Library."
@@ -226,8 +226,14 @@ struct HomeUseCases {
             )
         }
 
+        let difficulty = difficultyLabel(for: summary.deck, isEnglish: isEnglish)
+        let estimatedMinutes = estimatedStudyMinutes(forReadyCount: summary.readyCount)
+
         return Recommendation(
-            tags: isEnglish ? ["Ready", "New"] : ["Listo", "Nuevo"],
+            tags: [
+                difficulty,
+                "\(estimatedMinutes) min"
+            ],
             title: summary.deck.title,
             message: isEnglish
                 ? "\(summary.readyCount) ready and \(summary.newCount) new cards in this deck."
@@ -261,6 +267,48 @@ struct HomeUseCases {
 
     private func subjectNameText(for deck: Deck) -> String {
         deck.subject.name
+    }
+
+    private func difficultyLabel(for deck: Deck, isEnglish: Bool) -> String {
+        let cards = deck.cards
+        guard cards.isEmpty == false else {
+            return isEnglish ? "Low" : "Baja"
+        }
+
+        var reviewedCount = 0
+        let score = cards.reduce(into: 0) { partialResult, card in
+            guard let quality = card.lastReviewQualityRaw else { return }
+            reviewedCount += 1
+            switch quality {
+            case "easy":
+                partialResult += 1
+            case "good":
+                partialResult += 3
+            case "hard", "again":
+                partialResult += 5
+            default:
+                break
+            }
+        }
+
+        guard reviewedCount > 0 else {
+            return isEnglish ? "Medium" : "Media"
+        }
+
+        let averageScore = Double(score) / Double(reviewedCount)
+        if averageScore >= 4.2 {
+            return isEnglish ? "High" : "Alta"
+        }
+        if averageScore >= 2.4 {
+            return isEnglish ? "Medium" : "Media"
+        }
+        return isEnglish ? "Low" : "Baja"
+    }
+
+    private func estimatedStudyMinutes(forReadyCount readyCount: Int) -> Int {
+        guard readyCount > 0 else { return 0 }
+        let secondsPerCard = 10
+        return Int(ceil(Double(readyCount * secondsPerCard) / 60.0))
     }
 }
 

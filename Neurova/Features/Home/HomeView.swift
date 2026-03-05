@@ -244,7 +244,7 @@ struct HomeView: View {
             title: state.recommendation.title,
             description: state.recommendation.message,
             actionTitle: state.recommendation.actionTitle,
-            onAction: handlePrimaryAction
+            onAction: handleRecommendationAction
         )
     }
 
@@ -373,6 +373,14 @@ struct HomeView: View {
         shouldPresentStudyAfterOptionsDismiss = false
         isPresentingStudyOptions = false
         isPresentingStudy = true
+    }
+
+    private func handleRecommendationAction() {
+        guard let highlightedDeck = state.highlightedDeck else {
+            onOpenLibrary()
+            return
+        }
+        beginStudyFlow(with: highlightedDeck)
     }
 }
 
