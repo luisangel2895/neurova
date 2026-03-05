@@ -9,6 +9,7 @@ final class LibraryViewModel {
     private var hasSeeded = false
 
     private(set) var subjects: [Subject] = []
+    private(set) var readyCountBySubjectID: [UUID: Int] = [:]
     private(set) var isLoading = false
     var errorMessage: String?
 
@@ -24,6 +25,7 @@ final class LibraryViewModel {
             }
 
             subjects = try subjectRepository?.listSubjects() ?? []
+            recalculateReadyCounts(using: context)
         } catch {
             errorMessage = "Unable to load subjects."
         }
@@ -46,6 +48,7 @@ final class LibraryViewModel {
             colorTokenReference: normalized(colorTokenReference)
         )
         subjects = try subjectRepository?.listSubjects() ?? []
+        recalculateReadyCounts(using: context)
     }
 
     func updateSubject(
@@ -65,6 +68,27 @@ final class LibraryViewModel {
             colorTokenReference: normalized(colorTokenReference)
         )
         subjects = try subjectRepository?.listSubjects() ?? []
+        recalculateReadyCounts(using: context)
+    }
+
+    func deleteSubject(
+        _ subject: Subject,
+        using context: ModelContext
+    ) {
+        configureIfNeeded(context: context)
+        errorMessage = nil
+
+        do {
+            try subjectRepository?.deleteSubject(subject)
+            subjects = try subjectRepository?.listSubjects() ?? []
+            recalculateReadyCounts(using: context)
+        } catch {
+            errorMessage = "Unable to delete subject."
+        }
+    }
+
+    func readyCount(for subject: Subject) -> Int {
+        readyCountBySubjectID[subject.id] ?? 0
     }
 
     private func configureIfNeeded(context: ModelContext) {
@@ -76,5 +100,22 @@ final class LibraryViewModel {
         guard let value else { return nil }
         let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
+    }
+
+    private func recalculateReadyCounts(using context: ModelContext) {
+        let now = Date.now
+        var counts: [UUID: Int] = [:]
+
+        for subject in subjects {
+            let subjectID = subject.id
+            let descriptor = FetchDescriptor<Card>(
+                predicate: #Predicate<Card> { card in
+                    card.deck?.subject.id == subjectID && card.nextReviewDate <= now
+                }
+            )
+            counts[subjectID] = (try? context.fetchCount(descriptor)) ?? 0
+        }
+
+        readyCountBySubjectID = counts
     }
 }

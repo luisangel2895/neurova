@@ -37,8 +37,24 @@ struct LibraryView: View {
                             }
                             .buttonStyle(.plain)
                             .contextMenu {
-                                Button(AppCopy.text(locale, en: "Edit", es: "Editar")) {
+                                Button {
                                     editingSubject = subject
+                                } label: {
+                                    Label(
+                                        AppCopy.text(locale, en: "Edit", es: "Editar"),
+                                        systemImage: "pencil"
+                                    )
+                                }
+
+                                Divider()
+
+                                Button(role: .destructive) {
+                                    viewModel.deleteSubject(subject, using: modelContext)
+                                } label: {
+                                    Label(
+                                        AppCopy.text(locale, en: "Delete", es: "Eliminar"),
+                                        systemImage: "trash"
+                                    )
                                 }
                             }
                         }
@@ -91,11 +107,33 @@ struct LibraryView: View {
     }
 
     private func subjectCard(_ subject: Subject) -> some View {
-        NCard {
+        let accentColor = NColors.SubjectIcon.color(for: subject.colorTokenReference)
+        let readyCount = viewModel.readyCount(for: subject)
+
+        return NCard {
             VStack(alignment: .leading, spacing: NSpacing.sm) {
-                Image(systemName: subject.systemImageName ?? "square.grid.2x2")
-                    .font(NTypography.bodyEmphasis)
-                    .foregroundStyle(NColors.SubjectIcon.color(for: subject.colorTokenReference))
+                HStack(alignment: .top) {
+                    Image(systemName: subject.systemImageName ?? "square.grid.2x2")
+                        .font(NTypography.bodyEmphasis)
+                        .foregroundStyle(accentColor)
+
+                    Spacer(minLength: 0)
+
+                    if readyCount > 0 {
+                        Text("\(readyCount)")
+                            .font(NTypography.micro.weight(.bold))
+                            .foregroundStyle(Color.white.opacity(0.96))
+                            .frame(width: 24, height: 24)
+                            .background(
+                                Circle()
+                                    .fill(accentColor)
+                            )
+                            .overlay(
+                                Circle()
+                                    .stroke(accentColor.opacity(colorScheme == .light ? 0.42 : 0.9), lineWidth: 1)
+                            )
+                    }
+                }
 
                 Spacer(minLength: 0)
 
