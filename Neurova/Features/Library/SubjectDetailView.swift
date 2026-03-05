@@ -109,6 +109,7 @@ struct SubjectDetailView: View {
 
     private func deckCard(_ deck: Deck) -> some View {
         let metrics = viewModel.metrics(for: deck)
+        let subjectAccentColor = NColors.SubjectIcon.color(for: subject.colorTokenReference)
 
         return NCard {
             VStack(alignment: .leading, spacing: NSpacing.sm) {
@@ -146,6 +147,13 @@ struct SubjectDetailView: View {
                             pluralEs: "listas"
                         ),
                         isSelected: false
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: NRadius.chip, style: .continuous)
+                            .stroke(
+                                subjectAccentColor.opacity(colorScheme == .light ? 0.72 : 0.95),
+                                lineWidth: 1.25
+                            )
                     )
                 }
             }
