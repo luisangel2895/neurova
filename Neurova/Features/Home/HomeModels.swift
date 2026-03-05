@@ -6,6 +6,7 @@ struct HomeState {
     let subtitle: String
     let studySectionTitle: String
     let studyTitle: String
+    let recommendedDeckText: String?
     let progress: Double
     let progressPercentText: String
     let progressDetailText: String
@@ -15,6 +16,7 @@ struct HomeState {
     let quickStats: [QuickStat]
     let recommendationSectionTitle: String
     let recommendation: Recommendation
+    let studyRecommendations: [StudyDeckRecommendation]
     let recentsSectionTitle: String
     let recentDecks: [RecentDeck]
     let dailyGoalSummaryTitle: String
@@ -32,6 +34,7 @@ struct HomeState {
         subtitle: "",
         studySectionTitle: "STUDY",
         studyTitle: "Daily goal",
+        recommendedDeckText: nil,
         progress: 0,
         progressPercentText: "0%",
         progressDetailText: "",
@@ -46,6 +49,7 @@ struct HomeState {
             message: "",
             actionTitle: ""
         ),
+        studyRecommendations: [],
         recentsSectionTitle: "RECENT",
         recentDecks: [],
         dailyGoalSummaryTitle: "Daily goal",
@@ -74,9 +78,19 @@ struct Recommendation {
     let actionTitle: String
 }
 
+struct StudyDeckRecommendation: Identifiable {
+    let id: UUID
+    let deck: Deck
+    let subjectPathText: String
+    let readyCount: Int
+    let totalCards: Int
+    let accentColor: Color
+}
+
 struct RecentDeck: Identifiable {
     let id: UUID
     let deck: Deck
+    let subjectPathText: String
     let title: String
     let cardCountText: String
     let readyCountText: String

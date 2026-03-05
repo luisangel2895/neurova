@@ -16,7 +16,17 @@ struct NeurovaApp: App {
         WindowGroup {
             AppSceneContainer(launchMode: $launchMode)
                 .modelContainer(
-                    for: [Subject.self, Deck.self, Card.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self, ScanEntity.self]
+                    for: [
+                        Subject.self,
+                        Deck.self,
+                        Card.self,
+                        XPEventEntity.self,
+                        XPStatsEntity.self,
+                        UserPreferences.self,
+                        ScanEntity.self,
+                        MindMapEntity.self,
+                        StudyGuideEntity.self
+                    ]
                 )
         }
     }
@@ -128,6 +138,7 @@ private struct AppTabShellView: View {
     @State private var selectedTab: NBottomNavItem = .home
     @State private var isShowingScanPlaceholder = false
     @State private var isShowingSettings = false
+    @State private var scanResultMessage: String?
     @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
     @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
 
@@ -156,13 +167,30 @@ private struct AppTabShellView: View {
             .ignoresSafeArea(edges: .bottom)
             .sheet(isPresented: $isShowingScanPlaceholder) {
                 NavigationStack {
-                    ScanCaptureView()
+                    ScanCaptureView { message in
+                        scanResultMessage = message
+                    }
                 }
                 .presentationDetents([.medium, .large])
             }
             .fullScreenCover(isPresented: $isShowingSettings) {
                 SettingsView()
                     .id("settings-\(appThemeRawValue)")
+            }
+            .alert(
+                AppCopy.text(locale, en: "Generation Complete", es: "Generación completada"),
+                isPresented: Binding(
+                    get: { scanResultMessage != nil },
+                    set: { isPresented in
+                        if isPresented == false {
+                            scanResultMessage = nil
+                        }
+                    }
+                )
+            ) {
+                Button(AppCopy.text(locale, en: "OK", es: "OK"), role: .cancel) {}
+            } message: {
+                Text(scanResultMessage ?? "")
             }
         }
     }

@@ -1,35 +1,46 @@
 import PhotosUI
 import SwiftData
 import SwiftUI
+import UniformTypeIdentifiers
 import UIKit
 
 struct ScanCaptureView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.locale) private var locale
     @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
+
+    let onFlashcardsSaved: (String) -> Void
 
     @State private var photosPickerItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
     @State private var isShowingCamera = false
-    @State private var rawText = ""
     @State private var cleanedText = ""
     @State private var isRecognizing = false
-    @State private var isSaving = false
     @State private var infoMessage: String?
     @State private var errorMessage: String?
-    @State private var resultAlertMessage = ""
-    @State private var isShowingResultAlert = false
+    @State private var isShowingGeneratorPreview = false
+    @State private var selectedMode: ScanInputMode = .capture
+    @State private var csvTextInput = ""
+    @State private var isShowingCSVImporter = false
+    @State private var importedCSVFileName: String?
 
     private let ocrService = VisionOCRService()
+
+    init(onFlashcardsSaved: @escaping (String) -> Void) {
+        self.onFlashcardsSaved = onFlashcardsSaved
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: NSpacing.md) {
-                    sourceCard
-                    previewCard
-                    textEditorCard
+                    modePicker
+                    if selectedMode == .capture {
+                        sourceCard
+                        previewCard
+                    } else {
+                        csvImportCard
+                    }
                 }
                 .padding(.horizontal, NSpacing.md)
                 .padding(.vertical, NSpacing.md)
@@ -47,7 +58,6 @@ struct ScanCaptureView: View {
             .sheet(isPresented: $isShowingCamera) {
                 CameraImagePicker { image in
                     selectedImage = image
-                    rawText = ""
                     cleanedText = ""
                     infoMessage = nil
                     errorMessage = nil
@@ -57,15 +67,30 @@ struct ScanCaptureView: View {
                 guard let newItem else { return }
                 loadImage(from: newItem)
             }
-            .alert(
-                AppCopy.text(locale, en: "Scan Result", es: "Resultado del escaneo"),
-                isPresented: $isShowingResultAlert
-            ) {
-                Button(AppCopy.text(locale, en: "OK", es: "OK"), role: .cancel) {}
-            } message: {
-                Text(resultAlertMessage)
+            .fileImporter(
+                isPresented: $isShowingCSVImporter,
+                allowedContentTypes: [.commaSeparatedText, .plainText, .text],
+                allowsMultipleSelection: false
+            ) { result in
+                handleCSVImport(result: result)
+            }
+            .fullScreenCover(isPresented: $isShowingGeneratorPreview) {
+                GeneratorPreviewView(cleanedText: cleanedText) { message in
+                    onFlashcardsSaved(message)
+                    dismiss()
+                }
             }
         }
+    }
+
+    private var modePicker: some View {
+        Picker("", selection: $selectedMode) {
+            Text(AppCopy.text(locale, en: "Capture", es: "Captura"))
+                .tag(ScanInputMode.capture)
+            Text(AppCopy.text(locale, en: "CSV tables", es: "Tablas CSV"))
+                .tag(ScanInputMode.csv)
+        }
+        .pickerStyle(.segmented)
     }
 
     private var sourceCard: some View {
@@ -86,7 +111,7 @@ struct ScanCaptureView: View {
                         .font(NTypography.caption.weight(.semibold))
                         .foregroundStyle(NColors.Brand.neuroBlue)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 38)
+                        .frame(height: 40)
                         .background(
                             RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
                                 .fill(NColors.Home.surfaceL2)
@@ -106,7 +131,7 @@ struct ScanCaptureView: View {
                         .font(NTypography.caption.weight(.semibold))
                         .foregroundStyle(NColors.Brand.neuroBlue)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 38)
+                        .frame(height: 40)
                         .background(
                             RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
                                 .fill(NColors.Home.surfaceL2)
@@ -120,8 +145,8 @@ struct ScanCaptureView: View {
 
                 NPrimaryButton(
                     isRecognizing
-                        ? AppCopy.text(locale, en: "Reading...", es: "Leyendo...")
-                        : AppCopy.text(locale, en: "Run OCR", es: "Ejecutar OCR")
+                        ? AppCopy.text(locale, en: "Processing...", es: "Procesando...")
+                        : AppCopy.text(locale, en: "Create from image", es: "Crear desde imagen")
                 ) {
                     runOCR()
                 }
@@ -167,22 +192,39 @@ struct ScanCaptureView: View {
         }
     }
 
-    private var textEditorCard: some View {
+    private var csvImportCard: some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
-                Text(AppCopy.text(locale, en: "Review text", es: "Revisar texto"))
+                Text(AppCopy.text(locale, en: "Import CSV for flashcards", es: "Importar CSV para flashcards"))
                     .font(NTypography.bodyEmphasis.weight(.semibold))
                     .foregroundStyle(NColors.Text.textPrimary)
 
+                NSecondaryButton(AppCopy.text(locale, en: "Attach CSV file", es: "Adjuntar archivo CSV")) {
+                    isShowingCSVImporter = true
+                }
+
+                if let importedCSVFileName {
+                    Text(
+                        AppCopy.text(
+                            locale,
+                            en: "Loaded file: \(importedCSVFileName)",
+                            es: "Archivo cargado: \(importedCSVFileName)"
+                        )
+                    )
+                    .font(NTypography.caption)
+                    .foregroundStyle(NColors.Brand.neuroBlue)
+                }
+
                 VStack(alignment: .leading, spacing: NSpacing.xs) {
-                    Text(AppCopy.text(locale, en: "Raw OCR", es: "OCR bruto"))
+                    Text(AppCopy.text(locale, en: "Or paste CSV content", es: "O pega contenido CSV"))
                         .font(NTypography.caption)
                         .foregroundStyle(NColors.Text.textSecondary)
-                    TextEditor(text: $rawText)
+
+                    TextEditor(text: $csvTextInput)
                         .font(NTypography.body)
                         .foregroundStyle(NColors.Text.textPrimary)
                         .scrollContentBackground(.hidden)
-                        .frame(minHeight: 120)
+                        .frame(height: 320)
                         .padding(NSpacing.sm)
                         .background(NColors.Home.surfaceL1)
                         .overlay(
@@ -192,38 +234,23 @@ struct ScanCaptureView: View {
                         .clipShape(RoundedRectangle(cornerRadius: NRadius.card, style: .continuous))
                 }
 
-                VStack(alignment: .leading, spacing: NSpacing.xs) {
-                    Text(AppCopy.text(locale, en: "Cleaned text", es: "Texto limpio"))
+                NPrimaryButton(AppCopy.text(locale, en: "Convert CSV", es: "Convertir CSV")) {
+                    convertCSVAndContinue()
+                }
+                .disabled(csvTextInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                if let errorMessage {
+                    Text(errorMessage)
                         .font(NTypography.caption)
-                        .foregroundStyle(NColors.Text.textSecondary)
-                    TextEditor(text: $cleanedText)
-                        .font(NTypography.body)
-                        .foregroundStyle(NColors.Text.textPrimary)
-                        .scrollContentBackground(.hidden)
-                        .frame(minHeight: 160)
-                        .padding(NSpacing.sm)
-                        .background(NColors.Home.surfaceL1)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                                .stroke(NColors.Home.cardBorder, lineWidth: 1)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: NRadius.card, style: .continuous))
+                        .foregroundStyle(NColors.Feedback.danger)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                HStack(spacing: NSpacing.sm) {
-                    NSecondaryButton(AppCopy.text(locale, en: "Clean again", es: "Limpiar de nuevo")) {
-                        cleanedText = ScanTextCleaner.cleanedText(from: rawText)
-                    }
-                    .disabled(rawText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-
-                    NPrimaryButton(
-                        isSaving
-                            ? AppCopy.text(locale, en: "Saving...", es: "Guardando...")
-                            : AppCopy.text(locale, en: "Save scan", es: "Guardar escaneo")
-                    ) {
-                        saveScan()
-                    }
-                    .disabled(cleanedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
+                if let infoMessage {
+                    Text(infoMessage)
+                        .font(NTypography.caption)
+                        .foregroundStyle(NColors.Brand.neuroBlue)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
@@ -236,7 +263,6 @@ struct ScanCaptureView: View {
                    let image = UIImage(data: data) {
                     await MainActor.run {
                         selectedImage = image
-                        rawText = ""
                         cleanedText = ""
                         infoMessage = nil
                         errorMessage = nil
@@ -265,67 +291,219 @@ struct ScanCaptureView: View {
             do {
                 let result = try await ocrService.recognizeText(from: cgImage, preferredLanguage: selectedLanguage)
                 await MainActor.run {
-                    rawText = result.fullText
-                    cleanedText = ScanTextCleaner.cleanedText(from: result.fullText)
-                    infoMessage = AppCopy.text(locale, en: "OCR completed successfully.", es: "OCR completado correctamente.")
+                    if result.tablePairs.count >= 3 {
+                        let tableReconstructedText = result.tablePairs
+                            .map { "\($0.front): \($0.back)" }
+                            .joined(separator: "\n")
+                        cleanedText = ScanTextCleaner.cleanedText(from: tableReconstructedText)
+                    } else {
+                        cleanedText = ScanTextCleaner.cleanedText(from: result.fullText)
+                    }
                     isRecognizing = false
+                    if cleanedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        errorMessage = AppCopy.text(
+                            locale,
+                            en: "No readable text found. Try a clearer image.",
+                            es: "No se encontró texto legible. Prueba con una imagen más clara."
+                        )
+                    } else {
+                        infoMessage = AppCopy.text(
+                            locale,
+                            en: "Done. Choose where to save your flashcards.",
+                            es: "Listo. Elige dónde guardar tus flashcards."
+                        )
+                        isShowingGeneratorPreview = true
+                    }
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = AppCopy.text(locale, en: "OCR failed. Please try another image.", es: "OCR fallo. Prueba con otra imagen.")
+                    errorMessage = AppCopy.text(locale, en: "OCR failed. Please try another image.", es: "OCR falló. Prueba con otra imagen.")
                     isRecognizing = false
                 }
             }
         }
     }
 
-    private func saveScan() {
-        guard isSaving == false else { return }
+    private func handleCSVImport(result: Result<[URL], Error>) {
+        switch result {
+        case let .success(urls):
+            guard let url = urls.first else { return }
+            let hasAccess = url.startAccessingSecurityScopedResource()
+            defer {
+                if hasAccess {
+                    url.stopAccessingSecurityScopedResource()
+                }
+            }
 
-        let normalizedRaw = rawText.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalizedCleaned = cleanedText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard normalizedCleaned.isEmpty == false else { return }
+            do {
+                let data = try Data(contentsOf: url)
+                guard let fileText = String(data: data, encoding: .utf8) ??
+                    String(data: data, encoding: .isoLatin1) else {
+                    errorMessage = AppCopy.text(locale, en: "Could not decode CSV file.", es: "No se pudo leer el archivo CSV.")
+                    return
+                }
+                csvTextInput = fileText
+                importedCSVFileName = url.lastPathComponent
+                infoMessage = AppCopy.text(locale, en: "CSV loaded. Ready to convert.", es: "CSV cargado. Listo para convertir.")
+                errorMessage = nil
+            } catch {
+                errorMessage = AppCopy.text(locale, en: "Could not read CSV file.", es: "No se pudo leer el archivo CSV.")
+            }
+        case .failure:
+            errorMessage = AppCopy.text(locale, en: "CSV import was cancelled or failed.", es: "La importación CSV se canceló o falló.")
+        }
+    }
 
-        isSaving = true
+    private func convertCSVAndContinue() {
         errorMessage = nil
         infoMessage = nil
 
-        let scan = ScanEntity(
-            imageData: selectedImage?.jpegData(compressionQuality: 0.82),
-            rawText: normalizedRaw,
-            cleanedText: normalizedCleaned,
-            languageCode: selectedLanguage.rawValue
-        )
-
-        modelContext.insert(scan)
-
-        do {
-            try modelContext.save()
-            let savedCount = (try? modelContext.fetch(FetchDescriptor<ScanEntity>()).count) ?? 0
-            let successMessage = AppCopy.text(
+        let pairs = CSVFlashcardParser.extractPairs(from: csvTextInput)
+        guard pairs.isEmpty == false else {
+            errorMessage = AppCopy.text(
                 locale,
-                en: "Scan saved locally. Total scans: \(savedCount).",
-                es: "Escaneo guardado localmente. Total de escaneos: \(savedCount)."
+                en: "No valid flashcard pairs were found in the CSV.",
+                es: "No se encontraron pares válidos de flashcards en el CSV."
             )
-            infoMessage = successMessage
-            resultAlertMessage = successMessage
-            isShowingResultAlert = true
-        } catch {
-            let failureMessage = AppCopy.text(
-                locale,
-                en: "Could not save scan. Error: \(error.localizedDescription)",
-                es: "No se pudo guardar el escaneo. Error: \(error.localizedDescription)"
-            )
-            errorMessage = failureMessage
-            resultAlertMessage = failureMessage
-            isShowingResultAlert = true
+            return
         }
 
-        isSaving = false
+        cleanedText = pairs
+            .map { "\($0.front): \($0.back)" }
+            .joined(separator: "\n")
+
+        infoMessage = AppCopy.text(
+            locale,
+            en: "Converted \(pairs.count) pairs. Choose where to save.",
+            es: "Se convirtieron \(pairs.count) pares. Elige dónde guardar."
+        )
+        isShowingGeneratorPreview = true
     }
 
     private var selectedLanguage: AppLanguage {
         AppLanguage(rawValue: appLanguageRawValue) ?? .spanish
+    }
+}
+
+private enum ScanInputMode {
+    case capture
+    case csv
+}
+
+private struct CSVFlashcardParser {
+    struct Pair {
+        let front: String
+        let back: String
+    }
+
+    static func extractPairs(from csvText: String) -> [Pair] {
+        let normalized = csvText
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard normalized.isEmpty == false else { return [] }
+
+        let delimiter = detectDelimiter(in: normalized)
+        var rows = parseRows(from: normalized, delimiter: delimiter)
+            .map { row in row.map(cleanCell) }
+            .filter { row in row.contains(where: { $0.isEmpty == false }) }
+
+        guard rows.isEmpty == false else { return [] }
+        if shouldSkipHeader(rows[0]) {
+            rows.removeFirst()
+        }
+
+        var pairs: [Pair] = []
+        var seen = Set<String>()
+
+        for row in rows {
+            let values = row.filter { $0.isEmpty == false }
+            guard values.count >= 2 else { continue }
+
+            let front = values[0]
+            let back = values[1]
+            guard front.isEmpty == false, back.isEmpty == false else { continue }
+
+            let key = "\(front.lowercased())|\(back.lowercased())"
+            guard seen.contains(key) == false else { continue }
+            seen.insert(key)
+            pairs.append(Pair(front: front, back: back))
+        }
+
+        return pairs
+    }
+
+    private static func detectDelimiter(in text: String) -> Character {
+        let firstLine = text.split(separator: "\n").first.map(String.init) ?? text
+        let commaCount = firstLine.filter { $0 == "," }.count
+        let semicolonCount = firstLine.filter { $0 == ";" }.count
+        let tabCount = firstLine.filter { $0 == "\t" }.count
+
+        if tabCount >= commaCount && tabCount >= semicolonCount {
+            return "\t"
+        }
+        return semicolonCount > commaCount ? ";" : ","
+    }
+
+    private static func parseRows(from text: String, delimiter: Character) -> [[String]] {
+        var rows: [[String]] = []
+        var row: [String] = []
+        var cell = ""
+        var insideQuotes = false
+
+        for char in text {
+            if char == "\"" {
+                if insideQuotes {
+                    insideQuotes = false
+                } else {
+                    insideQuotes = true
+                }
+                continue
+            }
+
+            if char == delimiter, insideQuotes == false {
+                row.append(cell)
+                cell = ""
+                continue
+            }
+
+            if char == "\n", insideQuotes == false {
+                row.append(cell)
+                rows.append(row)
+                row = []
+                cell = ""
+                continue
+            }
+
+            cell.append(char)
+        }
+
+        if cell.isEmpty == false || row.isEmpty == false {
+            row.append(cell)
+            rows.append(row)
+        }
+
+        return rows
+    }
+
+    private static func shouldSkipHeader(_ row: [String]) -> Bool {
+        let headerKeywords: Set<String> = [
+            "front", "back", "question", "answer", "term", "definition",
+            "anverso", "reverso", "pregunta", "respuesta", "termino", "término", "definicion", "definición"
+        ]
+        let normalized = row
+            .map { $0.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.isEmpty == false }
+
+        guard normalized.count >= 2 else { return false }
+        return normalized.prefix(2).allSatisfy { headerKeywords.contains($0) }
+    }
+
+    private static func cleanCell(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
     }
 }
 
@@ -373,9 +551,19 @@ private struct CameraImagePicker: UIViewControllerRepresentable {
 }
 
 #Preview("Scan Capture") {
-    ScanCaptureView()
+    ScanCaptureView(onFlashcardsSaved: { _ in })
         .modelContainer(
-            for: [Subject.self, Deck.self, Card.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self, ScanEntity.self],
+            for: [
+                Subject.self,
+                Deck.self,
+                Card.self,
+                XPEventEntity.self,
+                XPStatsEntity.self,
+                UserPreferences.self,
+                ScanEntity.self,
+                MindMapEntity.self,
+                StudyGuideEntity.self
+            ],
             inMemory: true
         )
 }

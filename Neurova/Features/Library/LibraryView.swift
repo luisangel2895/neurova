@@ -66,10 +66,11 @@ struct LibraryView: View {
             viewModel.load(using: modelContext)
         }
         .sheet(isPresented: $isPresentingCreateSubject) {
-            CreateSubjectView { name, systemImageName in
+            CreateSubjectView { name, systemImageName, colorTokenReference in
                 try viewModel.createSubject(
                     name: name,
                     systemImageName: systemImageName,
+                    colorTokenReference: colorTokenReference,
                     using: modelContext
                 )
             }
@@ -77,11 +78,12 @@ struct LibraryView: View {
         .sheet(item: $editingSubject, onDismiss: {
             viewModel.load(using: modelContext)
         }) { subject in
-            CreateSubjectView(subject: subject) { name, systemImageName in
+            CreateSubjectView(subject: subject) { name, systemImageName, colorTokenReference in
                 try viewModel.updateSubject(
                     subject,
                     name: name,
                     systemImageName: systemImageName,
+                    colorTokenReference: colorTokenReference,
                     using: modelContext
                 )
             }
@@ -93,7 +95,7 @@ struct LibraryView: View {
             VStack(alignment: .leading, spacing: NSpacing.sm) {
                 Image(systemName: subject.systemImageName ?? "square.grid.2x2")
                     .font(NTypography.bodyEmphasis)
-                    .foregroundStyle(NColors.Brand.neuroBlue)
+                    .foregroundStyle(NColors.SubjectIcon.color(for: subject.colorTokenReference))
 
                 Spacer(minLength: 0)
 

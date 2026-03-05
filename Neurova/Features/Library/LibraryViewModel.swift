@@ -34,6 +34,7 @@ final class LibraryViewModel {
     func createSubject(
         name: String,
         systemImageName: String?,
+        colorTokenReference: String?,
         using context: ModelContext
     ) throws {
         configureIfNeeded(context: context)
@@ -42,7 +43,7 @@ final class LibraryViewModel {
         _ = try subjectRepository?.createSubject(
             name: name,
             systemImageName: normalized(systemImageName),
-            colorTokenReference: nil
+            colorTokenReference: normalized(colorTokenReference)
         )
         subjects = try subjectRepository?.listSubjects() ?? []
     }
@@ -51,6 +52,7 @@ final class LibraryViewModel {
         _ subject: Subject,
         name: String,
         systemImageName: String?,
+        colorTokenReference: String?,
         using context: ModelContext
     ) throws {
         configureIfNeeded(context: context)
@@ -60,7 +62,7 @@ final class LibraryViewModel {
             subject,
             name: name,
             systemImageName: normalized(systemImageName),
-            colorTokenReference: subject.colorTokenReference
+            colorTokenReference: normalized(colorTokenReference)
         )
         subjects = try subjectRepository?.listSubjects() ?? []
     }

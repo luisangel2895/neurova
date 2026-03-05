@@ -41,11 +41,36 @@ struct HomeUseCases {
         let progressDetailText = isEnglish
             ? "\(streak.todayProgress) / \(streak.dailyGoal) cards completed"
             : "\(streak.todayProgress) / \(streak.dailyGoal) tarjetas completadas"
+        let recommendedDeckText = recommended.map { summary in
+            let deckPath = deckPathText(for: summary.deck)
+            return isEnglish
+                ? "Recommended deck: \(deckPath)"
+                : "Deck recomendado: \(deckPath)"
+        }
 
         let recommendation = recommendedRecommendation(
             from: recommended,
             isEnglish: isEnglish
         )
+        let studyRecommendations = summaries
+            .filter { $0.readyCount > 0 }
+            .sorted { lhs, rhs in
+                if lhs.readyCount != rhs.readyCount {
+                    return lhs.readyCount > rhs.readyCount
+                }
+                return lhs.lastActivityDate > rhs.lastActivityDate
+            }
+            .prefix(6)
+            .map { summary in
+                StudyDeckRecommendation(
+                    id: summary.deck.id,
+                    deck: summary.deck,
+                    subjectPathText: deckPathText(for: summary.deck),
+                    readyCount: summary.readyCount,
+                    totalCards: summary.totalCards,
+                    accentColor: summary.accentColor
+                )
+            }
 
         return HomeState(
             greetingName: "Adrián",
@@ -53,6 +78,7 @@ struct HomeUseCases {
             subtitle: isEnglish ? "Ready to study?" : "¿Listo para estudiar?",
             studySectionTitle: isEnglish ? "STUDY TODAY" : "ESTUDIA HOY",
             studyTitle: isEnglish ? "Daily goal" : "Meta diaria",
+            recommendedDeckText: recommendedDeckText,
             progress: dailyProgress,
             progressPercentText: progressText,
             progressDetailText: progressDetailText,
@@ -89,11 +115,13 @@ struct HomeUseCases {
             ],
             recommendationSectionTitle: isEnglish ? "RECOMMENDED FOR YOU" : "RECOMENDADO PARA TI",
             recommendation: recommendation,
+            studyRecommendations: studyRecommendations,
             recentsSectionTitle: isEnglish ? "RECENT DECKS" : "DECKS RECIENTES",
             recentDecks: recent.map { summary in
                 RecentDeck(
                     id: summary.deck.id,
                     deck: summary.deck,
+                    subjectPathText: subjectNameText(for: summary.deck),
                     title: summary.deck.title,
                     cardCountText: isEnglish
                         ? "\(summary.totalCards) cards"
@@ -224,6 +252,15 @@ struct HomeUseCases {
             avoidNewWhenDueBacklogHigh: preferences?.resolvedAvoidNewWhenDueBacklogHigh ?? StudySessionPolicy.default.avoidNewWhenDueBacklogHigh,
             dueBacklogThreshold: preferences?.resolvedDueBacklogThreshold ?? StudySessionPolicy.default.dueBacklogThreshold
         )
+    }
+
+    private func deckPathText(for deck: Deck) -> String {
+        let subjectName = subjectNameText(for: deck)
+        return "\(subjectName) / \(deck.title)"
+    }
+
+    private func subjectNameText(for deck: Deck) -> String {
+        deck.subject.name
     }
 }
 

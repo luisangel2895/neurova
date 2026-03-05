@@ -15,6 +15,7 @@ struct HomeView: View {
     @State private var studyOptionCounts: [StudyCardFilter: Int] = [:]
     @State private var selectedStudyCards: [Card] = []
     @State private var isPresentingStudyOptions = false
+    @State private var isPresentingStudyCoach = false
     @State private var shouldPresentStudyAfterOptionsDismiss = false
     @State private var isPresentingStudy = false
     @State private var selectedDeckForDetail: Deck?
@@ -53,6 +54,14 @@ struct HomeView: View {
         }
         .onChange(of: locale.identifier) { _, _ in
             viewModel.load(using: modelContext, forceRefresh: true)
+        }
+        .sheet(isPresented: $isPresentingStudyCoach) {
+            StudyCoachView(
+                recommendations: state.studyRecommendations,
+                onSelectDeck: { deck in
+                    beginStudyFlow(with: deck)
+                }
+            )
         }
         .sheet(isPresented: $isPresentingStudyOptions) {
             if let selectedDeckForStudy {
@@ -186,6 +195,7 @@ struct HomeView: View {
         NHighlightCard(
             sectionLabel: state.studySectionTitle,
             title: state.studyTitle,
+            recommendationText: nil,
             subtitle: state.progressDetailText,
             primaryActionTitle: state.primaryActionTitle,
             secondaryActionTitle: state.secondaryActionTitle,
@@ -263,6 +273,7 @@ struct HomeView: View {
                             } label: {
                                 NDeckCard(
                                     accentColor: deck.accentColor,
+                                    contextText: deck.subjectPathText,
                                     title: deck.title,
                                     cardCountText: "\(deck.cardCountText) • \(deck.readyCountText)"
                                 )
@@ -317,12 +328,20 @@ struct HomeView: View {
     }
 
     private func handlePrimaryAction() {
-        guard let highlightedDeck = state.highlightedDeck else {
-            onOpenLibrary()
+        guard state.studyRecommendations.isEmpty == false else {
+            guard let highlightedDeck = state.highlightedDeck else {
+                onOpenLibrary()
+                return
+            }
+            beginStudyFlow(with: highlightedDeck)
             return
         }
 
-        let counts = viewModel.studyCounts(for: highlightedDeck, using: modelContext)
+        isPresentingStudyCoach = true
+    }
+
+    private func beginStudyFlow(with deck: Deck) {
+        let counts = viewModel.studyCounts(for: deck, using: modelContext)
         let hasCards = counts.values.contains { $0 > 0 }
         guard hasCards else {
             noCardsAlertMessage = AppCopy.text(
@@ -333,7 +352,7 @@ struct HomeView: View {
             return
         }
 
-        selectedDeckForStudy = highlightedDeck
+        selectedDeckForStudy = deck
         studyOptionCounts = counts
         isPresentingStudyOptions = true
     }

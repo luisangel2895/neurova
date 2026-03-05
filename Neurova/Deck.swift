@@ -11,6 +11,10 @@ final class Deck {
     var subject: Subject
     @Relationship(deleteRule: .cascade, inverse: \Card.deck)
     var cards: [Card]
+    @Relationship(deleteRule: .cascade, inverse: \MindMapEntity.deck)
+    var generatedMindMaps: [MindMapEntity]
+    @Relationship(deleteRule: .cascade, inverse: \StudyGuideEntity.deck)
+    var generatedStudyGuides: [StudyGuideEntity]
 
     init(
         id: UUID = UUID(),
@@ -27,6 +31,8 @@ final class Deck {
         self.createdAt = createdAt
         self.isArchived = isArchived
         self.cards = []
+        self.generatedMindMaps = []
+        self.generatedStudyGuides = []
     }
 
     var description: String? {

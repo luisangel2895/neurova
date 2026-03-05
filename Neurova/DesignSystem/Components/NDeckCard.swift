@@ -4,6 +4,7 @@ struct NDeckCard: View {
     @Environment(\.colorScheme) private var colorScheme
 
     let accentColor: Color
+    let contextText: String?
     let title: String
     let cardCountText: String
 
@@ -16,6 +17,13 @@ struct NDeckCard: View {
 
                 Spacer(minLength: 0)
 
+                if let contextText, contextText.isEmpty == false {
+                    Text(contextText)
+                        .font(NTypography.micro.weight(.semibold))
+                        .foregroundStyle(NColors.Text.textTertiary)
+                        .lineLimit(1)
+                }
+
                 Text(title)
                     .font(NTypography.caption.weight(.bold))
                     .foregroundStyle(NColors.Text.textPrimary)
@@ -25,7 +33,7 @@ struct NDeckCard: View {
                     .font(NTypography.caption)
                     .foregroundStyle(secondaryTextColor)
             }
-            .frame(width: 104, height: 78, alignment: .leading)
+            .frame(width: 122, height: 92, alignment: .leading)
         }
     }
 
@@ -35,14 +43,24 @@ struct NDeckCard: View {
 }
 
 #Preview("NDeckCard Light") {
-    NDeckCard(accentColor: NColors.Brand.neuroBlue, title: "Anatomía", cardCountText: "58 cards")
+    NDeckCard(
+        accentColor: NColors.Brand.neuroBlue,
+        contextText: "Biología",
+        title: "Anatomía",
+        cardCountText: "58 cards"
+    )
         .padding()
         .background(NColors.Home.backgroundLightTop)
         .preferredColorScheme(.light)
 }
 
 #Preview("NDeckCard Dark") {
-    NDeckCard(accentColor: NColors.Brand.neuroBlue, title: "Anatomía", cardCountText: "58 cards")
+    NDeckCard(
+        accentColor: NColors.Brand.neuroBlue,
+        contextText: "Biología",
+        title: "Anatomía",
+        cardCountText: "58 cards"
+    )
         .padding()
         .background(
             LinearGradient(

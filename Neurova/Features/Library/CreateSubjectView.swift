@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct CreateSubjectView: View {
     @Environment(\.dismiss) private var dismiss
@@ -7,27 +6,29 @@ struct CreateSubjectView: View {
     @Environment(\.locale) private var locale
 
     private let subject: Subject?
-    private let onSave: (String, String?) throws -> Void
+    private let onSave: (String, String?, String?) throws -> Void
 
-    @FocusState private var focusedField: Field?
+    @FocusState private var isNameFocused: Bool
     @State private var name: String
-    @State private var systemImageName: String
+    @State private var selectedSymbolName: String
+    @State private var selectedColorToken: String
     @State private var isSaving = false
     @State private var errorMessage: String?
 
-    private enum Field {
-        case name
-        case symbol
-    }
+    private let symbolColumns = Array(repeating: GridItem(.flexible(), spacing: NSpacing.xs), count: 5)
 
     init(
         subject: Subject? = nil,
-        onSave: @escaping (String, String?) throws -> Void
+        onSave: @escaping (String, String?, String?) throws -> Void
     ) {
         self.subject = subject
         self.onSave = onSave
+
+        let fallbackSymbol = "book.closed"
+        let fallbackColor = NColors.SubjectIcon.palette.first?.token ?? "NeuroBlue"
         _name = State(initialValue: subject?.name ?? "")
-        _systemImageName = State(initialValue: subject?.systemImageName ?? "")
+        _selectedSymbolName = State(initialValue: subject?.systemImageName ?? fallbackSymbol)
+        _selectedColorToken = State(initialValue: subject?.colorTokenReference ?? fallbackColor)
     }
 
     var body: some View {
@@ -41,48 +42,21 @@ struct CreateSubjectView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
-                    inputField(
-                        title: AppCopy.text(locale, en: "Subject name", es: "Nombre de la materia"),
-                        text: $name,
-                        field: .name,
-                        submitLabel: .next
-                    )
-
-                    VStack(alignment: .leading, spacing: NSpacing.xs) {
-                        inputField(
-                            title: AppCopy.text(locale, en: "SF Symbol (optional)", es: "SF Symbol (opcional)"),
-                            text: $systemImageName,
-                            field: .symbol,
-                            submitLabel: .done
-                        )
-
-                        Text(AppCopy.text(locale, en: "Example: book, leaf, brain, graduationcap", es: "Ejemplo: book, leaf, brain, graduationcap"))
-                            .font(NTypography.caption)
-                            .foregroundStyle(secondaryTextColor)
-
-                        if let previewSymbolName {
-                            HStack(spacing: NSpacing.sm) {
-                                Image(systemName: previewSymbolName)
-                                    .font(NTypography.bodyEmphasis)
-                                    .foregroundStyle(NColors.Brand.neuroBlue)
-
-                                Text(AppCopy.text(locale, en: "Preview", es: "Vista previa"))
-                                    .font(NTypography.caption)
-                                    .foregroundStyle(secondaryTextColor)
-                            }
-                            .padding(NSpacing.sm)
-                            .background(
-                                RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                                    .fill(NColors.Home.surfaceL1)
-                            )
-                        }
-                    }
+                    nameField
+                    previewCard
+                    colorPickerCard
+                    iconPickerCard
                 }
                 .padding(.horizontal, NSpacing.md)
                 .padding(.top, NSpacing.md)
+                .padding(.bottom, NSpacing.md)
             }
             .background(backgroundView.ignoresSafeArea())
-            .navigationTitle(subject == nil ? AppCopy.text(locale, en: "Create Subject", es: "Crear Materia") : AppCopy.text(locale, en: "Edit Subject", es: "Editar Materia"))
+            .navigationTitle(
+                subject == nil
+                    ? AppCopy.text(locale, en: "Create Subject", es: "Crear Materia")
+                    : AppCopy.text(locale, en: "Edit Subject", es: "Editar Materia")
+            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -101,40 +75,13 @@ struct CreateSubjectView: View {
                 }
             }
             .onAppear {
-                focusedField = .name
+                isNameFocused = true
             }
         }
     }
 
-    private var trimmedName: String {
-        name.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private var trimmedIconName: String? {
-        let trimmed = systemImageName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
-
-    private var canSave: Bool {
-        trimmedName.isEmpty == false && isSaving == false
-    }
-
-    private var previewSymbolName: String? {
-        guard let trimmedIconName else { return nil }
-        return UIImage(systemName: trimmedIconName) == nil ? nil : trimmedIconName
-    }
-
-    private var secondaryTextColor: Color {
-        colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark
-    }
-
-    private func inputField(
-        title: String,
-        text: Binding<String>,
-        field: Field,
-        submitLabel: SubmitLabel
-    ) -> some View {
-        TextField(title, text: text)
+    private var nameField: some View {
+        TextField(AppCopy.text(locale, en: "Subject name", es: "Nombre de la materia"), text: $name)
             .font(NTypography.body)
             .foregroundStyle(NColors.Text.textPrimary)
             .padding(.horizontal, NSpacing.md)
@@ -143,34 +90,136 @@ struct CreateSubjectView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
                     .stroke(
-                        focusedField == field ? NColors.Brand.neuroBlue : NColors.Neutrals.border,
+                        isNameFocused ? NColors.Brand.neuroBlue : NColors.Neutrals.border,
                         lineWidth: 1
                     )
             )
-            .clipShape(
-                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-            )
-            .focused($focusedField, equals: field)
-            .submitLabel(submitLabel)
+            .clipShape(RoundedRectangle(cornerRadius: NRadius.button, style: .continuous))
+            .focused($isNameFocused)
+            .submitLabel(.done)
             .tint(NColors.Brand.neuroBlue)
-            .onSubmit {
-                switch field {
-                case .name:
-                    focusedField = .symbol
-                case .symbol:
-                    handleSave()
+            .onSubmit { handleSave() }
+    }
+
+    private var previewCard: some View {
+        NCard {
+            HStack(spacing: NSpacing.sm) {
+                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                    .fill(NColors.SubjectIcon.color(for: selectedColorToken).opacity(0.14))
+                    .frame(width: 44, height: 44)
+                    .overlay {
+                        Image(systemName: selectedSymbolName)
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(NColors.SubjectIcon.color(for: selectedColorToken))
+                    }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(trimmedName.isEmpty ? AppCopy.text(locale, en: "Subject Preview", es: "Vista previa de materia") : trimmedName)
+                        .font(NTypography.bodyEmphasis.weight(.semibold))
+                        .foregroundStyle(NColors.Text.textPrimary)
+                    Text(AppCopy.text(locale, en: "Icon + color selection", es: "Selección de icono + color"))
+                        .font(NTypography.caption)
+                        .foregroundStyle(secondaryTextColor)
+                }
+
+                Spacer()
+            }
+        }
+    }
+
+    private var colorPickerCard: some View {
+        NCard {
+            VStack(alignment: .leading, spacing: NSpacing.sm) {
+                Text(AppCopy.text(locale, en: "Choose icon color", es: "Elige color del icono"))
+                    .font(NTypography.bodyEmphasis.weight(.semibold))
+                    .foregroundStyle(NColors.Text.textPrimary)
+
+                HStack(spacing: NSpacing.sm) {
+                    ForEach(NColors.SubjectIcon.palette) { option in
+                        Button {
+                            selectedColorToken = option.token
+                        } label: {
+                            Circle()
+                                .fill(option.color)
+                                .frame(width: 30, height: 30)
+                                .overlay(
+                                    Circle()
+                                        .stroke(
+                                            selectedColorToken == option.token ? NColors.Text.textPrimary : Color.clear,
+                                            lineWidth: 2
+                                        )
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
             }
+        }
+    }
+
+    private var iconPickerCard: some View {
+        NCard {
+            VStack(alignment: .leading, spacing: NSpacing.sm) {
+                Text(AppCopy.text(locale, en: "Choose icon", es: "Elige icono"))
+                    .font(NTypography.bodyEmphasis.weight(.semibold))
+                    .foregroundStyle(NColors.Text.textPrimary)
+
+                LazyVGrid(columns: symbolColumns, spacing: NSpacing.xs) {
+                    ForEach(Self.topSubjectSymbols, id: \.self) { symbol in
+                        Button {
+                            selectedSymbolName = symbol
+                        } label: {
+                            RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                                .fill(
+                                    selectedSymbolName == symbol
+                                        ? NColors.SubjectIcon.color(for: selectedColorToken).opacity(0.14)
+                                        : NColors.Neutrals.surfaceAlt
+                                )
+                                .frame(height: 44)
+                                .overlay {
+                                    Image(systemName: symbol)
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundStyle(
+                                            selectedSymbolName == symbol
+                                                ? NColors.SubjectIcon.color(for: selectedColorToken)
+                                                : NColors.Text.textSecondary
+                                        )
+                                }
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                                        .stroke(
+                                            selectedSymbolName == symbol ? NColors.SubjectIcon.color(for: selectedColorToken) : NColors.Neutrals.border,
+                                            lineWidth: 1
+                                        )
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    private var trimmedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var canSave: Bool {
+        trimmedName.isEmpty == false && isSaving == false
+    }
+
+    private var secondaryTextColor: Color {
+        colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark
     }
 
     private func handleSave() {
         guard canSave else { return }
         isSaving = true
         errorMessage = nil
-        focusedField = nil
+        isNameFocused = false
 
         do {
-            try onSave(trimmedName, trimmedIconName)
+            try onSave(trimmedName, selectedSymbolName, selectedColorToken)
             dismiss()
         } catch {
             isSaving = false
@@ -188,3 +237,29 @@ struct CreateSubjectView: View {
         )
     }
 }
+
+private extension CreateSubjectView {
+    static let topSubjectSymbols: [String] = [
+        "book.closed", "books.vertical", "text.book.closed", "bookmark", "graduationcap",
+        "studentdesk", "pencil", "pencil.and.ruler", "doc.text", "note.text",
+        "list.bullet.rectangle", "folder", "tray.full", "archivebox", "paperclip",
+        "brain", "lightbulb", "sparkles", "target", "scope",
+        "flag", "star", "medal", "bolt", "flame",
+        "clock", "calendar", "hourglass", "timer", "chart.bar",
+        "chart.line.uptrend.xyaxis", "chart.pie", "waveform.path.ecg", "waveform", "cpu",
+        "desktopcomputer", "laptopcomputer", "keyboard", "gamecontroller", "headphones",
+        "music.note", "guitars", "mic", "camera", "video",
+        "photo", "film", "tv", "newspaper", "globe",
+        "globe.americas", "location", "map", "mappin", "airplane",
+        "car", "bicycle", "tram", "shippingbox", "cart",
+        "bag", "creditcard", "dollarsign.circle", "banknote", "building.2",
+        "house", "bed.double", "fork.knife", "cup.and.saucer", "leaf",
+        "tree", "drop", "sun.max", "moon", "cloud",
+        "snowflake", "hare", "tortoise", "pawprint", "fish",
+        "ant", "ladybug", "bird", "dog", "cat",
+        "heart", "cross.case", "bandage", "stethoscope", "pills",
+        "atom", "function", "sum", "percent", "infinity",
+        "ruler", "compass.drawing", "paintpalette", "hammer", "wrench.and.screwdriver"
+    ]
+}
+

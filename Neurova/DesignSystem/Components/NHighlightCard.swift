@@ -5,6 +5,7 @@ struct NHighlightCard<LeadingContent: View>: View {
 
     let sectionLabel: String
     let title: String
+    let recommendationText: String?
     let subtitle: String
     let primaryActionTitle: String
     let secondaryActionTitle: String
@@ -27,6 +28,12 @@ struct NHighlightCard<LeadingContent: View>: View {
                         Text(title)
                             .font(NTypography.bodyEmphasis.weight(.bold))
                             .foregroundStyle(NColors.Text.textPrimary)
+
+                        if let recommendationText, recommendationText.isEmpty == false {
+                            Text(recommendationText)
+                                .font(NTypography.caption.weight(.semibold))
+                                .foregroundStyle(NColors.Brand.neuroBlue)
+                        }
 
                         Text(subtitle)
                             .font(NTypography.caption)
@@ -55,6 +62,7 @@ struct NHighlightCard<LeadingContent: View>: View {
     NHighlightCard(
         sectionLabel: "ESTUDIA HOY",
         title: "Meta diaria",
+        recommendationText: "Deck recomendado: Biología",
         subtitle: "16 / 25 cards completadas",
         primaryActionTitle: "Continuar",
         secondaryActionTitle: "Elegir deck",
@@ -73,6 +81,7 @@ struct NHighlightCard<LeadingContent: View>: View {
     NHighlightCard(
         sectionLabel: "ESTUDIA HOY",
         title: "Meta diaria",
+        recommendationText: "Deck recomendado: Biología",
         subtitle: "16 / 25 cards completadas",
         primaryActionTitle: "Continuar",
         secondaryActionTitle: "Elegir deck",

@@ -1,6 +1,12 @@
 import SwiftUI
 
 enum NColors {
+    struct SubjectIconOption: Identifiable, Hashable {
+        let token: String
+        let color: Color
+        var id: String { token }
+    }
+
     enum Home {
         static let backgroundLightTop = Neutrals.surface.opacity(0.96)
         static let backgroundLightBottom = Neutrals.background
@@ -42,6 +48,29 @@ enum NColors {
         static let success = Color("Success")
         static let warning = Color("Warning")
         static let danger = Color("Danger")
+    }
+
+    enum SubjectIcon {
+        static let palette: [SubjectIconOption] = [
+            .init(token: "NeuroBlue", color: Brand.neuroBlue),
+            .init(token: "NeuroBlueDeep", color: Brand.neuroBlueDeep),
+            .init(token: "NeuralMint", color: Brand.neuralMint),
+            .init(token: "Success", color: Feedback.success),
+            .init(token: "Warning", color: Feedback.warning),
+            .init(token: "Danger", color: Feedback.danger),
+            .init(token: "TextPrimary", color: Text.textPrimary),
+            .init(token: "TextSecondary", color: Text.textSecondary)
+        ]
+
+        static func color(for tokenReference: String?) -> Color {
+            guard
+                let tokenReference,
+                let option = palette.first(where: { $0.token.caseInsensitiveCompare(tokenReference) == .orderedSame })
+            else {
+                return Brand.neuroBlue
+            }
+            return option.color
+        }
     }
 
     static let neuroGradient = LinearGradient(
