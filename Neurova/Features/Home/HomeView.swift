@@ -246,6 +246,77 @@ struct HomeView: View {
             actionTitle: state.recommendation.actionTitle,
             onAction: handleRecommendationAction
         )
+        .overlay(recommendationImportanceBorder)
+    }
+
+    @ViewBuilder
+    private var recommendationImportanceBorder: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { context in
+            let phase = (context.date.timeIntervalSinceReferenceDate / 3.6)
+                .truncatingRemainder(dividingBy: 1.0)
+            let segment: CGFloat = 0.15
+
+            ZStack {
+                RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                NColors.Brand.neuroBlue.opacity(0.98),
+                                NColors.Brand.neuralMint.opacity(1.0),
+                                NColors.Brand.neuroBlueDeep.opacity(0.96),
+                                NColors.Brand.neuralMint.opacity(0.96)
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ),
+                        lineWidth: 2.5
+                    )
+
+                recommendationPerimeterGlow(
+                    start: CGFloat(phase),
+                    length: segment,
+                    lineWidth: 2.6,
+                    color: .white.opacity(0.32)
+                )
+
+                recommendationPerimeterGlow(
+                    start: CGFloat((phase + 0.5).truncatingRemainder(dividingBy: 1.0)),
+                    length: segment,
+                    lineWidth: 2.2,
+                    color: .white.opacity(0.22)
+                )
+            }
+            .drawingGroup()
+        }
+    }
+
+    @ViewBuilder
+    private func recommendationPerimeterGlow(start: CGFloat, length: CGFloat, lineWidth: CGFloat, color: Color) -> some View {
+        let end = start + length
+        if end <= 1 {
+            RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
+                .trim(from: start, to: end)
+                .stroke(style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
+                .foregroundStyle(color)
+                .shadow(color: .white.opacity(0.18), radius: 6, x: 0, y: 0)
+                .shadow(color: NColors.Brand.neuralMint.opacity(0.14), radius: 5, x: 0, y: 0)
+                .blendMode(.plusLighter)
+        } else {
+            ZStack {
+                RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
+                    .trim(from: start, to: 1)
+                    .stroke(style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
+                    .foregroundStyle(color)
+
+                RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
+                    .trim(from: 0, to: end - 1)
+                    .stroke(style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
+                    .foregroundStyle(color)
+            }
+            .shadow(color: .white.opacity(0.18), radius: 6, x: 0, y: 0)
+            .shadow(color: NColors.Brand.neuralMint.opacity(0.14), radius: 5, x: 0, y: 0)
+            .blendMode(.plusLighter)
+        }
     }
 
     private var recentDecksSection: some View {
