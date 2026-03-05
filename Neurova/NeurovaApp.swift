@@ -15,7 +15,9 @@ struct NeurovaApp: App {
     var body: some Scene {
         WindowGroup {
             AppSceneContainer(launchMode: $launchMode)
-                .modelContainer(for: [Subject.self, Deck.self, Card.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self])
+                .modelContainer(
+                    for: [Subject.self, Deck.self, Card.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self, ScanEntity.self]
+                )
         }
     }
 }
@@ -154,7 +156,7 @@ private struct AppTabShellView: View {
             .ignoresSafeArea(edges: .bottom)
             .sheet(isPresented: $isShowingScanPlaceholder) {
                 NavigationStack {
-                    ScanPlaceholderView()
+                    ScanCaptureView()
                 }
                 .presentationDetents([.medium, .large])
             }
@@ -215,36 +217,5 @@ private struct AppTabShellView: View {
 
     private var selectedLanguage: AppLanguage {
         AppLanguage(rawValue: appLanguageRawValue) ?? .spanish
-    }
-}
-
-private struct ScanPlaceholderView: View {
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.locale) private var locale
-
-    var body: some View {
-        VStack(spacing: NSpacing.lg) {
-            Image(systemName: "viewfinder.circle.fill")
-                .font(.system(size: 48, weight: .semibold))
-                .foregroundStyle(NColors.neuroGradient)
-
-            Text(AppCopy.text(locale, en: "Scan", es: "Escanear"))
-                .font(NTypography.title)
-                .foregroundStyle(NColors.Text.textPrimary)
-
-            Text(AppCopy.text(locale, en: "Scan flow placeholder while the feature is being wired.", es: "Placeholder del flujo de escaneo mientras se conecta la feature."))
-                .font(NTypography.body)
-                .foregroundStyle(NColors.Text.textSecondary)
-                .multilineTextAlignment(.center)
-
-            Button(AppCopy.text(locale, en: "Close", es: "Cerrar")) {
-                dismiss()
-            }
-            .font(NTypography.bodyEmphasis)
-            .foregroundStyle(NColors.Brand.neuroBlue)
-        }
-        .padding(NSpacing.xl)
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(NColors.Neutrals.background.ignoresSafeArea())
     }
 }
