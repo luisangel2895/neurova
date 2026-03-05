@@ -98,7 +98,7 @@ struct CreateSubjectView: View {
             .focused($isNameFocused)
             .submitLabel(.done)
             .tint(NColors.Brand.neuroBlue)
-            .onSubmit { handleSave() }
+            .onSubmit { isNameFocused = false }
     }
 
     private var previewCard: some View {
@@ -134,25 +134,29 @@ struct CreateSubjectView: View {
                     .font(NTypography.bodyEmphasis.weight(.semibold))
                     .foregroundStyle(NColors.Text.textPrimary)
 
-                HStack(spacing: NSpacing.sm) {
-                    ForEach(NColors.SubjectIcon.palette) { option in
-                        Button {
-                            selectedColorToken = option.token
-                        } label: {
-                            Circle()
-                                .fill(option.color)
-                                .frame(width: 30, height: 30)
-                                .overlay(
-                                    Circle()
-                                        .stroke(
-                                            selectedColorToken == option.token ? NColors.Text.textPrimary : Color.clear,
-                                            lineWidth: 2
-                                        )
-                                )
+                ScrollView(.horizontal) {
+                    HStack(spacing: NSpacing.sm) {
+                        ForEach(NColors.SubjectIcon.palette) { option in
+                            Button {
+                                selectedColorToken = option.token
+                            } label: {
+                                Circle()
+                                    .fill(option.color)
+                                    .frame(width: 30, height: 30)
+                                    .overlay(
+                                        Circle()
+                                            .stroke(
+                                                selectedColorToken == option.token ? NColors.Text.textPrimary : Color.clear,
+                                                lineWidth: 2
+                                            )
+                                    )
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
+                .scrollIndicators(.hidden)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
     }
@@ -164,38 +168,41 @@ struct CreateSubjectView: View {
                     .font(NTypography.bodyEmphasis.weight(.semibold))
                     .foregroundStyle(NColors.Text.textPrimary)
 
-                LazyVGrid(columns: symbolColumns, spacing: NSpacing.xs) {
-                    ForEach(Self.topSubjectSymbols, id: \.self) { symbol in
-                        Button {
-                            selectedSymbolName = symbol
-                        } label: {
-                            RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                                .fill(
-                                    selectedSymbolName == symbol
-                                        ? NColors.SubjectIcon.color(for: selectedColorToken).opacity(0.14)
-                                        : NColors.Neutrals.surfaceAlt
-                                )
-                                .frame(height: 44)
-                                .overlay {
-                                    Image(systemName: symbol)
-                                        .font(.system(size: 18, weight: .semibold))
-                                        .foregroundStyle(
-                                            selectedSymbolName == symbol
-                                                ? NColors.SubjectIcon.color(for: selectedColorToken)
-                                                : NColors.Text.textSecondary
-                                        )
-                                }
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                                        .stroke(
-                                            selectedSymbolName == symbol ? NColors.SubjectIcon.color(for: selectedColorToken) : NColors.Neutrals.border,
-                                            lineWidth: 1
-                                        )
-                                )
+                ScrollView {
+                    LazyVGrid(columns: symbolColumns, spacing: NSpacing.xs) {
+                        ForEach(Self.topSubjectSymbols, id: \.self) { symbol in
+                            Button {
+                                selectedSymbolName = symbol
+                            } label: {
+                                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                                    .fill(
+                                        selectedSymbolName == symbol
+                                            ? NColors.SubjectIcon.color(for: selectedColorToken).opacity(0.14)
+                                            : NColors.Neutrals.surfaceAlt
+                                    )
+                                    .frame(height: 44)
+                                    .overlay {
+                                        Image(systemName: symbol)
+                                            .font(.system(size: 18, weight: .semibold))
+                                            .foregroundStyle(
+                                                selectedSymbolName == symbol
+                                                    ? NColors.SubjectIcon.color(for: selectedColorToken)
+                                                    : NColors.Text.textSecondary
+                                            )
+                                    }
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                                            .stroke(
+                                                selectedSymbolName == symbol ? NColors.SubjectIcon.color(for: selectedColorToken) : NColors.Neutrals.border,
+                                                lineWidth: 1
+                                            )
+                                    )
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
+                .frame(height: 300)
             }
         }
     }
@@ -262,4 +269,3 @@ private extension CreateSubjectView {
         "ruler", "compass.drawing", "paintpalette", "hammer", "wrench.and.screwdriver"
     ]
 }
-

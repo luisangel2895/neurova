@@ -52,14 +52,36 @@ enum NColors {
 
     enum SubjectIcon {
         static let palette: [SubjectIconOption] = [
-            .init(token: "NeuroBlue", color: Brand.neuroBlue),
-            .init(token: "NeuroBlueDeep", color: Brand.neuroBlueDeep),
-            .init(token: "NeuralMint", color: Brand.neuralMint),
-            .init(token: "Success", color: Feedback.success),
-            .init(token: "Warning", color: Feedback.warning),
-            .init(token: "Danger", color: Feedback.danger),
-            .init(token: "TextPrimary", color: Text.textPrimary),
-            .init(token: "TextSecondary", color: Text.textSecondary)
+            .init(token: "IconAzure", color: Color("IconAzure")),
+            .init(token: "IconCobalt", color: Color("IconCobalt")),
+            .init(token: "IconIndigo", color: Color("IconIndigo")),
+            .init(token: "IconViolet", color: Color("IconViolet")),
+            .init(token: "IconMagenta", color: Color("IconMagenta")),
+            .init(token: "IconRose", color: Color("IconRose")),
+            .init(token: "IconCoral", color: Color("IconCoral")),
+            .init(token: "IconTangerine", color: Color("IconTangerine")),
+            .init(token: "IconAmber", color: Color("IconAmber")),
+            .init(token: "IconGold", color: Color("IconGold")),
+            .init(token: "IconLime", color: Color("IconLime")),
+            .init(token: "IconEmerald", color: Color("IconEmerald")),
+            .init(token: "IconMint", color: Color("IconMint")),
+            .init(token: "IconTeal", color: Color("IconTeal")),
+            .init(token: "IconCyan", color: Color("IconCyan")),
+            .init(token: "IconSky", color: Color("IconSky")),
+            .init(token: "IconSteel", color: Color("IconSteel")),
+            .init(token: "IconLavender", color: Color("IconLavender")),
+            .init(token: "IconPlum", color: Color("IconPlum")),
+            .init(token: "IconBerry", color: Color("IconBerry")),
+            .init(token: "IconCrimson", color: Color("IconCrimson")),
+            .init(token: "IconSalmon", color: Color("IconSalmon")),
+            .init(token: "IconPeach", color: Color("IconPeach")),
+            .init(token: "IconSand", color: Color("IconSand")),
+            .init(token: "IconOlive", color: Color("IconOlive")),
+            .init(token: "IconForest", color: Color("IconForest")),
+            .init(token: "IconTurquoise", color: Color("IconTurquoise")),
+            .init(token: "IconOcean", color: Color("IconOcean")),
+            .init(token: "IconSlate", color: Color("IconSlate")),
+            .init(token: "IconGraphite", color: Color("IconGraphite"))
         ]
 
         static func color(for tokenReference: String?) -> Color {
