@@ -7,6 +7,12 @@ struct CreateCardView: View {
 
     private let onSave: (String, String) -> Void
 
+    private enum Field: Hashable {
+        case front
+        case back
+    }
+
+    @FocusState private var focusedField: Field?
     @State private var frontText: String = ""
     @State private var backText: String = ""
 
@@ -18,8 +24,16 @@ struct CreateCardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: NSpacing.md) {
-                    multilineField(title: AppCopy.text(locale, en: "Front", es: "Frente"), text: $frontText)
-                    multilineField(title: AppCopy.text(locale, en: "Back", es: "Reverso"), text: $backText)
+                    multilineField(
+                        title: AppCopy.text(locale, en: "Front", es: "Frente"),
+                        text: $frontText,
+                        field: .front
+                    )
+                    multilineField(
+                        title: AppCopy.text(locale, en: "Back", es: "Reverso"),
+                        text: $backText,
+                        field: .back
+                    )
                 }
                 .padding(.horizontal, NSpacing.md)
                 .padding(.top, NSpacing.md)
@@ -44,6 +58,9 @@ struct CreateCardView: View {
                     .foregroundStyle(saveButtonColor)
                 }
             }
+            .onAppear {
+                focusedField = .front
+            }
         }
     }
 
@@ -59,7 +76,7 @@ struct CreateCardView: View {
         trimmedFront.isEmpty || trimmedBack.isEmpty ? NColors.Text.textSecondary : NColors.Brand.neuroBlue
     }
 
-    private func multilineField(title: String, text: Binding<String>) -> some View {
+    private func multilineField(title: String, text: Binding<String>, field: Field) -> some View {
         VStack(alignment: .leading, spacing: NSpacing.xs) {
             Text(title)
                 .font(NTypography.caption)
@@ -70,6 +87,7 @@ struct CreateCardView: View {
                 .foregroundStyle(NColors.Text.textPrimary)
                 .scrollContentBackground(.hidden)
                 .frame(minHeight: 140)
+                .focused($focusedField, equals: field)
                 .padding(NSpacing.sm)
                 .background(NColors.Home.surfaceL1)
                 .overlay(
