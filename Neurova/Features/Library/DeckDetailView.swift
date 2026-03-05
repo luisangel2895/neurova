@@ -17,70 +17,17 @@ struct DeckDetailView: View {
     @State private var noCardsAlertMessage: String?
 
     var body: some View {
-        List {
-            Section {
-                summaryStrip
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-            }
+        VStack(spacing: NSpacing.md) {
+            summaryStrip
 
-            Section {
-                if viewModel.cards.isEmpty {
-                    NEmptyState(
-                        systemImage: "rectangle.stack",
-                        title: AppCopy.text(locale, en: "No cards yet", es: "Aun no hay tarjetas"),
-                        message: AppCopy.text(locale, en: "Add cards to this deck before starting a study session.", es: "Agrega tarjetas a este mazo antes de iniciar una sesion de estudio."),
-                        ctaTitle: AppCopy.text(locale, en: "Add Card", es: "Agregar Tarjeta")
-                    ) {
-                        isPresentingCreateCard = true
-                    }
-                    .listRowBackground(Color.clear)
-                } else {
-                    ForEach(Array(viewModel.cards.enumerated()), id: \.offset) { index, card in
-                        NCard {
-                            VStack(alignment: .leading, spacing: NSpacing.xs) {
-                                Text(card.frontText)
-                                    .font(NTypography.bodyEmphasis.weight(.semibold))
-                                    .foregroundStyle(NColors.Text.textPrimary)
-                                    .multilineTextAlignment(.leading)
-
-                                Text(card.backText)
-                                    .font(NTypography.caption)
-                                    .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
-                                    .multilineTextAlignment(.leading)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .listRowInsets(EdgeInsets(top: NSpacing.xs, leading: NSpacing.md, bottom: NSpacing.xs, trailing: NSpacing.md))
-                        .listRowBackground(Color.clear)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                viewModel.deleteCard(
-                                    at: index,
-                                    in: deck,
-                                    using: modelContext
-                                )
-                            } label: {
-                                Label(AppCopy.text(locale, en: "Delete", es: "Eliminar"), systemImage: "trash")
-                            }
-                        }
-                    }
-                }
-            } header: {
-                Text(AppCopy.text(locale, en: "Cards", es: "Tarjetas"))
-                    .font(NTypography.caption.weight(.semibold))
-                    .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
+            NPrimaryButton(AppCopy.text(locale, en: "Start Study", es: "Iniciar Estudio")) {
+                isPresentingStudyOptions = true
             }
+            .disabled(viewModel.cards.isEmpty)
+            .padding(.horizontal, NSpacing.md)
 
-            Section {
-                NPrimaryButton(AppCopy.text(locale, en: "Start Study", es: "Iniciar Estudio")) {
-                    isPresentingStudyOptions = true
-                }
-                .disabled(viewModel.cards.isEmpty)
-                .listRowBackground(Color.clear)
-            }
+            cardsContainer
         }
-        .scrollContentBackground(.hidden)
         .background(backgroundView)
         .safeAreaInset(edge: .bottom) {
             Color.clear
@@ -171,6 +118,63 @@ struct DeckDetailView: View {
         }
     }
 
+    private var cardsContainer: some View {
+        VStack(alignment: .leading, spacing: NSpacing.sm) {
+            Text(AppCopy.text(locale, en: "Cards", es: "Tarjetas"))
+                .font(NTypography.caption.weight(.semibold))
+                .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
+                .padding(.horizontal, NSpacing.md)
+
+            if viewModel.cards.isEmpty {
+                NEmptyState(
+                    systemImage: "rectangle.stack",
+                    title: AppCopy.text(locale, en: "No cards yet", es: "Aun no hay tarjetas"),
+                    message: AppCopy.text(locale, en: "Add cards to this deck before starting a study session.", es: "Agrega tarjetas a este mazo antes de iniciar una sesion de estudio."),
+                    ctaTitle: AppCopy.text(locale, en: "Add Card", es: "Agregar Tarjeta")
+                ) {
+                    isPresentingCreateCard = true
+                }
+                .padding(.horizontal, NSpacing.md)
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: NSpacing.xs) {
+                        ForEach(Array(viewModel.cards.enumerated()), id: \.offset) { index, card in
+                            NCard {
+                                VStack(alignment: .leading, spacing: NSpacing.xs) {
+                                    Text(card.frontText)
+                                        .font(NTypography.bodyEmphasis.weight(.semibold))
+                                        .foregroundStyle(NColors.Text.textPrimary)
+                                        .multilineTextAlignment(.leading)
+
+                                    Text(card.backText)
+                                        .font(NTypography.caption)
+                                        .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .contextMenu {
+                                Button(role: .destructive) {
+                                    viewModel.deleteCard(
+                                        at: index,
+                                        in: deck,
+                                        using: modelContext
+                                    )
+                                } label: {
+                                    Label(AppCopy.text(locale, en: "Delete", es: "Eliminar"), systemImage: "trash")
+                                }
+                            }
+                        }
+                    }
+                    .padding(.horizontal, NSpacing.md)
+                    .padding(.vertical, NSpacing.xs)
+                }
+                .scrollIndicators(.hidden)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: 350, maxHeight: 350, alignment: .top)
+    }
+
     private var summaryStrip: some View {
         HStack(spacing: NSpacing.sm) {
             NStatCard(
@@ -196,7 +200,7 @@ struct DeckDetailView: View {
         }
         .padding(.horizontal, NSpacing.md)
         .padding(.top, NSpacing.md)
-        .padding(.bottom, NSpacing.sm)
+        .padding(.bottom, NSpacing.xs)
     }
 
     private var backgroundView: some View {
