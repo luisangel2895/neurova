@@ -98,6 +98,21 @@ final class SubjectDetailViewModel {
         }
     }
 
+    func deleteDeck(
+        _ deck: Deck,
+        subject: Subject,
+        using context: ModelContext
+    ) {
+        configureIfNeeded(context: context)
+
+        do {
+            try deckRepository?.deleteDeck(deck)
+            load(subject: subject, using: context)
+        } catch {
+            errorMessage = "Unable to delete deck."
+        }
+    }
+
     func metrics(for deck: Deck) -> DeckMetrics {
         metricsByDeckID[deck.id] ?? DeckMetrics(cardCount: 0, dueCount: 0)
     }

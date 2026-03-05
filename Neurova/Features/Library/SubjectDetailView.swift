@@ -34,15 +34,27 @@ struct SubjectDetailView: View {
                             }
                             .buttonStyle(.plain)
                             .contextMenu {
-                                Button(AppCopy.text(locale, en: "Edit", es: "Editar")) {
+                                Button {
                                     editingDeck = deck
+                                } label: {
+                                    Label(
+                                        AppCopy.text(locale, en: "Edit", es: "Editar"),
+                                        systemImage: "pencil"
+                                    )
                                 }
 
-                                Button(AppCopy.text(locale, en: "Archive", es: "Archivar")) {
-                                    viewModel.archiveDeck(
+                                Divider()
+
+                                Button(role: .destructive) {
+                                    viewModel.deleteDeck(
                                         deck,
                                         subject: subject,
                                         using: modelContext
+                                    )
+                                } label: {
+                                    Label(
+                                        AppCopy.text(locale, en: "Delete", es: "Eliminar"),
+                                        systemImage: "trash"
                                     )
                                 }
                             }
@@ -71,35 +83,24 @@ struct SubjectDetailView: View {
             viewModel.load(subject: subject, using: modelContext)
         }
         .sheet(isPresented: $isPresentingCreateDeck) {
-            CreateDeckView { title, description, isArchived in
+            CreateDeckView { title, description in
                 viewModel.createDeck(
                     in: subject,
                     title: title,
                     description: description,
                     using: modelContext
                 )
-
-                if isArchived, let latestDeck = viewModel.decks.last {
-                    viewModel.updateDeck(
-                        latestDeck,
-                        title: latestDeck.title,
-                        description: latestDeck.description,
-                        isArchived: true,
-                        subject: subject,
-                        using: modelContext
-                    )
-                }
             }
         }
         .sheet(item: $editingDeck, onDismiss: {
             viewModel.load(subject: subject, using: modelContext)
         }) { deck in
-            CreateDeckView(deck: deck) { title, description, isArchived in
+            CreateDeckView(deck: deck) { title, description in
                 viewModel.updateDeck(
                     deck,
                     title: title,
                     description: description,
-                    isArchived: isArchived,
+                    isArchived: deck.isArchived,
                     subject: subject,
                     using: modelContext
                 )

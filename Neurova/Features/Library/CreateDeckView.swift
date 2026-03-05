@@ -6,23 +6,26 @@ struct CreateDeckView: View {
     @Environment(\.locale) private var locale
 
     private let deck: Deck?
-    private let onSave: (String, String?, Bool) -> Void
+    private let onSave: (String, String?) -> Void
 
-    @FocusState private var isTitleFocused: Bool
+    private enum Field: Hashable {
+        case title
+        case description
+    }
+
+    @FocusState private var focusedField: Field?
     @State private var title: String
     @State private var descriptionText: String
-    @State private var isArchived: Bool
     @State private var isSaving = false
 
     init(
         deck: Deck? = nil,
-        onSave: @escaping (String, String?, Bool) -> Void
+        onSave: @escaping (String, String?) -> Void
     ) {
         self.deck = deck
         self.onSave = onSave
         _title = State(initialValue: deck?.title ?? "")
         _descriptionText = State(initialValue: deck?.description ?? "")
-        _isArchived = State(initialValue: deck?.isArchived ?? false)
     }
 
     var body: some View {
@@ -30,19 +33,7 @@ struct CreateDeckView: View {
             ScrollView {
                 VStack(spacing: NSpacing.md) {
                     titleField
-                    multilineField(title: AppCopy.text(locale, en: "Description (optional)", es: "Descripcion (opcional)"), text: $descriptionText)
-
-                    Toggle(isOn: $isArchived) {
-                        Text(AppCopy.text(locale, en: "Archived", es: "Archivado"))
-                            .font(NTypography.body)
-                            .foregroundStyle(NColors.Text.textPrimary)
-                    }
-                    .tint(NColors.Brand.neuroBlue)
-                    .padding(NSpacing.md)
-                    .background(
-                        RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                            .fill(NColors.Home.surfaceL1)
-                    )
+                    descriptionField
                 }
                 .padding(.horizontal, NSpacing.md)
                 .padding(.top, NSpacing.md)
@@ -67,7 +58,7 @@ struct CreateDeckView: View {
                 }
             }
             .onAppear {
-                isTitleFocused = true
+                focusedField = .title
             }
         }
     }
@@ -94,38 +85,46 @@ struct CreateDeckView: View {
             .background(NColors.Neutrals.surfaceAlt)
             .overlay(
                 RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                    .stroke(isTitleFocused ? NColors.Brand.neuroBlue : NColors.Neutrals.border, lineWidth: 1)
+                    .stroke(focusedField == .title ? NColors.Brand.neuroBlue : NColors.Neutrals.border, lineWidth: 1)
             )
             .clipShape(
                 RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
             )
-            .focused($isTitleFocused)
-            .submitLabel(.done)
+            .focused($focusedField, equals: .title)
+            .submitLabel(.next)
             .tint(NColors.Brand.neuroBlue)
             .onSubmit {
-                handleSave()
+                focusedField = .description
             }
     }
 
-    private func multilineField(title: String, text: Binding<String>) -> some View {
+    private var descriptionField: some View {
         VStack(alignment: .leading, spacing: NSpacing.xs) {
-            Text(title)
+            Text(AppCopy.text(locale, en: "Description (optional)", es: "Descripcion (opcional)"))
                 .font(NTypography.caption)
                 .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
 
-            TextEditor(text: text)
+            TextField(
+                AppCopy.text(locale, en: "Add a short description", es: "Agrega una descripcion corta"),
+                text: $descriptionText
+            )
                 .font(NTypography.body)
                 .foregroundStyle(NColors.Text.textPrimary)
-                .scrollContentBackground(.hidden)
-                .frame(minHeight: 120)
-                .padding(NSpacing.sm)
-                .background(NColors.Home.surfaceL1)
+                .padding(.horizontal, NSpacing.md)
+                .frame(height: 48)
+                .focused($focusedField, equals: .description)
+                .submitLabel(.done)
+                .tint(NColors.Brand.neuroBlue)
+                .onSubmit {
+                    focusedField = nil
+                }
+                .background(NColors.Neutrals.surfaceAlt)
                 .overlay(
-                    RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                        .stroke(NColors.Home.cardBorder, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                        .stroke(focusedField == .description ? NColors.Brand.neuroBlue : NColors.Neutrals.border, lineWidth: 1)
                 )
                 .clipShape(
-                    RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
+                    RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
                 )
         }
     }
@@ -143,8 +142,8 @@ struct CreateDeckView: View {
     private func handleSave() {
         guard canSave else { return }
         isSaving = true
-        isTitleFocused = false
-        onSave(trimmedTitle, trimmedDescription, isArchived)
+        focusedField = nil
+        onSave(trimmedTitle, trimmedDescription)
         dismiss()
     }
 }
