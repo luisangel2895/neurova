@@ -4,15 +4,18 @@ struct NProgressRing: View {
     private let progress: Double
     private let lineWidth: CGFloat
     private let centerText: String?
+    private let animationDuration: Double
 
     init(
         progress: Double,
         lineWidth: CGFloat = NSpacing.sm,
-        centerText: String? = nil
+        centerText: String? = nil,
+        animationDuration: Double = 0.35
     ) {
         self.progress = min(max(progress, 0), 1)
         self.lineWidth = lineWidth
         self.centerText = centerText
+        self.animationDuration = max(animationDuration, 0)
     }
 
     var body: some View {
@@ -27,7 +30,7 @@ struct NProgressRing: View {
                     style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)
                 )
                 .rotationEffect(.degrees(-90))
-                .animation(.easeInOut(duration: 0.35), value: progress)
+                .animation(.easeInOut(duration: animationDuration), value: progress)
 
             if let centerText {
                 Text(centerText)

@@ -206,7 +206,8 @@ struct HomeView: View {
                 NProgressRing(
                     progress: state.progress,
                     lineWidth: NSpacing.xs + 3,
-                    centerText: nil
+                    centerText: nil,
+                    animationDuration: 1.1
                 )
                 .frame(width: 68, height: 68)
 
@@ -344,6 +345,7 @@ struct HomeView: View {
                             } label: {
                                 NDeckCard(
                                     accentColor: deck.accentColor,
+                                    iconName: deck.subjectIconName,
                                     contextText: deck.subjectPathText,
                                     title: deck.title,
                                     cardCountText: "\(deck.cardCountText) • \(deck.readyCountText)"
@@ -381,7 +383,12 @@ struct HomeView: View {
                             .foregroundStyle(secondaryTextColor)
                     }
 
-                    NProgressBar(progress: state.dailyGoalSummaryProgress)
+                    NProgressBar(
+                        progress: state.dailyGoalSummaryProgress,
+                        animationDuration: 1.9,
+                        showsShimmer: true,
+                        shimmerDuration: 2.5
+                    )
                 }
             }
         }
@@ -389,11 +396,11 @@ struct HomeView: View {
     }
 
     private var tipSection: some View {
-        NTipCard(title: state.tipTitle, bodyText: state.tipMessage) {
-            NImages.Brand.logoMark
+        NTipCard(title: state.tipTitle, bodyText: state.tipMessage, showsTypewriter: true) {
+            NImages.Mascot.neruThinking
                 .resizable()
                 .scaledToFit()
-                .frame(width: 36, height: 36)
+                .frame(width: 68, height: 68)
         }
         .frame(maxWidth: .infinity)
     }

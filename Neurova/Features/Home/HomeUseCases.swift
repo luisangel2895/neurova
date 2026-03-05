@@ -122,6 +122,7 @@ struct HomeUseCases {
                     id: summary.deck.id,
                     deck: summary.deck,
                     subjectPathText: subjectNameText(for: summary.deck),
+                    subjectIconName: summary.deck.subject.systemImageName ?? "book.closed",
                     title: summary.deck.title,
                     cardCountText: isEnglish
                         ? "\(summary.totalCards) cards"
@@ -161,14 +162,8 @@ struct HomeUseCases {
     }
 
     private func deckSummaries(for decks: [Deck], now: Date) -> [DeckSummary] {
-        let accentPalette: [Color] = [
-            NColors.Brand.neuroBlue,
-            NColors.Brand.neuralMint,
-            NColors.Brand.neuroBlueDeep
-        ]
-
-        return decks.enumerated()
-            .map { index, deck in
+        return decks
+            .map { deck in
                 let allCards = deck.cards
                 let readyCards = queueEngine.buildQueue(
                     cards: allCards,
@@ -187,7 +182,7 @@ struct HomeUseCases {
                     newCount: newCards.count,
                     totalCards: allCards.count,
                     lastActivityDate: activityDate,
-                    accentColor: accentPalette[index % accentPalette.count]
+                    accentColor: NColors.SubjectIcon.color(for: deck.subject.colorTokenReference)
                 )
             }
             .sorted { lhs, rhs in

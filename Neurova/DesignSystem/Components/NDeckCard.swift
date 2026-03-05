@@ -4,6 +4,7 @@ struct NDeckCard: View {
     @Environment(\.colorScheme) private var colorScheme
 
     let accentColor: Color
+    let iconName: String
     let contextText: String?
     let title: String
     let cardCountText: String
@@ -11,9 +12,14 @@ struct NDeckCard: View {
     var body: some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.xs + 2) {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(accentColor)
-                    .frame(width: 28, height: 28)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(accentColor.opacity(0.2))
+                    Image(systemName: iconName)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(accentColor)
+                }
+                .frame(width: 28, height: 28)
 
                 Spacer(minLength: 0)
 
@@ -45,6 +51,7 @@ struct NDeckCard: View {
 #Preview("NDeckCard Light") {
     NDeckCard(
         accentColor: NColors.Brand.neuroBlue,
+        iconName: "book.closed",
         contextText: "Biología",
         title: "Anatomía",
         cardCountText: "58 cards"
@@ -57,6 +64,7 @@ struct NDeckCard: View {
 #Preview("NDeckCard Dark") {
     NDeckCard(
         accentColor: NColors.Brand.neuroBlue,
+        iconName: "book.closed",
         contextText: "Biología",
         title: "Anatomía",
         cardCountText: "58 cards"

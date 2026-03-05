@@ -91,6 +91,7 @@ struct RecentDeck: Identifiable {
     let id: UUID
     let deck: Deck
     let subjectPathText: String
+    let subjectIconName: String
     let title: String
     let cardCountText: String
     let readyCountText: String
