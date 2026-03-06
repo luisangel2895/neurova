@@ -9,6 +9,7 @@ struct ProfileDebugView: View {
 
     @AppStorage("apple_user_id") private var appleUserID: String = ""
     @AppStorage("apple_given_name") private var appleGivenName: String = ""
+    @AppStorage("apple_email") private var appleEmail: String = ""
     @AppStorage("profile_display_name") private var profileDisplayName: String = ""
     @AppStorage("cloudkit_sync_enabled") private var cloudKitSyncEnabled: Bool = true
     @AppStorage("cloudkit_sync_runtime_active") private var cloudKitRuntimeActive: Bool = false
@@ -27,6 +28,9 @@ struct ProfileDebugView: View {
     @State private var cloudIdentityProbeText: String = "Not checked"
     @State private var cloudSchemaStageProbeText: String = "Not checked"
     @State private var cloudRecordProbeText: String = "Not checked"
+    @State private var cloudProfileDisplayNameText: String = "Not checked"
+    @State private var cloudProfileEmailText: String = "Not checked"
+    @State private var cloudProfileUpdatedAtText: String = "Not checked"
 
     private let containerIdentifier = "iCloud.com.angelorellana.neurova"
 
@@ -68,11 +72,15 @@ struct ProfileDebugView: View {
             VStack(alignment: .leading, spacing: NSpacing.xs) {
                 keyValueRow("apple_user_id", value: appleUserID.isEmpty ? "<empty>" : appleUserID)
                 keyValueRow("apple_given_name", value: appleGivenName.isEmpty ? "<empty>" : appleGivenName)
+                keyValueRow("apple_email", value: appleEmail.isEmpty ? "<empty>" : appleEmail)
                 keyValueRow("profile_display_name", value: profileDisplayName.isEmpty ? "<empty>" : profileDisplayName)
                 keyValueRow("CloudKit Container", value: containerIdentifier)
                 keyValueRow("cloudkit_sync_enabled", value: cloudKitSyncEnabled ? "true" : "false")
                 keyValueRow("cloudkit_sync_runtime_active", value: cloudKitRuntimeActive ? "true" : "false")
                 keyValueRow("cloudkit_sync_last_error", value: cloudKitLastError.isEmpty ? "<none>" : cloudKitLastError)
+                keyValueRow("cloud_profile_display_name", value: cloudProfileDisplayNameText)
+                keyValueRow("cloud_profile_email", value: cloudProfileEmailText)
+                keyValueRow("cloud_profile_updated_at", value: cloudProfileUpdatedAtText)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -332,6 +340,7 @@ struct ProfileDebugView: View {
             Subject.self,
             Deck.self,
             Card.self,
+            CloudAccountProfile.self,
             XPEventEntity.self,
             XPStatsEntity.self,
             UserPreferences.self,
@@ -344,7 +353,8 @@ struct ProfileDebugView: View {
             let cloudSchema = Schema([
                 Subject.self,
                 Deck.self,
-                Card.self
+                Card.self,
+                CloudAccountProfile.self
             ])
             let localOnlySchema = Schema([
                 XPEventEntity.self,
@@ -539,6 +549,28 @@ struct ProfileDebugView: View {
         } catch {
             subjectsCountText = "Error: \(error.localizedDescription)"
             latestErrorText = "Subjects: \(error.localizedDescription)"
+        }
+
+        do {
+            let descriptor = FetchDescriptor<CloudAccountProfile>(
+                predicate: #Predicate<CloudAccountProfile> { profile in
+                    profile.key == "primary"
+                }
+            )
+            let profile = try modelContext.fetch(descriptor).first
+            if let profile {
+                cloudProfileDisplayNameText = profile.displayName?.isEmpty == false ? (profile.displayName ?? "<empty>") : "<empty>"
+                cloudProfileEmailText = profile.email?.isEmpty == false ? (profile.email ?? "<empty>") : "<empty>"
+                cloudProfileUpdatedAtText = profile.updatedAt.formatted(date: .abbreviated, time: .shortened)
+            } else {
+                cloudProfileDisplayNameText = "missing"
+                cloudProfileEmailText = "missing"
+                cloudProfileUpdatedAtText = "missing"
+            }
+        } catch {
+            cloudProfileDisplayNameText = "Error: \(error.localizedDescription)"
+            cloudProfileEmailText = "Error: \(error.localizedDescription)"
+            cloudProfileUpdatedAtText = "Error: \(error.localizedDescription)"
         }
 
         do {

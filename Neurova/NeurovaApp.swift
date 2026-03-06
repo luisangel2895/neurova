@@ -20,6 +20,7 @@ struct NeurovaApp: App {
             Subject.self,
             Deck.self,
             Card.self,
+            CloudAccountProfile.self,
             XPEventEntity.self,
             XPStatsEntity.self,
             UserPreferences.self,
@@ -99,7 +100,8 @@ struct NeurovaApp: App {
         let cloudSchema = Schema([
             Subject.self,
             Deck.self,
-            Card.self
+            Card.self,
+            CloudAccountProfile.self
         ])
         let localOnlySchema = Schema([
             XPEventEntity.self,
@@ -259,10 +261,18 @@ private struct AppRootView: View {
 
 private struct HomeLaunchGateView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.locale) private var locale
+    @Environment(\.scenePhase) private var scenePhase
     let onOpenBootstrap: () -> Void
 
     @State private var isLoading = true
     @State private var hasCompletedOnboarding = false
+    @State private var recoveredCloudSession: RecoveredCloudSession?
+
+    @AppStorage("apple_user_id") private var appleUserID: String = ""
+    @AppStorage("apple_given_name") private var appleGivenName: String = ""
+    @AppStorage("apple_email") private var appleEmail: String = ""
+    @AppStorage("profile_display_name") private var profileDisplayName: String = ""
 
     var body: some View {
         Group {
@@ -273,6 +283,14 @@ private struct HomeLaunchGateView: View {
                 }
             } else if hasCompletedOnboarding {
                 AppTabShellView(onOpenBootstrap: onOpenBootstrap)
+            } else if let recoveredCloudSession {
+                RecoveredCloudSessionView(
+                    locale: locale,
+                    recoveredCloudSession: recoveredCloudSession,
+                    onContinue: {
+                        restoreCloudSessionAndEnterApp(recoveredCloudSession)
+                    }
+                )
             } else {
                 OnboardingView {
                     hasCompletedOnboarding = true
@@ -281,6 +299,13 @@ private struct HomeLaunchGateView: View {
         }
         .task {
             loadOnboardingState()
+            await pollForRecoveredCloudSession()
+        }
+        .onChange(of: scenePhase) { _, newValue in
+            guard newValue == .active else { return }
+            Task {
+                await pollForRecoveredCloudSession()
+            }
         }
     }
 
@@ -292,8 +317,145 @@ private struct HomeLaunchGateView: View {
         )
 
         let preferences = try? modelContext.fetch(descriptor).first
-        hasCompletedOnboarding = preferences?.hasCompletedOnboarding ?? false
+        if preferences?.hasCompletedOnboarding == true {
+            hasCompletedOnboarding = true
+            recoveredCloudSession = nil
+            isLoading = false
+            return
+        }
+
+        if let cloudSession = fetchRecoveredCloudSession() {
+            recoveredCloudSession = cloudSession
+            hasCompletedOnboarding = false
+            isLoading = false
+            return
+        }
+
+        hasCompletedOnboarding = false
         isLoading = false
+    }
+
+    private func fetchRecoveredCloudSession() -> RecoveredCloudSession? {
+        let descriptor = FetchDescriptor<CloudAccountProfile>(
+            predicate: #Predicate<CloudAccountProfile> { profile in
+                profile.key == "primary"
+            }
+        )
+
+        guard
+            let profile = try? modelContext.fetch(descriptor).first,
+            let displayName = profile.displayName?.trimmingCharacters(in: .whitespacesAndNewlines),
+            displayName.isEmpty == false
+        else {
+            return nil
+        }
+
+        return RecoveredCloudSession(
+            appleUserID: profile.appleUserID?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "",
+            displayName: displayName,
+            email: profile.email?.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+    }
+
+    private func restoreCloudSessionAndEnterApp(_ session: RecoveredCloudSession) {
+        if session.appleUserID.isEmpty == false {
+            appleUserID = session.appleUserID
+        }
+        appleGivenName = session.displayName
+        profileDisplayName = session.displayName
+        if let email = session.email, email.isEmpty == false {
+            appleEmail = email
+        }
+
+        do {
+            let descriptor = FetchDescriptor<UserPreferences>(
+                predicate: #Predicate<UserPreferences> { preferences in
+                    preferences.key == "global"
+                }
+            )
+            let preferences = try modelContext.fetch(descriptor).first ?? UserPreferences()
+            if preferences.modelContext == nil {
+                modelContext.insert(preferences)
+            }
+            preferences.hasCompletedOnboarding = true
+            try modelContext.save()
+        } catch {
+            // If local preferences fail to persist, still allow entering app for this launch.
+        }
+
+        recoveredCloudSession = nil
+        hasCompletedOnboarding = true
+    }
+
+    @MainActor
+    private func pollForRecoveredCloudSession() async {
+        guard hasCompletedOnboarding == false else { return }
+        guard recoveredCloudSession == nil else { return }
+
+        for _ in 0..<20 {
+            if hasCompletedOnboarding {
+                return
+            }
+            if let session = fetchRecoveredCloudSession() {
+                recoveredCloudSession = session
+                return
+            }
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+        }
+    }
+}
+
+private struct RecoveredCloudSession {
+    let appleUserID: String
+    let displayName: String
+    let email: String?
+}
+
+private struct RecoveredCloudSessionView: View {
+    let locale: Locale
+    let recoveredCloudSession: RecoveredCloudSession
+    let onContinue: () -> Void
+
+    var body: some View {
+        ZStack {
+            NColors.Neutrals.background.ignoresSafeArea()
+
+            VStack(alignment: .leading, spacing: NSpacing.md) {
+                NCard {
+                    VStack(alignment: .leading, spacing: NSpacing.sm) {
+                        Text(AppCopy.text(locale, en: "iCloud account found", es: "Cuenta de iCloud encontrada"))
+                            .font(NTypography.title.weight(.bold))
+                            .foregroundStyle(NColors.Text.textPrimary)
+
+                        Text(
+                            AppCopy.text(
+                                locale,
+                                en: "We found your Neurova profile in iCloud. You can continue without signing in again.",
+                                es: "Encontramos tu perfil de Neurova en iCloud. Puedes continuar sin iniciar sesión otra vez."
+                            )
+                        )
+                        .font(NTypography.body)
+                        .foregroundStyle(NColors.Text.textSecondary)
+
+                        Text(recoveredCloudSession.displayName)
+                            .font(NTypography.bodyEmphasis.weight(.semibold))
+                            .foregroundStyle(NColors.Text.textPrimary)
+
+                        if let email = recoveredCloudSession.email, email.isEmpty == false {
+                            Text(email)
+                                .font(NTypography.caption)
+                                .foregroundStyle(NColors.Text.textSecondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                NPrimaryButton(AppCopy.text(locale, en: "Continue to app", es: "Ir a la app")) {
+                    onContinue()
+                }
+            }
+            .padding(.horizontal, NSpacing.md)
+        }
     }
 }
 

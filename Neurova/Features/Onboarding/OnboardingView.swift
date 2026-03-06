@@ -11,6 +11,7 @@ struct OnboardingView: View {
     @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
     @AppStorage("apple_user_id") private var appleUserID: String = ""
     @AppStorage("apple_given_name") private var appleGivenName: String = ""
+    @AppStorage("apple_email") private var appleEmail: String = ""
     @AppStorage("profile_display_name") private var profileDisplayName: String = ""
     @AppStorage("cloudkit_sync_enabled") private var cloudKitSyncEnabled: Bool = true
 
@@ -488,6 +489,27 @@ struct OnboardingView: View {
                 appleGivenName = givenName
                 profileDisplayName = givenName
             }
+            let email = credential.email?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if email.isEmpty == false {
+                appleEmail = email
+            }
+
+            let displayNameForCloud = firstNonEmpty([givenName, profileDisplayName, appleGivenName])
+            let emailForCloud = firstNonEmpty([email, appleEmail])
+            do {
+                let profile = try fetchOrCreateCloudAccountProfile()
+                profile.appleUserID = credential.user
+                profile.displayName = displayNameForCloud
+                profile.email = emailForCloud
+                profile.updatedAt = .now
+                try modelContext.save()
+            } catch {
+                errorMessage = AppCopy.text(
+                    locale,
+                    en: "Apple login succeeded, but profile sync failed. You can continue and retry later.",
+                    es: "El login de Apple funcionó, pero falló la sincronización del perfil. Puedes continuar y reintentar luego."
+                )
+            }
             persistOnboarding()
 
         case .failure(let error):
@@ -554,6 +576,28 @@ struct OnboardingView: View {
         return preferences
     }
 
+    private func fetchOrCreateCloudAccountProfile() throws -> CloudAccountProfile {
+        let descriptor = FetchDescriptor<CloudAccountProfile>(
+            predicate: #Predicate<CloudAccountProfile> { profile in
+                profile.key == "primary"
+            }
+        )
+
+        if let existing = try modelContext.fetch(descriptor).first {
+            return existing
+        }
+
+        let profile = CloudAccountProfile()
+        modelContext.insert(profile)
+        return profile
+    }
+
+    private func firstNonEmpty(_ values: [String?]) -> String? {
+        values
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .first { $0.isEmpty == false }
+    }
+
     private func finishOnboarding() {
         onFinish()
     }
@@ -576,11 +620,11 @@ struct OnboardingView: View {
 #Preview("Onboarding Light") {
     OnboardingView(onFinish: {})
         .preferredColorScheme(.light)
-        .modelContainer(for: [Subject.self, Deck.self, Card.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self], inMemory: true)
+        .modelContainer(for: [Subject.self, Deck.self, Card.self, CloudAccountProfile.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self], inMemory: true)
 }
 
 #Preview("Onboarding Dark") {
     OnboardingView(onFinish: {})
         .preferredColorScheme(.dark)
-        .modelContainer(for: [Subject.self, Deck.self, Card.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self], inMemory: true)
+        .modelContainer(for: [Subject.self, Deck.self, Card.self, CloudAccountProfile.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self], inMemory: true)
 }
