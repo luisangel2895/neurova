@@ -24,9 +24,7 @@ struct NeurovaApp: App {
             XPEventEntity.self,
             XPStatsEntity.self,
             UserPreferences.self,
-            ScanEntity.self,
-            MindMapEntity.self,
-            StudyGuideEntity.self
+            ScanEntity.self
         ])
 
         do {
@@ -107,9 +105,7 @@ struct NeurovaApp: App {
             XPEventEntity.self,
             XPStatsEntity.self,
             UserPreferences.self,
-            ScanEntity.self,
-            MindMapEntity.self,
-            StudyGuideEntity.self
+            ScanEntity.self
         ])
 
         let cloudConfiguration = ModelConfiguration(

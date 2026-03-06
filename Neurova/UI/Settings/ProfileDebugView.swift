@@ -344,9 +344,7 @@ struct ProfileDebugView: View {
             XPEventEntity.self,
             XPStatsEntity.self,
             UserPreferences.self,
-            ScanEntity.self,
-            MindMapEntity.self,
-            StudyGuideEntity.self
+            ScanEntity.self
         ])
 
         do {
@@ -360,9 +358,7 @@ struct ProfileDebugView: View {
                 XPEventEntity.self,
                 XPStatsEntity.self,
                 UserPreferences.self,
-                ScanEntity.self,
-                MindMapEntity.self,
-                StudyGuideEntity.self
+                ScanEntity.self
             ])
             let cloudConfiguration = ModelConfiguration("cloudProbe", schema: cloudSchema)
             let localConfiguration = ModelConfiguration("localProbe", schema: localOnlySchema, cloudKitDatabase: .none)

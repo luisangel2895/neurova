@@ -475,9 +475,7 @@ private enum GeneratorTab: CaseIterable {
             XPEventEntity.self,
             XPStatsEntity.self,
             UserPreferences.self,
-            ScanEntity.self,
-            MindMapEntity.self,
-            StudyGuideEntity.self
+            ScanEntity.self
         ],
         inMemory: true
     )
