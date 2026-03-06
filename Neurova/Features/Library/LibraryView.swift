@@ -145,7 +145,7 @@ struct LibraryView: View {
                 Text(
                     AppCopy.countLabel(
                         locale,
-                        count: subject.decks.count,
+                        count: (subject.decks ?? []).count,
                         singularEn: "deck",
                         pluralEn: "decks",
                         singularEs: "mazo",

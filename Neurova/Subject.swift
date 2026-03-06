@@ -8,8 +8,8 @@ final class Subject {
     var createdAt: Date = Date()
     var systemImageName: String?
     var colorTokenReference: String?
-    @Relationship(deleteRule: .cascade, inverse: \Deck.subject)
-    var decks: [Deck] = []
+    @Relationship(deleteRule: .nullify, inverse: \Deck.subject)
+    var decks: [Deck]?
 
     init(
         id: UUID = UUID(),
@@ -23,6 +23,6 @@ final class Subject {
         self.createdAt = createdAt
         self.systemImageName = systemImageName
         self.colorTokenReference = colorTokenReference
-        self.decks = []
+        self.decks = nil
     }
 }

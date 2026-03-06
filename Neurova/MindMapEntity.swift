@@ -8,7 +8,7 @@ final class MindMapEntity {
     var title: String = ""
     var serializedTree: String = ""
     var sourceScanID: UUID?
-    var deck: Deck?
+    var deckID: UUID?
 
     init(
         id: UUID = UUID(),
@@ -16,13 +16,13 @@ final class MindMapEntity {
         title: String,
         serializedTree: String,
         sourceScanID: UUID? = nil,
-        deck: Deck? = nil
+        deckID: UUID? = nil
     ) {
         self.id = id
         self.createdAt = createdAt
         self.title = title
         self.serializedTree = serializedTree
         self.sourceScanID = sourceScanID
-        self.deck = deck
+        self.deckID = deckID
     }
 }

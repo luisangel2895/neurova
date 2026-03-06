@@ -9,7 +9,7 @@ final class StudyGuideEntity {
     var summary: String = ""
     var serializedSections: String = ""
     var sourceScanID: UUID?
-    var deck: Deck?
+    var deckID: UUID?
 
     init(
         id: UUID = UUID(),
@@ -18,7 +18,7 @@ final class StudyGuideEntity {
         summary: String,
         serializedSections: String,
         sourceScanID: UUID? = nil,
-        deck: Deck? = nil
+        deckID: UUID? = nil
     ) {
         self.id = id
         self.createdAt = createdAt
@@ -26,6 +26,6 @@ final class StudyGuideEntity {
         self.summary = summary
         self.serializedSections = serializedSections
         self.sourceScanID = sourceScanID
-        self.deck = deck
+        self.deckID = deckID
     }
 }

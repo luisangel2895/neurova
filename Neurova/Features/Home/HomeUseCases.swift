@@ -148,7 +148,7 @@ struct HomeUseCases {
 
     func studyCards(for deck: Deck, filter: StudyCardFilter, now: Date = .now) -> [Card] {
         queueEngine.buildQueue(
-            cards: deck.cards,
+            cards: deck.cards ?? [],
             filter: filter.queueFilter,
             policy: sessionPolicy,
             now: now
@@ -164,7 +164,7 @@ struct HomeUseCases {
     private func deckSummaries(for decks: [Deck], now: Date) -> [DeckSummary] {
         return decks
             .map { deck in
-                let allCards = deck.cards
+                let allCards = deck.cards ?? []
                 let readyCards = queueEngine.buildQueue(
                     cards: allCards,
                     filter: .ready,
@@ -263,7 +263,7 @@ struct HomeUseCases {
     }
 
     private func difficultyLabel(for deck: Deck, isEnglish: Bool) -> String {
-        let cards = deck.cards
+        let cards = deck.cards ?? []
         guard cards.isEmpty == false else {
             return isEnglish ? "Low" : "Baja"
         }

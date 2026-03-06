@@ -37,50 +37,33 @@ struct NeurovaApp: App {
             let cloudKitEnabled = defaults.bool(forKey: cloudKitSyncFlagKey)
             if cloudKitEnabled {
                 do {
-                    let cloudSchema = Schema([
-                        Subject.self,
-                        Deck.self,
-                        Card.self,
-                        XPEventEntity.self,
-                        XPStatsEntity.self,
-                        UserPreferences.self
-                    ])
-                    let localOnlySchema = Schema([
-                        ScanEntity.self,
-                        MindMapEntity.self,
-                        StudyGuideEntity.self
-                    ])
-
-                    let cloudConfiguration = ModelConfiguration(
-                        "cloud",
-                        schema: cloudSchema
-                    )
-                    let localConfiguration = ModelConfiguration(
-                        "local",
-                        schema: localOnlySchema,
-                        cloudKitDatabase: .none
-                    )
-
-                    let container = try ModelContainer(
-                        for: fullSchema,
-                        configurations: [cloudConfiguration, localConfiguration]
-                    )
+                    let container = try makeCloudBackedContainer(for: fullSchema)
                     defaults.set(true, forKey: cloudKitRuntimeActiveKey)
                     defaults.removeObject(forKey: cloudKitLastErrorKey)
                     return container
                 } catch {
-                    // Keep the desired flag intact; fall back to local mode for this run.
-                    defaults.set(false, forKey: cloudKitRuntimeActiveKey)
-                    let nsError = error as NSError
-                    let details = [
-                        "CloudKit init failed",
-                        "domain=\(nsError.domain)",
-                        "code=\(nsError.code)",
-                        "description=\(nsError.localizedDescription)",
-                        "debug=\(String(describing: error))",
-                        "userInfo=\(nsError.userInfo)"
-                    ].joined(separator: " | ")
-                    defaults.set(details, forKey: cloudKitLastErrorKey)
+                    // One-shot recovery: clear likely stale cloud store cache and retry once.
+                    let purgeSummary = purgeLikelyCloudStoreFiles()
+                    do {
+                        let container = try makeCloudBackedContainer(for: fullSchema)
+                        defaults.set(true, forKey: cloudKitRuntimeActiveKey)
+                        defaults.set("Recovered after purge: \(purgeSummary)", forKey: cloudKitLastErrorKey)
+                        return container
+                    } catch {
+                        // Keep the desired flag intact; fall back to local mode for this run.
+                        defaults.set(false, forKey: cloudKitRuntimeActiveKey)
+                        let nsError = error as NSError
+                        let details = [
+                            "CloudKit init failed",
+                            "purge=\(purgeSummary)",
+                            "domain=\(nsError.domain)",
+                            "code=\(nsError.code)",
+                            "description=\(nsError.localizedDescription)",
+                            "debug=\(String(describing: error))",
+                            "userInfo=\(nsError.userInfo)"
+                        ].joined(separator: " | ")
+                        defaults.set(details, forKey: cloudKitLastErrorKey)
+                    }
                 }
             } else {
                 defaults.set(false, forKey: cloudKitRuntimeActiveKey)
@@ -88,12 +71,14 @@ struct NeurovaApp: App {
 
             let localConfiguration = ModelConfiguration(
                 schema: fullSchema,
+                url: storeURL(named: "neurova-local-fallback.store"),
                 cloudKitDatabase: .none
             )
             return try ModelContainer(for: fullSchema, configurations: [localConfiguration])
         } catch {
             let localConfiguration = ModelConfiguration(
                 schema: fullSchema,
+                url: storeURL(named: "neurova-local-fallback.store"),
                 cloudKitDatabase: .none
             )
 
@@ -107,6 +92,101 @@ struct NeurovaApp: App {
             fatalError("Failed to create ModelContainer: \(error)")
         }
     }()
+
+    private static func makeCloudBackedContainer(for fullSchema: Schema) throws -> ModelContainer {
+        let cloudStoreURL = storeURL(named: "neurova-cloud-v1.store")
+        let localStoreURL = storeURL(named: "neurova-local-v1.store")
+        let cloudSchema = Schema([
+            Subject.self,
+            Deck.self,
+            Card.self
+        ])
+        let localOnlySchema = Schema([
+            XPEventEntity.self,
+            XPStatsEntity.self,
+            UserPreferences.self,
+            ScanEntity.self,
+            MindMapEntity.self,
+            StudyGuideEntity.self
+        ])
+
+        let cloudConfiguration = ModelConfiguration(
+            "cloud",
+            schema: cloudSchema,
+            url: cloudStoreURL,
+            cloudKitDatabase: .automatic
+        )
+        let localConfiguration = ModelConfiguration(
+            "local",
+            schema: localOnlySchema,
+            url: localStoreURL,
+            cloudKitDatabase: .none
+        )
+
+        return try ModelContainer(
+            for: fullSchema,
+            configurations: [cloudConfiguration, localConfiguration]
+        )
+    }
+
+    private static func storeURL(named fileName: String) -> URL {
+        let manager = FileManager.default
+        let baseURL = (try? manager.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )) ?? manager.temporaryDirectory
+        return baseURL.appendingPathComponent(fileName, isDirectory: false)
+    }
+
+    private static func purgeLikelyCloudStoreFiles() -> String {
+        let manager = FileManager.default
+        do {
+            let appSupport = try manager.url(
+                for: .applicationSupportDirectory,
+                in: .userDomainMask,
+                appropriateFor: nil,
+                create: true
+            )
+            guard let enumerator = manager.enumerator(
+                at: appSupport,
+                includingPropertiesForKeys: [.isRegularFileKey],
+                options: [.skipsHiddenFiles]
+            ) else {
+                return "no-enumerator"
+            }
+
+            var removed: [String] = []
+            for case let fileURL as URL in enumerator {
+                let name = fileURL.lastPathComponent.lowercased()
+                let shouldRemove =
+                    name.contains("privatedefault") ||
+                    name.contains("privatecloud") ||
+                    name.contains("cloud") ||
+                    name.contains("swiftdata") ||
+                    name.contains("neurova-cloud-v1") ||
+                    name.contains("neurova-local-v1") ||
+                    name.hasSuffix(".store") ||
+                    name.hasSuffix(".sqlite") ||
+                    name.hasSuffix(".sqlite-wal") ||
+                    name.hasSuffix(".sqlite-shm")
+                if shouldRemove {
+                    if (try? fileURL.resourceValues(forKeys: [.isRegularFileKey]).isRegularFile) == true {
+                        try? manager.removeItem(at: fileURL)
+                        removed.append(fileURL.lastPathComponent)
+                    }
+                }
+            }
+
+            if removed.isEmpty {
+                return "no-files-removed"
+            }
+            return "removed=\(removed.joined(separator: ","))"
+        } catch {
+            return "purge-error=\(error.localizedDescription)"
+        }
+    }
 
     var body: some Scene {
         WindowGroup {

@@ -108,7 +108,7 @@ final class LibraryViewModel {
 
         for subject in subjects {
             let subjectDeckIDs = Set(
-                subject.decks
+                (subject.decks ?? [])
                     .filter { $0.isArchived == false }
                     .map(\.id)
             )

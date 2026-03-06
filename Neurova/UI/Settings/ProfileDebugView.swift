@@ -20,6 +20,13 @@ struct ProfileDebugView: View {
     @State private var subjectsCountText: String = "Not checked"
     @State private var preferencesStateText: String = "Not checked"
     @State private var latestErrorText: String = "-"
+    @State private var cloudContainerProbeText: String = "Not checked"
+    @State private var localContainerProbeText: String = "Not checked"
+    @State private var modelEntityProbeText: String = "Not checked"
+    @State private var fileSystemProbeText: String = "Not checked"
+    @State private var cloudIdentityProbeText: String = "Not checked"
+    @State private var cloudSchemaStageProbeText: String = "Not checked"
+    @State private var cloudRecordProbeText: String = "Not checked"
 
     private let containerIdentifier = "iCloud.com.angelorellana.neurova"
 
@@ -77,6 +84,13 @@ struct ProfileDebugView: View {
                 keyValueRow(AppCopy.text(locale, en: "iCloud account", es: "Cuenta iCloud"), value: cloudKitStatusText)
                 keyValueRow(AppCopy.text(locale, en: "Apple credential", es: "Credencial Apple"), value: appleCredentialStatusText)
                 keyValueRow(AppCopy.text(locale, en: "SwiftData smoke test", es: "Prueba SwiftData"), value: storageSmokeTestText)
+                keyValueRow(AppCopy.text(locale, en: "Cloud container probe", es: "Prueba contenedor cloud"), value: cloudContainerProbeText)
+                keyValueRow(AppCopy.text(locale, en: "Local container probe", es: "Prueba contenedor local"), value: localContainerProbeText)
+                keyValueRow(AppCopy.text(locale, en: "Subject/Deck/Card probe", es: "Prueba Subject/Deck/Card"), value: modelEntityProbeText)
+                keyValueRow(AppCopy.text(locale, en: "Cloud identity probe", es: "Prueba identidad Cloud"), value: cloudIdentityProbeText)
+                keyValueRow(AppCopy.text(locale, en: "Cloud schema stage probe", es: "Prueba etapas schema cloud"), value: cloudSchemaStageProbeText)
+                keyValueRow(AppCopy.text(locale, en: "CloudKit record probe", es: "Prueba registro CloudKit"), value: cloudRecordProbeText)
+                keyValueRow(AppCopy.text(locale, en: "Store files probe", es: "Prueba archivos store"), value: fileSystemProbeText)
                 keyValueRow(AppCopy.text(locale, en: "Subjects count", es: "Total materias"), value: subjectsCountText)
                 keyValueRow(AppCopy.text(locale, en: "Global preferences", es: "Preferencias globales"), value: preferencesStateText)
                 keyValueRow(AppCopy.text(locale, en: "Latest error", es: "Último error"), value: latestErrorText)
@@ -98,6 +112,34 @@ struct ProfileDebugView: View {
 
                 NSecondaryButton(AppCopy.text(locale, en: "Run SwiftData write test", es: "Probar escritura SwiftData")) {
                     runStorageSmokeTest()
+                }
+
+                NSecondaryButton(AppCopy.text(locale, en: "Probe Subject/Deck/Card chain", es: "Probar cadena Subject/Deck/Card")) {
+                    runModelEntityProbe()
+                }
+
+                NSecondaryButton(AppCopy.text(locale, en: "Probe model containers", es: "Probar model containers")) {
+                    runContainerProbes()
+                }
+
+                NSecondaryButton(AppCopy.text(locale, en: "Probe Cloud identity", es: "Probar identidad Cloud")) {
+                    runCloudIdentityProbe()
+                }
+
+                NSecondaryButton(AppCopy.text(locale, en: "Probe cloud schema stages", es: "Probar etapas schema cloud")) {
+                    runCloudSchemaStageProbe()
+                }
+
+                NSecondaryButton(AppCopy.text(locale, en: "Probe CloudKit record I/O", es: "Probar lectura/escritura CloudKit")) {
+                    runCloudRecordProbe()
+                }
+
+                NSecondaryButton(AppCopy.text(locale, en: "Inspect store files", es: "Inspeccionar archivos store")) {
+                    runFileSystemProbe()
+                }
+
+                NSecondaryButton(AppCopy.text(locale, en: "Run full diagnostics", es: "Ejecutar diagnóstico completo")) {
+                    runFullDiagnostics()
                 }
 
                 NSecondaryButton(
@@ -237,6 +279,256 @@ struct ProfileDebugView: View {
             storageSmokeTestText = "Error: \(error.localizedDescription)"
             latestErrorText = "SwiftData: \(error.localizedDescription)"
         }
+    }
+
+    private func runModelEntityProbe() {
+        do {
+            let timestamp = Int(Date().timeIntervalSince1970)
+            let subjectRepository = SwiftDataSubjectRepository(context: modelContext)
+            let deckRepository = SwiftDataDeckRepository(context: modelContext)
+            let cardRepository = SwiftDataCardRepository(context: modelContext)
+
+            let subject = try subjectRepository.createSubject(
+                name: "Probe Subject \(timestamp)",
+                systemImageName: "checkmark.seal",
+                colorTokenReference: "NeuroBlue"
+            )
+
+            let deck = try deckRepository.createDeck(
+                in: subject,
+                title: "Probe Deck \(timestamp)",
+                description: "CloudKit probe"
+            )
+
+            let card = try cardRepository.createCard(
+                in: deck,
+                frontText: "Probe front \(timestamp)",
+                backText: "Probe back \(timestamp)",
+                createdAt: .now
+            )
+
+            let subjects = try subjectRepository.listSubjects()
+            let found = subjects.contains { subjectItem in
+                subjectItem.id == subject.id &&
+                (subjectItem.decks ?? []).contains { $0.id == deck.id && ($0.cards ?? []).contains(where: { $0 === card }) }
+            }
+
+            try subjectRepository.deleteSubject(subject)
+
+            modelEntityProbeText = found ? "OK (create/fetch/delete chain)" : "Failed (chain not found after create)"
+            if found == false {
+                latestErrorText = "Model probe: chain not found after create"
+            }
+            refreshLocalState()
+        } catch {
+            let details = expandedErrorDetails(error)
+            modelEntityProbeText = "Error: \(details)"
+            latestErrorText = "Model probe: \(details)"
+        }
+    }
+
+    private func runContainerProbes() {
+        let fullSchema = Schema([
+            Subject.self,
+            Deck.self,
+            Card.self,
+            XPEventEntity.self,
+            XPStatsEntity.self,
+            UserPreferences.self,
+            ScanEntity.self,
+            MindMapEntity.self,
+            StudyGuideEntity.self
+        ])
+
+        do {
+            let cloudSchema = Schema([
+                Subject.self,
+                Deck.self,
+                Card.self
+            ])
+            let localOnlySchema = Schema([
+                XPEventEntity.self,
+                XPStatsEntity.self,
+                UserPreferences.self,
+                ScanEntity.self,
+                MindMapEntity.self,
+                StudyGuideEntity.self
+            ])
+            let cloudConfiguration = ModelConfiguration("cloudProbe", schema: cloudSchema)
+            let localConfiguration = ModelConfiguration("localProbe", schema: localOnlySchema, cloudKitDatabase: .none)
+            _ = try ModelContainer(for: fullSchema, configurations: [cloudConfiguration, localConfiguration])
+            cloudContainerProbeText = "OK"
+        } catch {
+            let details = expandedErrorDetails(error)
+            cloudContainerProbeText = "Error: \(details)"
+            latestErrorText = "Cloud container probe: \(details)"
+        }
+
+        do {
+            let localConfiguration = ModelConfiguration(schema: fullSchema, cloudKitDatabase: .none)
+            _ = try ModelContainer(for: fullSchema, configurations: [localConfiguration])
+            localContainerProbeText = "OK"
+        } catch {
+            let details = expandedErrorDetails(error)
+            localContainerProbeText = "Error: \(details)"
+            latestErrorText = "Local container probe: \(details)"
+        }
+    }
+
+    private func runCloudIdentityProbe() {
+        let container = CKContainer(identifier: containerIdentifier)
+        container.fetchUserRecordID { recordID, error in
+            DispatchQueue.main.async {
+                if let error {
+                    let details = expandedErrorDetails(error)
+                    cloudIdentityProbeText = "Error: \(details)"
+                    latestErrorText = "Cloud identity: \(details)"
+                    return
+                }
+
+                if let recordID {
+                    cloudIdentityProbeText = "OK (\(recordID.recordName))"
+                } else {
+                    cloudIdentityProbeText = "No record ID returned"
+                }
+            }
+        }
+    }
+
+    private func runFileSystemProbe() {
+        let manager = FileManager.default
+        do {
+            let appSupport = try manager.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+            let enumerator = manager.enumerator(
+                at: appSupport,
+                includingPropertiesForKeys: [.isRegularFileKey, .fileSizeKey],
+                options: [.skipsHiddenFiles]
+            )
+
+            var lines: [String] = []
+            while let url = enumerator?.nextObject() as? URL {
+                let ext = url.pathExtension.lowercased()
+                if ["sqlite", "store", "db", "wal", "shm"].contains(ext) {
+                    let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .fileSizeKey])
+                    if values?.isRegularFile == true {
+                        let relativePath = url.path.replacingOccurrences(of: appSupport.path + "/", with: "")
+                        let size = values?.fileSize ?? 0
+                        lines.append("\(relativePath) (\(size) bytes)")
+                    }
+                }
+            }
+
+            if lines.isEmpty {
+                fileSystemProbeText = "No store-like files in Application Support"
+            } else {
+                fileSystemProbeText = "Found \(lines.count) files"
+                latestErrorText = "Store files: " + lines.prefix(8).joined(separator: " | ")
+            }
+        } catch {
+            let details = expandedErrorDetails(error)
+            fileSystemProbeText = "Error: \(details)"
+            latestErrorText = "File probe: \(details)"
+        }
+    }
+
+    private func runFullDiagnostics() {
+        refreshLocalState()
+        checkCloudKitStatus()
+        checkAppleCredentialState()
+        runStorageSmokeTest()
+        runModelEntityProbe()
+        runContainerProbes()
+        runCloudIdentityProbe()
+        runCloudSchemaStageProbe()
+        runCloudRecordProbe()
+        runFileSystemProbe()
+    }
+
+    private func runCloudSchemaStageProbe() {
+        func probe(_ schema: Schema, name: String) -> String {
+            do {
+                let configuration = ModelConfiguration(name, schema: schema)
+                _ = try ModelContainer(for: schema, configurations: [configuration])
+                return "OK"
+            } catch {
+                return "Error: \(expandedErrorDetails(error))"
+            }
+        }
+
+        let subjectOnly = probe(Schema([Subject.self]), name: "cloudStageSubject")
+        let subjectDeck = probe(Schema([Subject.self, Deck.self]), name: "cloudStageSubjectDeck")
+        let subjectDeckCard = probe(Schema([Subject.self, Deck.self, Card.self]), name: "cloudStageSubjectDeckCard")
+
+        cloudSchemaStageProbeText = "S=\(subjectOnly) | SD=\(subjectDeck) | SDC=\(subjectDeckCard)"
+        if subjectOnly.hasPrefix("Error:") || subjectDeck.hasPrefix("Error:") || subjectDeckCard.hasPrefix("Error:") {
+            latestErrorText = cloudSchemaStageProbeText
+        }
+    }
+
+    private func runCloudRecordProbe() {
+        let database = CKContainer(identifier: containerIdentifier).privateCloudDatabase
+        let recordID = CKRecord.ID(recordName: "probe-\(UUID().uuidString.lowercased())")
+        let record = CKRecord(recordType: "ProfileDebugProbe", recordID: recordID)
+        record["createdAt"] = Date() as NSDate
+        record["app"] = "Neurova" as NSString
+
+        database.save(record) { savedRecord, saveError in
+            if let saveError {
+                DispatchQueue.main.async {
+                    let details = expandedErrorDetails(saveError)
+                    cloudRecordProbeText = "Save error: \(details)"
+                    latestErrorText = "Cloud record save: \(details)"
+                }
+                return
+            }
+
+            guard let savedRecord else {
+                DispatchQueue.main.async {
+                    cloudRecordProbeText = "Save failed: no record returned"
+                    latestErrorText = "Cloud record save: no record returned"
+                }
+                return
+            }
+
+            database.fetch(withRecordID: savedRecord.recordID) { fetchedRecord, fetchError in
+                if let fetchError {
+                    DispatchQueue.main.async {
+                        let details = expandedErrorDetails(fetchError)
+                        cloudRecordProbeText = "Fetch error: \(details)"
+                        latestErrorText = "Cloud record fetch: \(details)"
+                    }
+                    return
+                }
+
+                guard fetchedRecord != nil else {
+                    DispatchQueue.main.async {
+                        cloudRecordProbeText = "Fetch failed: nil record"
+                        latestErrorText = "Cloud record fetch: nil record"
+                    }
+                    return
+                }
+
+                database.delete(withRecordID: savedRecord.recordID) { _, deleteError in
+                    DispatchQueue.main.async {
+                        if let deleteError {
+                            let details = expandedErrorDetails(deleteError)
+                            cloudRecordProbeText = "Save+Fetch OK, delete error: \(details)"
+                            latestErrorText = "Cloud record delete: \(details)"
+                        } else {
+                            cloudRecordProbeText = "OK (save/fetch/delete)"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func expandedErrorDetails(_ error: Error) -> String {
+        let nsError = error as NSError
+        let userInfoDump = nsError.userInfo
+            .map { key, value in "\(key)=\(value)" }
+            .joined(separator: ", ")
+        return "domain=\(nsError.domain) code=\(nsError.code) desc=\(nsError.localizedDescription) userInfo={\(userInfoDump)}"
     }
 
     private func refreshLocalState() {

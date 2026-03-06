@@ -9,12 +9,8 @@ final class Deck {
     var createdAt: Date = Date()
     var isArchived: Bool = false
     var subject: Subject?
-    @Relationship(deleteRule: .cascade, inverse: \Card.deck)
-    var cards: [Card] = []
-    @Relationship(deleteRule: .cascade, inverse: \MindMapEntity.deck)
-    var generatedMindMaps: [MindMapEntity] = []
-    @Relationship(deleteRule: .cascade, inverse: \StudyGuideEntity.deck)
-    var generatedStudyGuides: [StudyGuideEntity] = []
+    @Relationship(deleteRule: .nullify, inverse: \Card.deck)
+    var cards: [Card]?
 
     init(
         id: UUID = UUID(),
@@ -30,9 +26,7 @@ final class Deck {
         self.deckDescription = description
         self.createdAt = createdAt
         self.isArchived = isArchived
-        self.cards = []
-        self.generatedMindMaps = []
-        self.generatedStudyGuides = []
+        self.cards = nil
     }
 
     var description: String? {
