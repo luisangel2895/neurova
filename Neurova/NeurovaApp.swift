@@ -11,23 +11,107 @@ import SwiftUI
 @main
 struct NeurovaApp: App {
     @State private var launchMode: AppLaunchMode = AppDevConfig.defaultLaunchMode
+    private static let cloudKitSyncFlagKey = "cloudkit_sync_enabled"
+    private static let cloudKitRuntimeActiveKey = "cloudkit_sync_runtime_active"
+    private static let cloudKitLastErrorKey = "cloudkit_sync_last_error"
 
-    var body: some Scene {
-        WindowGroup {
-            AppSceneContainer(launchMode: $launchMode)
-                .modelContainer(
-                    for: [
+    private let modelContainer: ModelContainer = {
+        let fullSchema = Schema([
+            Subject.self,
+            Deck.self,
+            Card.self,
+            XPEventEntity.self,
+            XPStatsEntity.self,
+            UserPreferences.self,
+            ScanEntity.self,
+            MindMapEntity.self,
+            StudyGuideEntity.self
+        ])
+
+        do {
+            let defaults = UserDefaults.standard
+            if defaults.object(forKey: cloudKitSyncFlagKey) == nil {
+                defaults.set(true, forKey: cloudKitSyncFlagKey)
+            }
+
+            let cloudKitEnabled = defaults.bool(forKey: cloudKitSyncFlagKey)
+            if cloudKitEnabled {
+                do {
+                    let cloudSchema = Schema([
                         Subject.self,
                         Deck.self,
                         Card.self,
                         XPEventEntity.self,
                         XPStatsEntity.self,
-                        UserPreferences.self,
+                        UserPreferences.self
+                    ])
+                    let localOnlySchema = Schema([
                         ScanEntity.self,
                         MindMapEntity.self,
                         StudyGuideEntity.self
-                    ]
-                )
+                    ])
+
+                    let cloudConfiguration = ModelConfiguration(
+                        "cloud",
+                        schema: cloudSchema
+                    )
+                    let localConfiguration = ModelConfiguration(
+                        "local",
+                        schema: localOnlySchema,
+                        cloudKitDatabase: .none
+                    )
+
+                    let container = try ModelContainer(
+                        for: fullSchema,
+                        configurations: [cloudConfiguration, localConfiguration]
+                    )
+                    defaults.set(true, forKey: cloudKitRuntimeActiveKey)
+                    defaults.removeObject(forKey: cloudKitLastErrorKey)
+                    return container
+                } catch {
+                    // Keep the desired flag intact; fall back to local mode for this run.
+                    defaults.set(false, forKey: cloudKitRuntimeActiveKey)
+                    let nsError = error as NSError
+                    let details = [
+                        "CloudKit init failed",
+                        "domain=\(nsError.domain)",
+                        "code=\(nsError.code)",
+                        "description=\(nsError.localizedDescription)",
+                        "debug=\(String(describing: error))",
+                        "userInfo=\(nsError.userInfo)"
+                    ].joined(separator: " | ")
+                    defaults.set(details, forKey: cloudKitLastErrorKey)
+                }
+            } else {
+                defaults.set(false, forKey: cloudKitRuntimeActiveKey)
+            }
+
+            let localConfiguration = ModelConfiguration(
+                schema: fullSchema,
+                cloudKitDatabase: .none
+            )
+            return try ModelContainer(for: fullSchema, configurations: [localConfiguration])
+        } catch {
+            let localConfiguration = ModelConfiguration(
+                schema: fullSchema,
+                cloudKitDatabase: .none
+            )
+
+            if let fallbackContainer = try? ModelContainer(for: fullSchema, configurations: [localConfiguration]) {
+                let defaults = UserDefaults.standard
+                defaults.set(false, forKey: cloudKitRuntimeActiveKey)
+                defaults.set("Fallback local init used", forKey: cloudKitLastErrorKey)
+                return fallbackContainer
+            }
+
+            fatalError("Failed to create ModelContainer: \(error)")
+        }
+    }()
+
+    var body: some Scene {
+        WindowGroup {
+            AppSceneContainer(launchMode: $launchMode)
+                .modelContainer(modelContainer)
         }
     }
 }
@@ -222,7 +306,10 @@ private struct AppTabShellView: View {
             }
             .safeAreaPadding(.bottom, Layout.contentBottomInset)
         case .profile:
-            placeholderScreen(title: AppCopy.text(locale, en: "Profile", es: "Perfil"))
+            NavigationStack {
+                ProfileDebugView()
+            }
+            .safeAreaPadding(.bottom, Layout.contentBottomInset)
         }
     }
 

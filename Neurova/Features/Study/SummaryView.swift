@@ -22,10 +22,10 @@ struct SummaryView: View {
                     .foregroundStyle(secondaryTextColor)
             }
 
-            NImages.Mascot.neruMinimal
+            NImages.Mascot.neruCelebrate
                 .resizable()
                 .scaledToFit()
-                .frame(width: 140, height: 140)
+                .frame(width: 180, height: 180)
 
             VStack(spacing: NSpacing.xs) {
                 Text("\(summary.xpEarned) XP")

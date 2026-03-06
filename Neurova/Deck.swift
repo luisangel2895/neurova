@@ -3,18 +3,18 @@ import SwiftData
 
 @Model
 final class Deck {
-    var id: UUID
-    var title: String
+    var id: UUID = UUID()
+    var title: String = ""
     var deckDescription: String?
-    var createdAt: Date
-    var isArchived: Bool
-    var subject: Subject
+    var createdAt: Date = Date()
+    var isArchived: Bool = false
+    var subject: Subject?
     @Relationship(deleteRule: .cascade, inverse: \Card.deck)
-    var cards: [Card]
+    var cards: [Card] = []
     @Relationship(deleteRule: .cascade, inverse: \MindMapEntity.deck)
-    var generatedMindMaps: [MindMapEntity]
+    var generatedMindMaps: [MindMapEntity] = []
     @Relationship(deleteRule: .cascade, inverse: \StudyGuideEntity.deck)
-    var generatedStudyGuides: [StudyGuideEntity]
+    var generatedStudyGuides: [StudyGuideEntity] = []
 
     init(
         id: UUID = UUID(),

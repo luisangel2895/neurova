@@ -3,11 +3,11 @@ import SwiftData
 
 @Model
 final class StudyGuideEntity {
-    var id: UUID
-    var createdAt: Date
-    var title: String
-    var summary: String
-    var serializedSections: String
+    var id: UUID = UUID()
+    var createdAt: Date = Date()
+    var title: String = ""
+    var summary: String = ""
+    var serializedSections: String = ""
     var sourceScanID: UUID?
     var deck: Deck?
 

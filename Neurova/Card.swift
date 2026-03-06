@@ -3,16 +3,16 @@ import SwiftData
 
 @Model
 final class Card {
-    var frontText: String
-    var backText: String
-    var createdAt: Date
+    var frontText: String = ""
+    var backText: String = ""
+    var createdAt: Date = Date()
     var deck: Deck?
-    var repetition: Int
-    var interval: Int
-    var easinessFactor: Double
-    var nextReviewDate: Date
-    var lastReviewDate: Date
-    var lapses: Int
+    var repetition: Int = 0
+    var interval: Int = 0
+    var easinessFactor: Double = 2.5
+    var nextReviewDate: Date = Date()
+    var lastReviewDate: Date = Date()
+    var lapses: Int = 0
     var lastReviewQualityRaw: String?
     var learningStateRaw: String?
     var learningModeRaw: String?

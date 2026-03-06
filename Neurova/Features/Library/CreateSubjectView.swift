@@ -230,7 +230,11 @@ struct CreateSubjectView: View {
             dismiss()
         } catch {
             isSaving = false
-            errorMessage = AppCopy.text(locale, en: "Unable to save subject.", es: "No se pudo guardar la materia.")
+            errorMessage = AppCopy.text(
+                locale,
+                en: "Unable to save subject: \(error.localizedDescription)",
+                es: "No se pudo guardar la materia: \(error.localizedDescription)"
+            )
         }
     }
 

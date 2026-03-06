@@ -73,7 +73,7 @@ struct HomeUseCases {
             }
 
         return HomeState(
-            greetingName: "Adrián",
+            greetingName: "",
             greetingEmoji: "👋",
             subtitle: isEnglish ? "Ready to study?" : "¿Listo para estudiar?",
             studySectionTitle: isEnglish ? "STUDY TODAY" : "ESTUDIA HOY",
@@ -122,7 +122,7 @@ struct HomeUseCases {
                     id: summary.deck.id,
                     deck: summary.deck,
                     subjectPathText: subjectNameText(for: summary.deck),
-                    subjectIconName: summary.deck.subject.systemImageName ?? "book.closed",
+                    subjectIconName: summary.deck.subject?.systemImageName ?? "book.closed",
                     title: summary.deck.title,
                     cardCountText: isEnglish
                         ? "\(summary.totalCards) cards"
@@ -182,7 +182,7 @@ struct HomeUseCases {
                     newCount: newCards.count,
                     totalCards: allCards.count,
                     lastActivityDate: activityDate,
-                    accentColor: NColors.SubjectIcon.color(for: deck.subject.colorTokenReference)
+                    accentColor: NColors.SubjectIcon.color(for: deck.subject?.colorTokenReference)
                 )
             }
             .sorted { lhs, rhs in
@@ -259,7 +259,7 @@ struct HomeUseCases {
     }
 
     private func subjectNameText(for deck: Deck) -> String {
-        deck.subject.name
+        deck.subject?.name ?? "Sin materia"
     }
 
     private func difficultyLabel(for deck: Deck, isEnglish: Bool) -> String {

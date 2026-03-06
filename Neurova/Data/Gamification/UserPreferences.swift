@@ -3,9 +3,9 @@ import SwiftData
 
 @Model
 final class UserPreferences {
-    var key: String
-    var dailyGoalCards: Int
-    var hasCompletedOnboarding: Bool
+    var key: String = "global"
+    var dailyGoalCards: Int = 20
+    var hasCompletedOnboarding: Bool = false
     var preferredThemeRaw: String?
     var preferredLanguageRaw: String?
     var newCardsPerDay: Int?

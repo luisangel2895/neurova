@@ -3,12 +3,12 @@ import SwiftData
 
 @Model
 final class XPEventEntity {
-    var id: UUID
-    var date: Date
+    var id: UUID = UUID()
+    var date: Date = Date()
     var deckId: UUID?
     var cardId: UUID?
-    var eventTypeRaw: String
-    var xpDelta: Int
+    var eventTypeRaw: String = ""
+    var xpDelta: Int = 0
 
     init(
         id: UUID = UUID(),

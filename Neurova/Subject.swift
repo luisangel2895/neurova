@@ -3,13 +3,13 @@ import SwiftData
 
 @Model
 final class Subject {
-    var id: UUID
-    var name: String
-    var createdAt: Date
+    var id: UUID = UUID()
+    var name: String = ""
+    var createdAt: Date = Date()
     var systemImageName: String?
     var colorTokenReference: String?
     @Relationship(deleteRule: .cascade, inverse: \Deck.subject)
-    var decks: [Deck]
+    var decks: [Deck] = []
 
     init(
         id: UUID = UUID(),

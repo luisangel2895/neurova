@@ -6,6 +6,7 @@ struct StudyCoachView: View {
 
     let recommendations: [StudyDeckRecommendation]
     let onSelectDeck: (Deck) -> Void
+    let onOpenLibrary: () -> Void
 
     @State private var displayedMessage = ""
     @State private var typewriterTask: Task<Void, Never>?
@@ -43,7 +44,7 @@ struct StudyCoachView: View {
     private var mascotHeader: some View {
         NCard {
             HStack(alignment: .top, spacing: NSpacing.sm) {
-                NImages.Mascot.neruHappy
+                coachMascot
                     .resizable()
                     .scaledToFit()
                     .frame(width: 132, height: 132)
@@ -91,21 +92,34 @@ struct StudyCoachView: View {
     private var recommendationsCard: some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.sm) {
-                Text(AppCopy.text(locale, en: "Decks to review today", es: "Decks para repasar hoy"))
+                Text(
+                    recommendations.isEmpty
+                        ? AppCopy.text(locale, en: "You're all caught up", es: "Estás al día")
+                        : AppCopy.text(locale, en: "Decks to review today", es: "Decks para repasar hoy")
+                )
                     .font(NTypography.bodyEmphasis.weight(.semibold))
                     .foregroundStyle(NColors.Text.textPrimary)
 
                 if recommendations.isEmpty {
-                    Text(
-                        AppCopy.text(
-                            locale,
-                            en: "You have no ready cards right now.",
-                            es: "No tienes tarjetas listas ahora mismo."
+                    VStack(alignment: .leading, spacing: NSpacing.sm) {
+                        Text(
+                            AppCopy.text(
+                                locale,
+                                en: "Congratulations, you're up to date with your studies.",
+                                es: "Felicidades, estás al día en tus estudios."
+                            )
                         )
-                    )
-                    .font(NTypography.caption)
-                    .foregroundStyle(NColors.Text.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                        .font(NTypography.caption)
+                        .foregroundStyle(NColors.Text.textSecondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        NSecondaryButton(
+                            AppCopy.text(locale, en: "Go to Library", es: "Ir a Biblioteca")
+                        ) {
+                            dismiss()
+                            onOpenLibrary()
+                        }
+                    }
                 } else {
                     ForEach(recommendations) { recommendation in
                         Button {
@@ -116,15 +130,15 @@ struct StudyCoachView: View {
                                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                                     .fill(
                                         NColors.SubjectIcon
-                                            .color(for: recommendation.deck.subject.colorTokenReference)
+                                            .color(for: recommendation.deck.subject?.colorTokenReference)
                                             .opacity(0.16)
                                     )
                                     .frame(width: 28, height: 28)
                                     .overlay {
-                                        Image(systemName: recommendation.deck.subject.systemImageName ?? "book.closed")
+                                        Image(systemName: recommendation.deck.subject?.systemImageName ?? "book.closed")
                                             .font(.system(size: 13, weight: .semibold))
                                             .foregroundStyle(
-                                                NColors.SubjectIcon.color(for: recommendation.deck.subject.colorTokenReference)
+                                                NColors.SubjectIcon.color(for: recommendation.deck.subject?.colorTokenReference)
                                             )
                                     }
 
@@ -166,11 +180,23 @@ struct StudyCoachView: View {
     }
 
     private var fullMessage: String {
-        AppCopy.text(
+        if recommendations.isEmpty {
+            return AppCopy.text(
+                locale,
+                en: "Congratulations, you're up to date with your studies.",
+                es: "Felicidades, estás al día en tus estudios."
+            )
+        }
+
+        return AppCopy.text(
             locale,
             en: "Today you have these decks ready to review. Let's keep your streak alive.",
             es: "Hoy tienes estos decks para repasar. Vamos a mantener tu racha."
         )
+    }
+
+    private var coachMascot: Image {
+        recommendations.isEmpty ? NImages.Mascot.neruHappy : NImages.Mascot.neruThinking
     }
 
     private var backgroundView: some View {

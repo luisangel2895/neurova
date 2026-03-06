@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import AuthenticationServices
 
 struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
@@ -8,6 +9,10 @@ struct OnboardingView: View {
 
     @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
     @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
+    @AppStorage("apple_user_id") private var appleUserID: String = ""
+    @AppStorage("apple_given_name") private var appleGivenName: String = ""
+    @AppStorage("profile_display_name") private var profileDisplayName: String = ""
+    @AppStorage("cloudkit_sync_enabled") private var cloudKitSyncEnabled: Bool = true
 
     private let onFinish: () -> Void
 
@@ -22,6 +27,8 @@ struct OnboardingView: View {
     @State private var createdDeck: Deck?
     @State private var createdCards: [Card] = []
     @State private var isPresentingFirstStudy = false
+    @State private var isAuthenticating = false
+    @State private var isWavingMascot = false
 
     private enum Step: Int, CaseIterable {
         case welcome
@@ -29,6 +36,7 @@ struct OnboardingView: View {
         case subject
         case deck
         case firstCard
+        case account
         case done
     }
 
@@ -103,11 +111,10 @@ struct OnboardingView: View {
             )
         case .firstCard:
             firstCardEditor
+        case .account:
+            accountStepCard
         case .done:
-            onboardingCard(
-                title: AppCopy.text(locale, en: "Setup complete", es: "Configuración lista"),
-                message: AppCopy.text(locale, en: "You are ready to start your first study session.", es: "Ya puedes comenzar tu primera sesión de estudio.")
-            )
+            doneStepCard
         }
     }
 
@@ -132,6 +139,23 @@ struct OnboardingView: View {
                 NSecondaryButton(AppCopy.text(locale, en: "Go to app", es: "Ir a la app")) {
                     finishOnboarding()
                 }
+            } else if step == .account {
+                SignInWithAppleButton(.continue) { request in
+                    request.requestedScopes = [.fullName, .email]
+                    isAuthenticating = true
+                    errorMessage = nil
+                } onCompletion: { result in
+                    handleAppleSignIn(result: result)
+                }
+                .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+                .frame(height: 50)
+                .clipShape(RoundedRectangle(cornerRadius: NRadius.button, style: .continuous))
+                .disabled(isSaving || isAuthenticating)
+
+                NSecondaryButton(AppCopy.text(locale, en: "Skip for now", es: "Omitir por ahora")) {
+                    persistOnboarding()
+                }
+                .disabled(isSaving || isAuthenticating)
             } else {
                 NPrimaryButton(primaryButtonTitle) {
                     handlePrimaryAction()
@@ -251,6 +275,71 @@ struct OnboardingView: View {
         }
     }
 
+    private var accountStepCard: some View {
+        NCard {
+            VStack(alignment: .leading, spacing: NSpacing.sm + NSpacing.xs) {
+                Text(AppCopy.text(locale, en: "Create account to sync your progress", es: "Crea una cuenta para sincronizar tu progreso"))
+                    .font(NTypography.bodyEmphasis.weight(.bold))
+                    .foregroundStyle(NColors.Text.textPrimary)
+
+                Text(
+                    AppCopy.text(
+                        locale,
+                        en: "Sign in with Apple to keep your decks, cards, and progress across devices.",
+                        es: "Inicia sesión con Apple para mantener tus decks, tarjetas y progreso entre dispositivos."
+                    )
+                )
+                .font(NTypography.caption)
+                .foregroundStyle(secondaryTextColor)
+                .fixedSize(horizontal: false, vertical: true)
+
+                if isAuthenticating {
+                    HStack(spacing: NSpacing.xs) {
+                        ProgressView()
+                            .controlSize(.small)
+                        Text(AppCopy.text(locale, en: "Signing in…", es: "Iniciando sesión…"))
+                            .font(NTypography.caption)
+                            .foregroundStyle(secondaryTextColor)
+                    }
+                    .padding(.top, NSpacing.xs)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var doneStepCard: some View {
+        NCard {
+            VStack(alignment: .leading, spacing: NSpacing.md) {
+                Text(AppCopy.text(locale, en: "Setup complete", es: "Configuración lista"))
+                    .font(NTypography.bodyEmphasis.weight(.bold))
+                    .foregroundStyle(NColors.Text.textPrimary)
+
+                Text(AppCopy.text(locale, en: "You are ready to start your first study session.", es: "Ya puedes comenzar tu primera sesión de estudio."))
+                    .font(NTypography.body)
+                    .foregroundStyle(secondaryTextColor)
+
+                HStack {
+                    Spacer(minLength: 0)
+                    NImages.Mascot.neruWave
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 132, height: 132)
+                        .rotationEffect(.degrees(isWavingMascot ? 15 : 0), anchor: .bottomTrailing)
+                        .onAppear {
+                            isWavingMascot = false
+                            withAnimation(.easeInOut(duration: 1.15).repeatForever(autoreverses: true)) {
+                                isWavingMascot = true
+                            }
+                        }
+                    Spacer(minLength: 0)
+                }
+                .padding(.top, NSpacing.xs)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
     private func onboardingCard(title: String, message: String) -> some View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.sm) {
@@ -281,20 +370,25 @@ struct OnboardingView: View {
             return AppCopy.text(locale, en: "Your first study container.", es: "Tu primer contenedor de estudio.")
         case .firstCard:
             return AppCopy.text(locale, en: "Create one card to launch your first session.", es: "Crea una tarjeta para lanzar tu primera sesión.")
+        case .account:
+            return AppCopy.text(locale, en: "Optional but recommended for multi-device sync.", es: "Opcional pero recomendado para sincronizar en varios dispositivos.")
         case .done:
             return AppCopy.text(locale, en: "Everything is ready.", es: "Todo está listo.")
         }
     }
 
     private var primaryButtonTitle: String {
-        step == .firstCard
-            ? AppCopy.text(locale, en: "Create setup", es: "Crear configuración")
-            : AppCopy.text(locale, en: "Continue", es: "Continuar")
+        switch step {
+        case .firstCard:
+            return AppCopy.text(locale, en: "Continue", es: "Continuar")
+        default:
+            return AppCopy.text(locale, en: "Continue", es: "Continuar")
+        }
     }
 
     private var canContinue: Bool {
         switch step {
-        case .welcome, .dailyGoal, .done:
+        case .welcome, .dailyGoal, .account, .done:
             return true
         case .subject:
             return subjectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
@@ -308,7 +402,9 @@ struct OnboardingView: View {
 
     private func handlePrimaryAction() {
         if step == .firstCard {
-            persistOnboarding()
+            withAnimation(.easeInOut(duration: 0.2)) {
+                step = .account
+            }
             return
         }
         guard let next = Step(rawValue: step.rawValue + 1) else { return }
@@ -327,6 +423,7 @@ struct OnboardingView: View {
     private func persistOnboarding() {
         guard isSaving == false else { return }
         isSaving = true
+        isAuthenticating = false
         errorMessage = nil
 
         do {
@@ -364,10 +461,81 @@ struct OnboardingView: View {
             createdCards = [firstCard]
             step = .done
         } catch {
-            errorMessage = AppCopy.text(locale, en: "Unable to complete onboarding.", es: "No se pudo completar el onboarding.")
+            errorMessage = AppCopy.text(
+                locale,
+                en: "Unable to complete onboarding: \(error.localizedDescription)",
+                es: "No se pudo completar el onboarding: \(error.localizedDescription)"
+            )
         }
 
         isSaving = false
+    }
+
+    private func handleAppleSignIn(result: Result<ASAuthorization, Error>) {
+        isAuthenticating = false
+
+        switch result {
+        case .success(let authorization):
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+                errorMessage = AppCopy.text(locale, en: "Unable to sign in with Apple.", es: "No se pudo iniciar sesión con Apple.")
+                return
+            }
+
+            appleUserID = credential.user
+            cloudKitSyncEnabled = true
+            let givenName = credential.fullName?.givenName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if givenName.isEmpty == false {
+                appleGivenName = givenName
+                profileDisplayName = givenName
+            }
+            persistOnboarding()
+
+        case .failure(let error):
+            let nsError = error as NSError
+            if nsError.code == ASAuthorizationError.canceled.rawValue {
+                return
+            }
+            if let authCode = ASAuthorizationError.Code(rawValue: nsError.code) {
+                switch authCode {
+                case .notHandled:
+                    errorMessage = AppCopy.text(
+                        locale,
+                        en: "Apple sign-in was not completed. Please try again.",
+                        es: "El inicio con Apple no se completó. Inténtalo de nuevo."
+                    )
+                case .failed:
+                    errorMessage = AppCopy.text(
+                        locale,
+                        en: "Apple sign-in failed. Verify the capability is enabled and try again.",
+                        es: "Falló el inicio con Apple. Verifica que la capacidad esté habilitada e inténtalo de nuevo."
+                    )
+                case .invalidResponse:
+                    errorMessage = AppCopy.text(
+                        locale,
+                        en: "Received an invalid Apple response. Try again.",
+                        es: "Se recibió una respuesta inválida de Apple. Inténtalo de nuevo."
+                    )
+                case .unknown:
+                    errorMessage = AppCopy.text(
+                        locale,
+                        en: "Unknown Apple sign-in error. Check iCloud session and try again.",
+                        es: "Error desconocido de inicio con Apple. Verifica la sesión de iCloud e inténtalo."
+                    )
+                default:
+                    errorMessage = AppCopy.text(
+                        locale,
+                        en: "Unable to sign in with Apple right now.",
+                        es: "No se pudo iniciar sesión con Apple en este momento."
+                    )
+                }
+            } else {
+                errorMessage = AppCopy.text(
+                    locale,
+                    en: "Unable to sign in with Apple right now.",
+                    es: "No se pudo iniciar sesión con Apple en este momento."
+                )
+            }
+        }
     }
 
     private func fetchOrCreatePreferences() throws -> UserPreferences {

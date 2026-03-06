@@ -107,13 +107,29 @@ final class LibraryViewModel {
         var counts: [UUID: Int] = [:]
 
         for subject in subjects {
-            let subjectID = subject.id
+            let subjectDeckIDs = Set(
+                subject.decks
+                    .filter { $0.isArchived == false }
+                    .map(\.id)
+            )
+
+            guard subjectDeckIDs.isEmpty == false else {
+                counts[subject.id] = 0
+                continue
+            }
+
             let descriptor = FetchDescriptor<Card>(
                 predicate: #Predicate<Card> { card in
-                    card.deck?.subject.id == subjectID && card.nextReviewDate <= now
+                    card.nextReviewDate <= now
                 }
             )
-            counts[subjectID] = (try? context.fetchCount(descriptor)) ?? 0
+
+            let dueCards = (try? context.fetch(descriptor)) ?? []
+            counts[subject.id] = dueCards.reduce(into: 0) { partialResult, card in
+                if let deckID = card.deck?.id, subjectDeckIDs.contains(deckID) {
+                    partialResult += 1
+                }
+            }
         }
 
         readyCountBySubjectID = counts

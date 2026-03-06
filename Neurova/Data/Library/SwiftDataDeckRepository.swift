@@ -19,14 +19,13 @@ struct SwiftDataDeckRepository: DeckRepository {
     }
 
     func decks(for subject: Subject, includeArchived: Bool = false) throws -> [Deck] {
-        let subjectID = subject.id
         let descriptor = FetchDescriptor<Deck>(
-            predicate: #Predicate<Deck> { deck in
-                deck.subject.id == subjectID && (includeArchived || deck.isArchived == false)
-            },
             sortBy: [SortDescriptor(\.createdAt, order: .forward)]
         )
-        return try context.fetch(descriptor)
+        let allDecks = try context.fetch(descriptor)
+        return allDecks.filter { deck in
+            deck.subject?.id == subject.id && (includeArchived || deck.isArchived == false)
+        }
     }
 
     func createDeck(

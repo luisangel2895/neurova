@@ -5,6 +5,8 @@ struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.locale) private var locale
     @Environment(\.colorScheme) private var colorScheme
+    @AppStorage("apple_given_name") private var appleGivenName: String = ""
+    @AppStorage("profile_display_name") private var profileDisplayName: String = ""
 
     @StateObject private var viewModel: HomeViewModel
     private let onSettingsTap: () -> Void
@@ -60,7 +62,8 @@ struct HomeView: View {
                 recommendations: state.studyRecommendations,
                 onSelectDeck: { deck in
                     beginReadyStudyFlow(with: deck)
-                }
+                },
+                onOpenLibrary: onOpenLibrary
             )
         }
         .sheet(isPresented: $isPresentingStudyOptions) {
@@ -162,7 +165,7 @@ struct HomeView: View {
     private var headerSection: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: NSpacing.xs) {
-                Text("\(AppCopy.text(locale, en: "Hi", es: "Hola")), \(state.greetingName)\(state.greetingEmoji)")
+                Text(greetingText)
                     .font(NTypography.title.weight(.bold))
                     .foregroundStyle(NColors.Text.textPrimary)
 
@@ -189,6 +192,25 @@ struct HomeView: View {
             .buttonStyle(.plain)
             .onLongPressGesture(minimumDuration: 0.7, perform: onOpenBootstrap)
         }
+    }
+
+    private var resolvedGreetingName: String {
+        let appleTrimmed = appleGivenName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if appleTrimmed.isEmpty == false { return appleTrimmed }
+
+        let profileTrimmed = profileDisplayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if profileTrimmed.isEmpty == false { return profileTrimmed }
+
+        return state.greetingName
+    }
+
+    private var greetingText: String {
+        let hello = AppCopy.text(locale, en: "Hi", es: "Hola")
+        let name = resolvedGreetingName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if name.isEmpty {
+            return "\(hello) \(state.greetingEmoji)"
+        }
+        return "\(hello), \(name)\(state.greetingEmoji)"
     }
 
     private var studyCardSection: some View {
@@ -397,7 +419,7 @@ struct HomeView: View {
 
     private var tipSection: some View {
         NTipCard(title: state.tipTitle, bodyText: state.tipMessage, showsTypewriter: true) {
-            NImages.Mascot.neruThinking
+            NImages.Mascot.neruHappy
                 .resizable()
                 .scaledToFit()
                 .frame(width: 68, height: 68)
@@ -406,15 +428,7 @@ struct HomeView: View {
     }
 
     private func handlePrimaryAction() {
-        guard state.studyRecommendations.isEmpty == false else {
-            guard let highlightedDeck = state.highlightedDeck else {
-                onOpenLibrary()
-                return
-            }
-            beginStudyFlow(with: highlightedDeck)
-            return
-        }
-
+        // Always open coach first. It handles both recommendation mode and "all caught up" mode.
         isPresentingStudyCoach = true
     }
 

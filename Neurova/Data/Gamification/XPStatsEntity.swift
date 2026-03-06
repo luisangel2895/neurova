@@ -3,8 +3,8 @@ import SwiftData
 
 @Model
 final class XPStatsEntity {
-    var key: String
-    var totalXP: Int
+    var key: String = "global"
+    var totalXP: Int = 0
 
     init(key: String = "global", totalXP: Int = 0) {
         self.key = key

@@ -29,7 +29,7 @@ struct HomeState {
     let isEmptyState: Bool
 
     static let placeholder = HomeState(
-        greetingName: "Learner",
+        greetingName: "",
         greetingEmoji: "👋",
         subtitle: "",
         studySectionTitle: "STUDY",

@@ -3,10 +3,10 @@ import SwiftData
 
 @Model
 final class MindMapEntity {
-    var id: UUID
-    var createdAt: Date
-    var title: String
-    var serializedTree: String
+    var id: UUID = UUID()
+    var createdAt: Date = Date()
+    var title: String = ""
+    var serializedTree: String = ""
     var sourceScanID: UUID?
     var deck: Deck?
 
