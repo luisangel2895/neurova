@@ -935,17 +935,57 @@ private struct RecoveredCloudSessionView: View {
     let locale: Locale
     let recoveredCloudSession: RecoveredCloudSession
     let onContinue: () -> Void
+    @State private var logoFloat = false
 
     var body: some View {
         ZStack {
-            NColors.Neutrals.background.ignoresSafeArea()
+            LinearGradient(
+                colors: [
+                    Color(red: 0.04, green: 0.07, blue: 0.15),
+                    Color(red: 0.05, green: 0.08, blue: 0.18),
+                    Color(red: 0.03, green: 0.05, blue: 0.12)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
 
-            VStack(alignment: .leading, spacing: NSpacing.md) {
-                NCard {
-                    VStack(alignment: .leading, spacing: NSpacing.sm) {
-                        Text(AppCopy.text(locale, en: "iCloud account found", es: "Cuenta de iCloud encontrada"))
-                            .font(NTypography.title.weight(.bold))
-                            .foregroundStyle(NColors.Text.textPrimary)
+            VStack(spacing: 22) {
+                Spacer(minLength: 54)
+
+                NImages.Brand.logoOutline
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 66, height: 66)
+                    .shadow(color: Color(red: 0.22, green: 0.52, blue: 0.96).opacity(0.34), radius: 18, x: 0, y: 8)
+                    .offset(y: logoFloat ? -2 : 2)
+                    .padding(.bottom, 20)
+                    .task {
+                        guard logoFloat == false else { return }
+                        withAnimation(.easeInOut(duration: 2.1).repeatForever(autoreverses: true)) {
+                            logoFloat = true
+                        }
+                    }
+
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "icloud")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Color(red: 0.47, green: 0.70, blue: 1.0))
+                            .frame(width: 30, height: 30)
+                            .background(Color.white.opacity(0.07))
+                            .clipShape(Circle())
+
+                        Text(AppCopy.text(locale, en: "ICLOUD SYNCED", es: "ICLOUD SINCRONIZADO"))
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .tracking(0.4)
+                            .foregroundStyle(Color.white.opacity(0.56))
+                    }
+
+                    VStack(alignment: .leading, spacing: 7) {
+                        Text(AppCopy.text(locale, en: "Account found", es: "Cuenta encontrada"))
+                            .font(.system(size: 25, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Color.white.opacity(0.98))
 
                         Text(
                             AppCopy.text(
@@ -954,28 +994,277 @@ private struct RecoveredCloudSessionView: View {
                                 es: "Encontramos tu perfil de Neurova en iCloud. Puedes continuar sin iniciar sesión otra vez."
                             )
                         )
-                        .font(NTypography.body)
-                        .foregroundStyle(NColors.Text.textSecondary)
-
-                        Text(recoveredCloudSession.displayName)
-                            .font(NTypography.bodyEmphasis.weight(.semibold))
-                            .foregroundStyle(NColors.Text.textPrimary)
-
-                        if let email = recoveredCloudSession.email, email.isEmpty == false {
-                            Text(email)
-                                .font(NTypography.caption)
-                                .foregroundStyle(NColors.Text.textSecondary)
-                        }
+                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .foregroundStyle(Color(red: 0.66, green: 0.72, blue: 0.84))
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
 
-                NPrimaryButton(AppCopy.text(locale, en: "Continue to app", es: "Ir a la app")) {
+                    profilePill
+                }
+                .padding(.horizontal, 26)
+                .padding(.vertical, 24)
+                .background(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.08),
+                                    Color(red: 0.15, green: 0.24, blue: 0.43).opacity(0.28)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(Color.white.opacity(0.07), lineWidth: 1)
+                )
+
+                ShineSweepButton(title: AppCopy.text(locale, en: "Go to app", es: "Ir a la app")) {
                     onContinue()
                 }
+
+                Text(AppCopy.text(locale, en: "Your data is protected with end-to-end encryption", es: "Tus datos están protegidos con cifrado de extremo a extremo"))
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.28))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
+                    .multilineTextAlignment(.center)
+
+                Spacer(minLength: 18)
             }
-            .padding(.horizontal, NSpacing.md)
+            .padding(.horizontal, 24)
         }
+    }
+
+    private var profilePill: some View {
+        HStack(spacing: 12) {
+            AnimatedGradientAvatar(initial: avatarInitial)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(recoveredCloudSession.displayName)
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.96))
+
+                if let email = recoveredCloudSession.email, email.isEmpty == false {
+                    Text(email)
+                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.52))
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(Color.black.opacity(0.28))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+        )
+    }
+
+    private var avatarInitial: String {
+        let trimmed = recoveredCloudSession.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let first = trimmed.first else { return "N" }
+        return String(first).uppercased()
+    }
+}
+
+private struct ShineSweepButton: View {
+    let title: String
+    let action: () -> Void
+
+    @State private var sweep = false
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .foregroundStyle(Color(red: 0.08, green: 0.12, blue: 0.22))
+            .frame(maxWidth: .infinity)
+            .frame(height: 58)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.29, green: 0.57, blue: 0.97), // #4A92F7
+                        Color(red: 0.43, green: 0.33, blue: 0.95)  // #6E54F2
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                GeometryReader { proxy in
+                    let width = proxy.size.width
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(.clear)
+                        .overlay(
+                            Ellipse()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            .clear,
+                                            Color.white.opacity(0.03),
+                                            Color.white.opacity(0.10),
+                                            Color.white.opacity(0.03),
+                                            .clear
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: 178, height: 120)
+                                .rotationEffect(.degrees(20))
+                                .blur(radius: 7)
+                                .offset(x: sweep ? width * 1.4 : -width * 1.4)
+                        )
+                        .blendMode(.screen)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(Color.white.opacity(0.20), lineWidth: 0.9)
+            }
+            .overlay(alignment: .top) {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.20),
+                                Color.white.opacity(0.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(height: 20)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                    .allowsHitTesting(false)
+            }
+            .shadow(color: Color(red: 0.31, green: 0.43, blue: 0.96).opacity(0.30), radius: 14, x: 0, y: 8)
+        }
+        .buttonStyle(.plain)
+        .scaleEffect(isHovered ? 1.02 : 1.0)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    isHovered = false
+                }
+        )
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .modifier(PressScaleEffect())
+        .task {
+            guard sweep == false else { return }
+            withAnimation(.linear(duration: 2.2).repeatForever(autoreverses: false)) {
+                sweep = true
+            }
+        }
+    }
+}
+
+private struct AnimatedGradientAvatar: View {
+    let initial: String
+    @State private var sweep = false
+
+    var body: some View {
+        Text(initial)
+            .font(.system(size: 20, weight: .bold, design: .rounded))
+            .foregroundStyle(Color(red: 0.90, green: 0.93, blue: 1.0))
+            .frame(width: 46, height: 46)
+            .background(
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.29, green: 0.57, blue: 0.97),
+                        Color(red: 0.43, green: 0.33, blue: 0.95)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .overlay {
+                GeometryReader { proxy in
+                    let width = proxy.size.width
+                    Circle()
+                        .fill(.clear)
+                        .overlay(
+                            Ellipse()
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            .clear,
+                                            Color.white.opacity(0.04),
+                                            Color.white.opacity(0.16),
+                                            Color.white.opacity(0.04),
+                                            .clear
+                                        ],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .frame(width: 30, height: 30)
+                                .rotationEffect(.degrees(20))
+                                .blur(radius: 2)
+                                .offset(x: sweep ? width * 1.35 : -width * 1.35)
+                        )
+                        .blendMode(.screen)
+                }
+                .clipShape(Circle())
+            }
+            .overlay {
+                Circle()
+                    .stroke(Color.white.opacity(0.20), lineWidth: 0.8)
+            }
+            .overlay(alignment: .top) {
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.18),
+                                Color.white.opacity(0.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(width: 42, height: 18)
+                    .blur(radius: 0.5)
+                    .offset(y: -2)
+                    .allowsHitTesting(false)
+            }
+            .clipShape(Circle())
+            .task {
+                guard sweep == false else { return }
+                withAnimation(.linear(duration: 2.2).repeatForever(autoreverses: false)) {
+                    sweep = true
+                }
+            }
+    }
+}
+
+private struct PressScaleEffect: ViewModifier {
+    @GestureState private var pressed = false
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(pressed ? 0.98 : 1.0)
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 0)
+                    .updating($pressed) { _, state, _ in
+                        state = true
+                    }
+            )
     }
 }
 
