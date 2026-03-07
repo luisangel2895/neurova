@@ -330,13 +330,35 @@ private enum AppLaunchMode {
 
 private struct AppSceneContainer: View {
     @Binding var launchMode: AppLaunchMode
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
     @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
+    @State private var showSplash = true
+    @State private var splashAnimationStarted = false
+    @State private var splashLogoVisible = false
+    @State private var splashPulse = false
+    @State private var splashExit = false
 
     var body: some View {
-        AppRootView(launchMode: $launchMode)
-            .appTheme(selectedTheme)
-            .environment(\.locale, selectedLanguage.locale)
+        ZStack {
+            AppRootView(launchMode: $launchMode)
+                .appTheme(selectedTheme)
+                .environment(\.locale, selectedLanguage.locale)
+
+            if showSplash {
+                AppSplashView(
+                    isDark: usesDarkSplashStyle,
+                    logoVisible: splashLogoVisible,
+                    pulsing: splashPulse,
+                    exiting: splashExit
+                )
+                .transition(.opacity.combined(with: .scale(scale: 1.03)))
+                .zIndex(10)
+            }
+        }
+        .task {
+            await runSplashIfNeeded()
+        }
     }
 
     private var selectedTheme: AppTheme {
@@ -345,6 +367,378 @@ private struct AppSceneContainer: View {
 
     private var selectedLanguage: AppLanguage {
         AppLanguage(rawValue: appLanguageRawValue) ?? .spanish
+    }
+
+    private var usesDarkSplashStyle: Bool {
+        switch selectedTheme {
+        case .dark:
+            return true
+        case .light:
+            return false
+        case .system:
+            return colorScheme == .dark
+        }
+    }
+
+    @MainActor
+    private func runSplashIfNeeded() async {
+        guard splashAnimationStarted == false else { return }
+        splashAnimationStarted = true
+
+        withAnimation(.spring(response: 0.62, dampingFraction: 0.82)) {
+            splashLogoVisible = true
+        }
+        withAnimation(.easeInOut(duration: 1.35).repeatForever(autoreverses: true)) {
+            splashPulse = true
+        }
+
+        try? await Task.sleep(nanoseconds: 1_950_000_000)
+        withAnimation(.easeInOut(duration: 0.45)) {
+            splashExit = true
+        }
+
+        try? await Task.sleep(nanoseconds: 450_000_000)
+        withAnimation(.easeOut(duration: 0.22)) {
+            showSplash = false
+        }
+    }
+}
+
+private struct AppSplashView: View {
+    let isDark: Bool
+    let logoVisible: Bool
+    let pulsing: Bool
+    let exiting: Bool
+
+    var body: some View {
+        Group {
+            if isDark {
+                darkSplash
+            } else {
+                LightSplashView(
+                    logoVisible: logoVisible,
+                    pulsing: pulsing,
+                    exiting: exiting
+                )
+            }
+        }
+        .ignoresSafeArea()
+    }
+
+    private var darkSplash: some View {
+        DarkSplashView(
+            logoVisible: logoVisible,
+            pulsing: pulsing,
+            exiting: exiting
+        )
+    }
+}
+
+private struct LightSplashView: View {
+    let logoVisible: Bool
+    let pulsing: Bool
+    let exiting: Bool
+
+    @State private var loadingVisible = false
+    @State private var progress: CGFloat = 0.0
+
+    private let barWidth: CGFloat = 170
+    private let particleVectors: [(CGFloat, CGFloat, CGFloat, Double)] = [
+        (-1.0, 0.0, 7, 0.00),
+        (1.0, 0.0, 6, 0.22),
+        (0.0, 1.0, 7, 0.34),
+        (0.0, -1.0, 5, 0.12)
+    ]
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    Color(red: 0.97, green: 0.98, blue: 1.00),
+                    Color(red: 0.95, green: 0.96, blue: 0.99),
+                    Color(red: 0.97, green: 0.98, blue: 1.00)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color.white.opacity(0.88),
+                            Color(red: 0.90, green: 0.94, blue: 1.0).opacity(0.36),
+                            .clear
+                        ],
+                        center: .center,
+                        startRadius: 20,
+                        endRadius: 230
+                    )
+                )
+                .frame(width: 330, height: 330)
+
+            VStack(spacing: 22) {
+                ZStack {
+                    ForEach(Array(particleVectors.enumerated()), id: \.offset) { _, vector in
+                        LightSplashParticle(
+                            dx: vector.0,
+                            dy: vector.1,
+                            size: vector.2,
+                            delay: vector.3,
+                            active: logoVisible && exiting == false
+                        )
+                    }
+
+                    NImages.Brand.logoMark
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 124)
+                        .shadow(color: Color(red: 0.17, green: 0.33, blue: 0.72).opacity(0.22), radius: 16, x: 0, y: 8)
+                        .scaleEffect(logoVisible ? (pulsing ? 1.045 : 1.0) : 0.82)
+                        .opacity(logoVisible ? (exiting ? 0.0 : 1.0) : 0.0)
+                }
+
+                VStack(spacing: 10) {
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color(red: 0.85, green: 0.87, blue: 0.91).opacity(0.78))
+                            .frame(width: barWidth, height: 4)
+
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(red: 0.29, green: 0.86, blue: 0.75), Color(red: 0.22, green: 0.50, blue: 0.92)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: max(8, barWidth * progress), height: 4)
+                            .shadow(color: Color(red: 0.22, green: 0.50, blue: 0.92).opacity(0.24), radius: 5, x: 0, y: 2)
+                    }
+
+                    Text("LOADING")
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .tracking(4.8)
+                        .foregroundStyle(Color(red: 0.35, green: 0.39, blue: 0.48).opacity(0.88))
+                }
+                .offset(y: loadingVisible ? 0 : 16)
+                .opacity(loadingVisible ? (exiting ? 0.0 : 1.0) : 0.0)
+            }
+            .offset(y: -8)
+        }
+        .task {
+            guard loadingVisible == false else { return }
+            withAnimation(.easeOut(duration: 0.55).delay(0.08)) {
+                loadingVisible = true
+            }
+            withAnimation(.easeOut(duration: 1.42).delay(0.22)) {
+                progress = 1.0
+            }
+        }
+    }
+}
+
+private struct LightSplashParticle: View {
+    let dx: CGFloat
+    let dy: CGFloat
+    let size: CGFloat
+    let delay: Double
+    let active: Bool
+
+    @State private var phase = false
+
+    var body: some View {
+        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [Color(red: 0.29, green: 0.86, blue: 0.75), Color(red: 0.22, green: 0.50, blue: 0.92)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(width: size, height: size)
+            .opacity(active ? (phase ? 0.0 : 0.92) : 0.0)
+            .scaleEffect(phase ? 1.25 : 0.45)
+            .offset(x: dx * (phase ? 104 : 40), y: dy * (phase ? 104 : 40))
+            .task(id: active) {
+                guard active else {
+                    phase = false
+                    return
+                }
+
+                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                while Task.isCancelled == false {
+                    phase = false
+                    withAnimation(.easeOut(duration: 1.08)) {
+                        phase = true
+                    }
+                    try? await Task.sleep(nanoseconds: 1_120_000_000)
+                }
+            }
+    }
+}
+
+private struct DarkSplashView: View {
+    let logoVisible: Bool
+    let pulsing: Bool
+    let exiting: Bool
+
+    @State private var loadingVisible = false
+    @State private var progress: CGFloat = 0.0
+
+    private let barWidth: CGFloat = 170
+    private let particleVectors: [(CGFloat, CGFloat, CGFloat, Double)] = [
+        (-1.0, 0.0, 7, 0.00),
+        (1.0, 0.0, 6, 0.22),
+        (0.0, 1.0, 7, 0.34),
+        (0.0, -1.0, 5, 0.12)
+    ]
+
+    var body: some View {
+        ZStack {
+            Color(red: 0.03, green: 0.05, blue: 0.12)
+
+            LinearGradient(
+                colors: [
+                    Color(red: 0.09, green: 0.13, blue: 0.28).opacity(0.40),
+                    Color(red: 0.04, green: 0.06, blue: 0.14).opacity(0.0)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+
+            Ellipse()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color(red: 0.20, green: 0.39, blue: 0.96).opacity(0.30),
+                            Color(red: 0.15, green: 0.30, blue: 0.74).opacity(0.16),
+                            Color(red: 0.09, green: 0.18, blue: 0.44).opacity(0.06),
+                            .clear
+                        ],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: 520
+                    )
+                )
+                .frame(width: 780, height: 620)
+                .blur(radius: 26)
+                .offset(y: -12)
+
+            Ellipse()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color(red: 0.28, green: 0.44, blue: 0.98).opacity(0.14),
+                            .clear
+                        ],
+                        center: .center,
+                        startRadius: 0,
+                        endRadius: 460
+                    )
+                )
+                .frame(width: 650, height: 520)
+                .blur(radius: 38)
+                .offset(y: 18)
+
+            VStack(spacing: 22) {
+                ZStack {
+                    ForEach(Array(particleVectors.enumerated()), id: \.offset) { _, vector in
+                        DarkSplashParticle(
+                            dx: vector.0,
+                            dy: vector.1,
+                            size: vector.2,
+                            delay: vector.3,
+                            active: logoVisible && exiting == false
+                        )
+                    }
+
+                    NImages.Brand.logoOutline
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 124)
+                        .shadow(color: Color(red: 0.22, green: 0.40, blue: 0.95).opacity(0.32), radius: 20, x: 0, y: 8)
+                        .scaleEffect(logoVisible ? (pulsing ? 1.045 : 1.0) : 0.82)
+                        .opacity(logoVisible ? (exiting ? 0.0 : 1.0) : 0.0)
+                }
+
+                VStack(spacing: 10) {
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color.white.opacity(0.12))
+                            .frame(width: barWidth, height: 4)
+
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(red: 0.19, green: 0.86, blue: 0.96), Color(red: 0.45, green: 0.30, blue: 0.95)],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: max(8, barWidth * progress), height: 4)
+                            .shadow(color: Color(red: 0.29, green: 0.53, blue: 0.98).opacity(0.34), radius: 7, x: 0, y: 2)
+                    }
+
+                    Text("LOADING")
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .tracking(4.8)
+                        .foregroundStyle(Color.white.opacity(0.62))
+                }
+                .offset(y: loadingVisible ? 0 : 16)
+                .opacity(loadingVisible ? (exiting ? 0.0 : 1.0) : 0.0)
+            }
+            .offset(y: -8)
+        }
+        .task {
+            guard loadingVisible == false else { return }
+            withAnimation(.easeOut(duration: 0.55).delay(0.08)) {
+                loadingVisible = true
+            }
+            withAnimation(.easeOut(duration: 1.42).delay(0.22)) {
+                progress = 1.0
+            }
+        }
+    }
+}
+
+private struct DarkSplashParticle: View {
+    let dx: CGFloat
+    let dy: CGFloat
+    let size: CGFloat
+    let delay: Double
+    let active: Bool
+
+    @State private var phase = false
+
+    var body: some View {
+        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [Color(red: 0.19, green: 0.86, blue: 0.96), Color(red: 0.45, green: 0.30, blue: 0.95)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .frame(width: size, height: size)
+            .opacity(active ? (phase ? 0.0 : 0.90) : 0.0)
+            .scaleEffect(phase ? 1.25 : 0.45)
+            .offset(x: dx * (phase ? 104 : 40), y: dy * (phase ? 104 : 40))
+            .task(id: active) {
+                guard active else {
+                    phase = false
+                    return
+                }
+
+                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                while Task.isCancelled == false {
+                    phase = false
+                    withAnimation(.easeOut(duration: 1.08)) {
+                        phase = true
+                    }
+                    try? await Task.sleep(nanoseconds: 1_120_000_000)
+                }
+            }
     }
 }
 
