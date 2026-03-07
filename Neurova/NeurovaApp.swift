@@ -832,6 +832,18 @@ private struct HomeLaunchGateView: View {
         )
 
         let preferences = try? modelContext.fetch(descriptor).first
+        let cloudSession = fetchRecoveredCloudSession()
+        let hasPersistedLocalIdentity = profileDisplayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+
+        // If iCloud profile exists but local identity has not been explicitly restored yet,
+        // keep showing the recovered-session gate until user taps "Go to app".
+        if hasPersistedLocalIdentity == false, let cloudSession {
+            recoveredCloudSession = cloudSession
+            hasCompletedOnboarding = false
+            isLoading = false
+            return
+        }
+
         if preferences?.hasCompletedOnboarding == true {
             if let theme = preferences?.preferredThemeRaw, theme.isEmpty == false {
                 appThemeRawValue = theme
@@ -845,7 +857,7 @@ private struct HomeLaunchGateView: View {
             return
         }
 
-        if let cloudSession = fetchRecoveredCloudSession() {
+        if let cloudSession {
             recoveredCloudSession = cloudSession
             hasCompletedOnboarding = false
             isLoading = false
