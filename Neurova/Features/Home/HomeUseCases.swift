@@ -16,7 +16,7 @@ struct HomeUseCases {
         self.context = context
         self.deckRepository = deckRepository ?? SwiftDataDeckRepository(context: context)
         self.queueEngine = queueEngine
-        self.sessionPolicy = Self.loadSessionPolicy(from: context)
+        self.sessionPolicy = .default
     }
 
     func makeState(language: AppLanguage, now: Date = .now) throws -> HomeState {
@@ -232,24 +232,6 @@ struct HomeUseCases {
                 ? "\(summary.readyCount) ready and \(summary.newCount) new cards in this deck."
                 : "\(summary.readyCount) listas y \(summary.newCount) nuevas en este deck.",
             actionTitle: isEnglish ? "Open study options" : "Abrir opciones de estudio"
-        )
-    }
-
-    private static func loadSessionPolicy(from context: ModelContext) -> StudySessionPolicy {
-        let descriptor = FetchDescriptor<UserPreferences>(
-            predicate: #Predicate<UserPreferences> { preferences in
-                preferences.key == "global"
-            }
-        )
-
-        let preferences = try? context.fetch(descriptor).first
-
-        return StudySessionPolicy(
-            newCardsPerDay: preferences?.resolvedNewCardsPerDay ?? StudySessionPolicy.default.newCardsPerDay,
-            maxReviewsPerDay: preferences?.resolvedMaxReviewsPerDay ?? StudySessionPolicy.default.maxReviewsPerDay,
-            sessionTimeCapSeconds: preferences?.resolvedSessionTimeCapSeconds,
-            avoidNewWhenDueBacklogHigh: preferences?.resolvedAvoidNewWhenDueBacklogHigh ?? StudySessionPolicy.default.avoidNewWhenDueBacklogHigh,
-            dueBacklogThreshold: preferences?.resolvedDueBacklogThreshold ?? StudySessionPolicy.default.dueBacklogThreshold
         )
     }
 

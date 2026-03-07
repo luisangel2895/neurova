@@ -150,20 +150,7 @@ final class DeckDetailViewModel {
     }
 
     private func loadSessionPolicy(using context: ModelContext) -> StudySessionPolicy {
-        let descriptor = FetchDescriptor<UserPreferences>(
-            predicate: #Predicate<UserPreferences> { preferences in
-                preferences.key == "global"
-            }
-        )
-
-        let preferences = try? context.fetch(descriptor).first
-
-        return StudySessionPolicy(
-            newCardsPerDay: preferences?.resolvedNewCardsPerDay ?? StudySessionPolicy.default.newCardsPerDay,
-            maxReviewsPerDay: preferences?.resolvedMaxReviewsPerDay ?? StudySessionPolicy.default.maxReviewsPerDay,
-            sessionTimeCapSeconds: preferences?.resolvedSessionTimeCapSeconds,
-            avoidNewWhenDueBacklogHigh: preferences?.resolvedAvoidNewWhenDueBacklogHigh ?? StudySessionPolicy.default.avoidNewWhenDueBacklogHigh,
-            dueBacklogThreshold: preferences?.resolvedDueBacklogThreshold ?? StudySessionPolicy.default.dueBacklogThreshold
-        )
+        _ = context
+        return .default
     }
 }

@@ -8,19 +8,7 @@ enum StudyQueueFilter: Sendable {
 }
 
 struct StudySessionPolicy: Sendable {
-    let newCardsPerDay: Int
-    let maxReviewsPerDay: Int
-    let sessionTimeCapSeconds: Int?
-    let avoidNewWhenDueBacklogHigh: Bool
-    let dueBacklogThreshold: Int
-
-    static let `default` = StudySessionPolicy(
-        newCardsPerDay: 20,
-        maxReviewsPerDay: 200,
-        sessionTimeCapSeconds: nil,
-        avoidNewWhenDueBacklogHigh: false,
-        dueBacklogThreshold: 50
-    )
+    static let `default` = StudySessionPolicy()
 }
 
 struct StudyQueueEngine {
@@ -92,16 +80,8 @@ struct StudyQueueEngine {
                 return lhs.createdAt < rhs.createdAt
             }
 
-        let dueBacklog = urgentLearning.count + dueReviews.count
-        let includeNew = policy.avoidNewWhenDueBacklogHigh == false || dueBacklog < policy.dueBacklogThreshold
-        let cappedNewCards = includeNew ? Array(newCards.prefix(max(policy.newCardsPerDay, 0))) : []
-
-        var queue = urgentLearning + dueReviews + cappedNewCards
-        if policy.maxReviewsPerDay > 0 {
-            queue = Array(queue.prefix(policy.maxReviewsPerDay))
-        }
-
-        return queue
+        // No limits mode: include every due and every new card in deterministic priority order.
+        return urgentLearning + dueReviews + newCards
     }
 
     private func apply(filter: StudyQueueFilter, to cards: [Card], now: Date) -> [Card] {
