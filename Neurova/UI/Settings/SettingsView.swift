@@ -8,12 +8,15 @@ struct SettingsView: View {
 
     @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
     @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
+    @AppStorage("daily_goal_cards") private var dailyGoalCardsStorage: Int = 20
+    @State private var selectedDailyGoalCards: Int = 20
+
+    private let dailyGoalOptions = [20, 30, 50, 70, 100]
 
     var body: some View {
         settingsContent
-            .id("settings-content-\(selectedTheme.rawValue)-\(selectedLanguage.rawValue)")
             .onAppear {
-                syncPreferencesToCloud()
+                loadPreferencesFromCloud()
             }
             .onChange(of: appThemeRawValue) { _, _ in
                 syncPreferencesToCloud()
@@ -21,14 +24,13 @@ struct SettingsView: View {
             .onChange(of: appLanguageRawValue) { _, _ in
                 syncPreferencesToCloud()
             }
+            .onChange(of: selectedDailyGoalCards) { _, _ in
+                syncPreferencesToCloud()
+            }
     }
 
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: NSpacing.xs) {
-            Text(titleText)
-                .font(NTypography.title.weight(.bold))
-                .foregroundStyle(NColors.Text.textPrimary)
-
             Text(subtitleText)
                 .font(NTypography.body)
                 .foregroundStyle(NColors.Text.textSecondary)
@@ -62,6 +64,43 @@ struct SettingsView: View {
                     isSelected: selectedLanguage == language
                 ) {
                     selectedLanguage = language
+                }
+            }
+        }
+    }
+
+    private var dailyGoalSection: some View {
+        settingsSection(
+            title: dailyGoalTitle,
+            subtitle: dailyGoalSubtitle
+        ) {
+            HStack(spacing: NSpacing.sm) {
+                ForEach(dailyGoalOptions, id: \.self) { goal in
+                    Button {
+                        selectedDailyGoalCards = goal
+                    } label: {
+                        Text("\(goal)")
+                            .font(NTypography.bodyEmphasis.weight(.semibold))
+                            .foregroundStyle(
+                                selectedDailyGoalCards == goal
+                                ? NColors.Brand.neuroBlue
+                                : NColors.Text.textPrimary
+                            )
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 42)
+                            .background(
+                                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                                    .fill(selectedDailyGoalCards == goal ? NColors.Home.surfaceL1 : NColors.Neutrals.surfaceAlt)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                                    .stroke(
+                                        selectedDailyGoalCards == goal ? NColors.Brand.neuroBlue : NColors.Neutrals.border,
+                                        lineWidth: 1
+                                    )
+                            )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -139,6 +178,7 @@ struct SettingsView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: NSpacing.lg) {
                     headerSection
+                    dailyGoalSection
                     themeSection
                     languageSection
                 }
@@ -147,7 +187,7 @@ struct SettingsView: View {
             }
             .background(backgroundView.ignoresSafeArea())
             .navigationTitle(titleText)
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(closeText) {
@@ -200,6 +240,16 @@ struct SettingsView: View {
             : "Elige el idioma de la app."
     }
 
+    private var dailyGoalTitle: String {
+        selectedLanguage == .english ? "Daily goal" : "Meta diaria"
+    }
+
+    private var dailyGoalSubtitle: String {
+        selectedLanguage == .english
+            ? "Cards to complete each day."
+            : "Tarjetas por completar cada día."
+    }
+
     private var closeText: String {
         selectedLanguage == .english ? "Close" : "Cerrar"
     }
@@ -215,11 +265,33 @@ struct SettingsView: View {
             if preferences.modelContext == nil {
                 modelContext.insert(preferences)
             }
+            preferences.dailyGoalCards = selectedDailyGoalCards
+            dailyGoalCardsStorage = selectedDailyGoalCards
             preferences.preferredThemeRaw = appThemeRawValue
             preferences.preferredLanguageRaw = appLanguageRawValue
             try modelContext.save()
         } catch {
             // Best-effort sync to iCloud-backed preferences.
+        }
+    }
+
+    private func loadPreferencesFromCloud() {
+        do {
+            let descriptor = FetchDescriptor<UserPreferences>(
+                predicate: #Predicate<UserPreferences> { preferences in
+                    preferences.key == "global"
+                }
+            )
+
+            if let preferences = try modelContext.fetch(descriptor).first {
+                selectedDailyGoalCards = preferences.dailyGoalCards
+                dailyGoalCardsStorage = preferences.dailyGoalCards
+            } else {
+                selectedDailyGoalCards = dailyGoalCardsStorage
+                syncPreferencesToCloud()
+            }
+        } catch {
+            // Keep defaults if loading fails.
         }
     }
 }

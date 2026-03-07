@@ -9,6 +9,7 @@ struct OnboardingView: View {
 
     @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
     @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
+    @AppStorage("daily_goal_cards") private var dailyGoalCardsStorage: Int = 20
     @AppStorage("apple_user_id") private var appleUserID: String = ""
     @AppStorage("apple_given_name") private var appleGivenName: String = ""
     @AppStorage("apple_email") private var appleEmail: String = ""
@@ -453,6 +454,7 @@ struct OnboardingView: View {
 
             let preferences = try fetchOrCreatePreferences()
             preferences.dailyGoalCards = selectedDailyGoal
+            dailyGoalCardsStorage = selectedDailyGoal
             preferences.hasCompletedOnboarding = true
             preferences.preferredThemeRaw = appThemeRawValue
             preferences.preferredLanguageRaw = appLanguageRawValue

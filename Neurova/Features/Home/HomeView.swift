@@ -5,8 +5,10 @@ struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.locale) private var locale
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("apple_given_name") private var appleGivenName: String = ""
     @AppStorage("profile_display_name") private var profileDisplayName: String = ""
+    @AppStorage("daily_goal_cards") private var dailyGoalCardsStorage: Int = 20
 
     @StateObject private var viewModel: HomeViewModel
     private let onSettingsTap: () -> Void
@@ -55,6 +57,13 @@ struct HomeView: View {
             viewModel.load(using: modelContext)
         }
         .onChange(of: locale.identifier) { _, _ in
+            viewModel.load(using: modelContext, forceRefresh: true)
+        }
+        .onChange(of: dailyGoalCardsStorage) { _, _ in
+            viewModel.load(using: modelContext, forceRefresh: true)
+        }
+        .onChange(of: scenePhase) { _, newValue in
+            guard newValue == .active else { return }
             viewModel.load(using: modelContext, forceRefresh: true)
         }
         .sheet(isPresented: $isPresentingStudyCoach) {
