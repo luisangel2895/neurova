@@ -933,6 +933,7 @@ private struct RecoveredCloudSession {
 }
 
 private struct RecoveredCloudSessionView: View {
+    @Environment(\.colorScheme) private var colorScheme
     let locale: Locale
     let recoveredCloudSession: RecoveredCloudSession
     let onContinue: () -> Void
@@ -940,11 +941,17 @@ private struct RecoveredCloudSessionView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [
-                    Color(red: 0.04, green: 0.07, blue: 0.15),
-                    Color(red: 0.05, green: 0.08, blue: 0.18),
-                    Color(red: 0.03, green: 0.05, blue: 0.12)
-                ],
+                colors: isDark
+                    ? [
+                        Color(red: 0.04, green: 0.07, blue: 0.15),
+                        Color(red: 0.05, green: 0.08, blue: 0.18),
+                        Color(red: 0.03, green: 0.05, blue: 0.12)
+                    ]
+                    : [
+                        Color(red: 0.96, green: 0.96, blue: 0.98),
+                        Color(red: 0.94, green: 0.95, blue: 0.98),
+                        Color(red: 0.93, green: 0.94, blue: 0.97)
+                    ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -953,11 +960,11 @@ private struct RecoveredCloudSessionView: View {
             VStack(spacing: 22) {
                 Spacer(minLength: 54)
 
-                NImages.Brand.logoOutline
+                (isDark ? NImages.Brand.logoOutline : NImages.Brand.logoMark)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 66, height: 66)
-                    .shadow(color: Color(red: 0.22, green: 0.52, blue: 0.96).opacity(0.34), radius: 18, x: 0, y: 8)
+                    .shadow(color: logoShadowColor, radius: 18, x: 0, y: 8)
                     .modifier(FloatingLogoEffect(period: 2.1, amplitude: 2))
                     .padding(.bottom, 20)
 
@@ -965,21 +972,21 @@ private struct RecoveredCloudSessionView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "icloud")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(Color(red: 0.47, green: 0.70, blue: 1.0))
+                            .foregroundStyle(isDark ? Color(red: 0.47, green: 0.70, blue: 1.0) : Color(red: 0.38, green: 0.58, blue: 0.96))
                             .frame(width: 30, height: 30)
-                            .background(Color.white.opacity(0.07))
+                            .background(isDark ? Color.white.opacity(0.07) : Color(red: 0.85, green: 0.90, blue: 0.99))
                             .clipShape(Circle())
 
                         Text(AppCopy.text(locale, en: "ICLOUD SYNCED", es: "ICLOUD SINCRONIZADO"))
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
                             .tracking(0.4)
-                            .foregroundStyle(Color.white.opacity(0.56))
+                            .foregroundStyle(isDark ? Color.white.opacity(0.56) : Color(red: 0.41, green: 0.45, blue: 0.54))
                     }
 
                     VStack(alignment: .leading, spacing: 7) {
                         Text(AppCopy.text(locale, en: "Account found", es: "Cuenta encontrada"))
                             .font(.system(size: 25, weight: .semibold, design: .rounded))
-                            .foregroundStyle(Color.white.opacity(0.98))
+                            .foregroundStyle(isDark ? Color.white.opacity(0.98) : Color(red: 0.08, green: 0.10, blue: 0.16))
 
                         Text(
                             AppCopy.text(
@@ -989,7 +996,7 @@ private struct RecoveredCloudSessionView: View {
                             )
                         )
                         .font(.system(size: 14, weight: .regular, design: .rounded))
-                        .foregroundStyle(Color(red: 0.66, green: 0.72, blue: 0.84))
+                        .foregroundStyle(isDark ? Color(red: 0.66, green: 0.72, blue: 0.84) : Color(red: 0.36, green: 0.40, blue: 0.49))
                     }
 
                     profilePill
@@ -1001,8 +1008,8 @@ private struct RecoveredCloudSessionView: View {
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color.white.opacity(0.08),
-                                    Color(red: 0.15, green: 0.24, blue: 0.43).opacity(0.28)
+                                    isDark ? Color.white.opacity(0.08) : Color(red: 0.90, green: 0.91, blue: 0.95),
+                                    isDark ? Color(red: 0.15, green: 0.24, blue: 0.43).opacity(0.28) : Color(red: 0.84, green: 0.86, blue: 0.92)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -1011,16 +1018,19 @@ private struct RecoveredCloudSessionView: View {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.white.opacity(0.07), lineWidth: 1)
+                        .stroke(isDark ? Color.white.opacity(0.07) : Color.white.opacity(0.42), lineWidth: 1)
                 )
 
-                ShineSweepButton(title: AppCopy.text(locale, en: "Go to app", es: "Ir a la app")) {
+                ShineSweepButton(
+                    title: AppCopy.text(locale, en: "Go to app", es: "Ir a la app"),
+                    textColor: isDark ? Color(red: 0.08, green: 0.12, blue: 0.22) : .white
+                ) {
                     onContinue()
                 }
 
                 Text(AppCopy.text(locale, en: "Your data is protected with end-to-end encryption", es: "Tus datos están protegidos con cifrado de extremo a extremo"))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color.white.opacity(0.28))
+                    .foregroundStyle(isDark ? Color.white.opacity(0.28) : Color(red: 0.56, green: 0.59, blue: 0.67))
                     .lineLimit(1)
                     .minimumScaleFactor(0.9)
                     .multilineTextAlignment(.center)
@@ -1038,12 +1048,12 @@ private struct RecoveredCloudSessionView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(recoveredCloudSession.displayName)
                     .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.white.opacity(0.96))
+                    .foregroundStyle(isDark ? Color.white.opacity(0.96) : Color(red: 0.12, green: 0.14, blue: 0.20))
 
                 if let email = recoveredCloudSession.email, email.isEmpty == false {
                     Text(email)
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(Color.white.opacity(0.52))
+                        .foregroundStyle(isDark ? Color.white.opacity(0.52) : Color(red: 0.46, green: 0.49, blue: 0.58))
                         .lineLimit(1)
                 }
             }
@@ -1052,12 +1062,19 @@ private struct RecoveredCloudSessionView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(Color.black.opacity(0.28))
+        .background(isDark ? Color.black.opacity(0.28) : Color.white.opacity(0.50))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                .stroke(isDark ? Color.white.opacity(0.06) : Color.white.opacity(0.56), lineWidth: 1)
         )
+    }
+
+    private var isDark: Bool { colorScheme == .dark }
+    private var logoShadowColor: Color {
+        isDark
+            ? Color(red: 0.22, green: 0.52, blue: 0.96).opacity(0.34)
+            : Color(red: 0.36, green: 0.47, blue: 0.76).opacity(0.22)
     }
 
     private var avatarInitial: String {
@@ -1069,6 +1086,7 @@ private struct RecoveredCloudSessionView: View {
 
 private struct ShineSweepButton: View {
     let title: String
+    let textColor: Color
     let action: () -> Void
 
     @State private var isHovered = false
@@ -1083,7 +1101,7 @@ private struct ShineSweepButton: View {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
             }
-            .foregroundStyle(Color(red: 0.08, green: 0.12, blue: 0.22))
+            .foregroundStyle(textColor)
             .frame(maxWidth: .infinity)
             .frame(height: 58)
             .background(
