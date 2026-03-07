@@ -1023,7 +1023,16 @@ private struct RecoveredCloudSessionView: View {
 
                 ShineSweepButton(
                     title: AppCopy.text(locale, en: "Go to app", es: "Ir a la app"),
-                    textColor: isDark ? Color(red: 0.08, green: 0.12, blue: 0.22) : .white
+                    textColor: isDark ? Color(red: 0.08, green: 0.12, blue: 0.22) : .white,
+                    gradientColors: isDark
+                        ? [
+                            Color(red: 0.19, green: 0.72, blue: 0.97), // #31B8F7
+                            Color(red: 0.50, green: 0.27, blue: 0.95)  // #7F45F2
+                        ]
+                        : [
+                            Color(red: 0.17, green: 0.52, blue: 0.90), // darker light-left
+                            Color(red: 0.43, green: 0.24, blue: 0.86)  // darker light-right
+                        ]
                 ) {
                     onContinue()
                 }
@@ -1087,6 +1096,7 @@ private struct RecoveredCloudSessionView: View {
 private struct ShineSweepButton: View {
     let title: String
     let textColor: Color
+    let gradientColors: [Color]
     let action: () -> Void
 
     @State private var isHovered = false
@@ -1106,10 +1116,7 @@ private struct ShineSweepButton: View {
             .frame(height: 58)
             .background(
                 LinearGradient(
-                    colors: [
-                        Color(red: 0.19, green: 0.72, blue: 0.97), // #31B8F7
-                        Color(red: 0.50, green: 0.27, blue: 0.95)  // #7F45F2
-                    ],
+                    colors: gradientColors,
                     startPoint: .leading,
                     endPoint: .trailing
                 )
