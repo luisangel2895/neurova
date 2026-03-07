@@ -935,7 +935,6 @@ private struct RecoveredCloudSessionView: View {
     let locale: Locale
     let recoveredCloudSession: RecoveredCloudSession
     let onContinue: () -> Void
-    @State private var logoFloat = false
 
     var body: some View {
         ZStack {
@@ -958,14 +957,8 @@ private struct RecoveredCloudSessionView: View {
                     .scaledToFit()
                     .frame(width: 66, height: 66)
                     .shadow(color: Color(red: 0.22, green: 0.52, blue: 0.96).opacity(0.34), radius: 18, x: 0, y: 8)
-                    .offset(y: logoFloat ? -2 : 2)
+                    .modifier(FloatingLogoEffect(period: 2.1, amplitude: 2))
                     .padding(.bottom, 20)
-                    .task {
-                        guard logoFloat == false else { return }
-                        withAnimation(.easeInOut(duration: 2.1).repeatForever(autoreverses: true)) {
-                            logoFloat = true
-                        }
-                    }
 
                 VStack(alignment: .leading, spacing: 18) {
                     HStack(spacing: 10) {
@@ -1077,8 +1070,8 @@ private struct ShineSweepButton: View {
     let title: String
     let action: () -> Void
 
-    @State private var sweep = false
     @State private var isHovered = false
+    @State private var shinePhase: CGFloat = -1.45
 
     var body: some View {
         Button(action: action) {
@@ -1105,6 +1098,8 @@ private struct ShineSweepButton: View {
             .overlay {
                 GeometryReader { proxy in
                     let width = proxy.size.width
+                    let xOffset = width * shinePhase
+
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .fill(.clear)
                         .overlay(
@@ -1113,19 +1108,19 @@ private struct ShineSweepButton: View {
                                     LinearGradient(
                                         colors: [
                                             .clear,
-                                            Color.white.opacity(0.03),
                                             Color.white.opacity(0.10),
-                                            Color.white.opacity(0.03),
+                                            Color.white.opacity(0.24),
+                                            Color.white.opacity(0.10),
                                             .clear
                                         ],
                                         startPoint: .leading,
                                         endPoint: .trailing
                                     )
                                 )
-                                .frame(width: 178, height: 120)
+                                .frame(width: 188, height: 126)
                                 .rotationEffect(.degrees(20))
-                                .blur(radius: 7)
-                                .offset(x: sweep ? width * 1.4 : -width * 1.4)
+                                .blur(radius: 9)
+                                .offset(x: xOffset)
                         )
                         .blendMode(.screen)
                 }
@@ -1165,18 +1160,21 @@ private struct ShineSweepButton: View {
             isHovered = hovering
         }
         .modifier(PressScaleEffect())
-        .task {
-            guard sweep == false else { return }
-            withAnimation(.linear(duration: 2.2).repeatForever(autoreverses: false)) {
-                sweep = true
+        .onAppear {
+            shinePhase = -1.45
+            withAnimation(.linear(duration: 2.15).repeatForever(autoreverses: false)) {
+                shinePhase = 1.45
             }
+        }
+        .onDisappear {
+            shinePhase = -1.45
         }
     }
 }
 
 private struct AnimatedGradientAvatar: View {
     let initial: String
-    @State private var sweep = false
+    @State private var shinePhase: CGFloat = -1.4
 
     var body: some View {
         Text(initial)
@@ -1196,6 +1194,8 @@ private struct AnimatedGradientAvatar: View {
             .overlay {
                 GeometryReader { proxy in
                     let width = proxy.size.width
+                    let xOffset = width * shinePhase
+
                     Circle()
                         .fill(.clear)
                         .overlay(
@@ -1204,19 +1204,19 @@ private struct AnimatedGradientAvatar: View {
                                     LinearGradient(
                                         colors: [
                                             .clear,
-                                            Color.white.opacity(0.04),
-                                            Color.white.opacity(0.16),
-                                            Color.white.opacity(0.04),
+                                            Color.white.opacity(0.10),
+                                            Color.white.opacity(0.24),
+                                            Color.white.opacity(0.10),
                                             .clear
                                         ],
                                         startPoint: .leading,
                                         endPoint: .trailing
                                     )
                                 )
-                                .frame(width: 30, height: 30)
+                                .frame(width: 34, height: 34)
                                 .rotationEffect(.degrees(20))
-                                .blur(radius: 2)
-                                .offset(x: sweep ? width * 1.35 : -width * 1.35)
+                                .blur(radius: 2.4)
+                                .offset(x: xOffset)
                         )
                         .blendMode(.screen)
                 }
@@ -1244,11 +1244,34 @@ private struct AnimatedGradientAvatar: View {
                     .allowsHitTesting(false)
             }
             .clipShape(Circle())
-            .task {
-                guard sweep == false else { return }
-                withAnimation(.linear(duration: 2.2).repeatForever(autoreverses: false)) {
-                    sweep = true
+            .onAppear {
+                shinePhase = -1.4
+                withAnimation(.linear(duration: 2.15).repeatForever(autoreverses: false)) {
+                    shinePhase = 1.4
                 }
+            }
+            .onDisappear {
+                shinePhase = -1.4
+            }
+    }
+}
+
+private struct FloatingLogoEffect: ViewModifier {
+    let period: Double
+    let amplitude: CGFloat
+    @State private var floatUp = false
+
+    func body(content: Content) -> some View {
+        content
+            .offset(y: floatUp ? -amplitude : amplitude)
+            .onAppear {
+                floatUp = false
+                withAnimation(.easeInOut(duration: period / 2).repeatForever(autoreverses: true)) {
+                    floatUp = true
+                }
+            }
+            .onDisappear {
+                floatUp = false
             }
     }
 }
