@@ -7,6 +7,7 @@
 
 import SwiftData
 import SwiftUI
+import Combine
 
 @main
 struct NeurovaApp: App {
@@ -1071,7 +1072,8 @@ private struct ShineSweepButton: View {
     let action: () -> Void
 
     @State private var isHovered = false
-    @State private var shinePhase: CGFloat = -1.45
+    @State private var tickTime: TimeInterval = Date().timeIntervalSinceReferenceDate
+    private let tick = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         Button(action: action) {
@@ -1087,8 +1089,8 @@ private struct ShineSweepButton: View {
             .background(
                 LinearGradient(
                     colors: [
-                        Color(red: 0.29, green: 0.57, blue: 0.97), // #4A92F7
-                        Color(red: 0.43, green: 0.33, blue: 0.95)  // #6E54F2
+                        Color(red: 0.19, green: 0.72, blue: 0.97), // #31B8F7
+                        Color(red: 0.50, green: 0.27, blue: 0.95)  // #7F45F2
                     ],
                     startPoint: .leading,
                     endPoint: .trailing
@@ -1098,6 +1100,8 @@ private struct ShineSweepButton: View {
             .overlay {
                 GeometryReader { proxy in
                     let width = proxy.size.width
+                    let phase = (tickTime / 2.15).truncatingRemainder(dividingBy: 1.0)
+                    let shinePhase = -1.45 + (2.9 * phase)
                     let xOffset = width * shinePhase
 
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -1160,21 +1164,16 @@ private struct ShineSweepButton: View {
             isHovered = hovering
         }
         .modifier(PressScaleEffect())
-        .onAppear {
-            shinePhase = -1.45
-            withAnimation(.linear(duration: 2.15).repeatForever(autoreverses: false)) {
-                shinePhase = 1.45
-            }
-        }
-        .onDisappear {
-            shinePhase = -1.45
+        .onReceive(tick) { date in
+            tickTime = date.timeIntervalSinceReferenceDate
         }
     }
 }
 
 private struct AnimatedGradientAvatar: View {
     let initial: String
-    @State private var shinePhase: CGFloat = -1.4
+    @State private var tickTime: TimeInterval = Date().timeIntervalSinceReferenceDate
+    private let tick = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
 
     var body: some View {
         Text(initial)
@@ -1194,6 +1193,8 @@ private struct AnimatedGradientAvatar: View {
             .overlay {
                 GeometryReader { proxy in
                     let width = proxy.size.width
+                    let phase = (tickTime / 2.15).truncatingRemainder(dividingBy: 1.0)
+                    let shinePhase = -1.4 + (2.8 * phase)
                     let xOffset = width * shinePhase
 
                     Circle()
@@ -1244,14 +1245,8 @@ private struct AnimatedGradientAvatar: View {
                     .allowsHitTesting(false)
             }
             .clipShape(Circle())
-            .onAppear {
-                shinePhase = -1.4
-                withAnimation(.linear(duration: 2.15).repeatForever(autoreverses: false)) {
-                    shinePhase = 1.4
-                }
-            }
-            .onDisappear {
-                shinePhase = -1.4
+            .onReceive(tick) { date in
+                tickTime = date.timeIntervalSinceReferenceDate
             }
     }
 }
@@ -1259,19 +1254,17 @@ private struct AnimatedGradientAvatar: View {
 private struct FloatingLogoEffect: ViewModifier {
     let period: Double
     let amplitude: CGFloat
-    @State private var floatUp = false
+    @State private var tickTime: TimeInterval = Date().timeIntervalSinceReferenceDate
+    private let tick = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
 
     func body(content: Content) -> some View {
+        let phase = (tickTime / period) * 2.0 * Double.pi
+        let y = CGFloat(sin(phase)) * amplitude
+
         content
-            .offset(y: floatUp ? -amplitude : amplitude)
-            .onAppear {
-                floatUp = false
-                withAnimation(.easeInOut(duration: period / 2).repeatForever(autoreverses: true)) {
-                    floatUp = true
-                }
-            }
-            .onDisappear {
-                floatUp = false
+            .offset(y: y)
+            .onReceive(tick) { date in
+                tickTime = date.timeIntervalSinceReferenceDate
             }
     }
 }
