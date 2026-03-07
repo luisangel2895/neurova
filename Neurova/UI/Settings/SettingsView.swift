@@ -1,8 +1,10 @@
+import SwiftData
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.modelContext) private var modelContext
 
     @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
     @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
@@ -10,6 +12,15 @@ struct SettingsView: View {
     var body: some View {
         settingsContent
             .id("settings-content-\(selectedTheme.rawValue)-\(selectedLanguage.rawValue)")
+            .onAppear {
+                syncPreferencesToCloud()
+            }
+            .onChange(of: appThemeRawValue) { _, _ in
+                syncPreferencesToCloud()
+            }
+            .onChange(of: appLanguageRawValue) { _, _ in
+                syncPreferencesToCloud()
+            }
     }
 
     private var headerSection: some View {
@@ -192,14 +203,41 @@ struct SettingsView: View {
     private var closeText: String {
         selectedLanguage == .english ? "Close" : "Cerrar"
     }
+
+    private func syncPreferencesToCloud() {
+        do {
+            let descriptor = FetchDescriptor<UserPreferences>(
+                predicate: #Predicate<UserPreferences> { preferences in
+                    preferences.key == "global"
+                }
+            )
+            let preferences = try modelContext.fetch(descriptor).first ?? UserPreferences()
+            if preferences.modelContext == nil {
+                modelContext.insert(preferences)
+            }
+            preferences.preferredThemeRaw = appThemeRawValue
+            preferences.preferredLanguageRaw = appLanguageRawValue
+            try modelContext.save()
+        } catch {
+            // Best-effort sync to iCloud-backed preferences.
+        }
+    }
 }
 
 #Preview("Settings Light") {
     SettingsView()
-    .preferredColorScheme(.light)
+        .preferredColorScheme(.light)
+        .modelContainer(
+            for: [Subject.self, Deck.self, Card.self, CloudAccountProfile.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self],
+            inMemory: true
+        )
 }
 
 #Preview("Settings Dark") {
     SettingsView()
-    .preferredColorScheme(.dark)
+        .preferredColorScheme(.dark)
+        .modelContainer(
+            for: [Subject.self, Deck.self, Card.self, CloudAccountProfile.self, XPEventEntity.self, XPStatsEntity.self, UserPreferences.self],
+            inMemory: true
+        )
 }

@@ -14,6 +14,7 @@ struct NeurovaApp: App {
     private static let cloudKitSyncFlagKey = "cloudkit_sync_enabled"
     private static let cloudKitRuntimeActiveKey = "cloudkit_sync_runtime_active"
     private static let cloudKitLastErrorKey = "cloudkit_sync_last_error"
+    private static let migratedLegacyLocalStoreKey = "migrated_legacy_local_store_v1_to_cloud"
 
     private let modelContainer: ModelContainer = {
         let fullSchema = Schema([
@@ -37,6 +38,7 @@ struct NeurovaApp: App {
             if cloudKitEnabled {
                 do {
                     let container = try makeCloudBackedContainer(for: fullSchema)
+                    migrateLegacyLocalDataIfNeeded(into: container)
                     defaults.set(true, forKey: cloudKitRuntimeActiveKey)
                     defaults.removeObject(forKey: cloudKitLastErrorKey)
                     return container
@@ -45,6 +47,7 @@ struct NeurovaApp: App {
                     let purgeSummary = purgeLikelyCloudStoreFiles()
                     do {
                         let container = try makeCloudBackedContainer(for: fullSchema)
+                        migrateLegacyLocalDataIfNeeded(into: container)
                         defaults.set(true, forKey: cloudKitRuntimeActiveKey)
                         defaults.set("Recovered after purge: \(purgeSummary)", forKey: cloudKitLastErrorKey)
                         return container
@@ -99,12 +102,12 @@ struct NeurovaApp: App {
             Subject.self,
             Deck.self,
             Card.self,
-            CloudAccountProfile.self
-        ])
-        let localOnlySchema = Schema([
+            CloudAccountProfile.self,
             XPEventEntity.self,
             XPStatsEntity.self,
-            UserPreferences.self,
+            UserPreferences.self
+        ])
+        let localOnlySchema = Schema([
             ScanEntity.self
         ])
 
@@ -125,6 +128,125 @@ struct NeurovaApp: App {
             for: fullSchema,
             configurations: [cloudConfiguration, localConfiguration]
         )
+    }
+
+    private static func migrateLegacyLocalDataIfNeeded(into container: ModelContainer) {
+        let defaults = UserDefaults.standard
+        guard defaults.bool(forKey: migratedLegacyLocalStoreKey) == false else { return }
+
+        let legacyURL = storeURL(named: "neurova-local-v1.store")
+        guard FileManager.default.fileExists(atPath: legacyURL.path) else {
+            defaults.set(true, forKey: migratedLegacyLocalStoreKey)
+            return
+        }
+
+        do {
+            let legacySchema = Schema([
+                XPEventEntity.self,
+                XPStatsEntity.self,
+                UserPreferences.self
+            ])
+            let legacyConfiguration = ModelConfiguration(
+                "legacy-local-v1",
+                schema: legacySchema,
+                url: legacyURL,
+                cloudKitDatabase: .none
+            )
+            let legacyContainer = try ModelContainer(for: legacySchema, configurations: [legacyConfiguration])
+
+            let targetContext = ModelContext(container)
+            let legacyContext = ModelContext(legacyContainer)
+
+            try mergeLegacyXPEvents(from: legacyContext, into: targetContext)
+            try mergeLegacyXPStats(from: legacyContext, into: targetContext)
+            try mergeLegacyUserPreferences(from: legacyContext, into: targetContext)
+
+            if targetContext.hasChanges {
+                try targetContext.save()
+            }
+            defaults.set(true, forKey: migratedLegacyLocalStoreKey)
+        } catch {
+            defaults.set("Legacy local migration failed: \(error.localizedDescription)", forKey: cloudKitLastErrorKey)
+        }
+    }
+
+    private static func mergeLegacyXPEvents(from legacyContext: ModelContext, into targetContext: ModelContext) throws {
+        let existingEvents = try targetContext.fetch(FetchDescriptor<XPEventEntity>())
+        let existingIDs = Set(existingEvents.map(\.id))
+
+        let legacyEvents = try legacyContext.fetch(
+            FetchDescriptor<XPEventEntity>(sortBy: [SortDescriptor(\.date, order: .forward)])
+        )
+        for event in legacyEvents where existingIDs.contains(event.id) == false {
+            targetContext.insert(
+                XPEventEntity(
+                    id: event.id,
+                    date: event.date,
+                    deckId: event.deckId,
+                    cardId: event.cardId,
+                    eventTypeRaw: event.eventTypeRaw,
+                    xpDelta: event.xpDelta
+                )
+            )
+        }
+    }
+
+    private static func mergeLegacyXPStats(from legacyContext: ModelContext, into targetContext: ModelContext) throws {
+        let legacyStatsDescriptor = FetchDescriptor<XPStatsEntity>(
+            predicate: #Predicate<XPStatsEntity> { stats in
+                stats.key == "global"
+            }
+        )
+        guard let legacyStats = try legacyContext.fetch(legacyStatsDescriptor).first else { return }
+
+        let targetStatsDescriptor = FetchDescriptor<XPStatsEntity>(
+            predicate: #Predicate<XPStatsEntity> { stats in
+                stats.key == "global"
+            }
+        )
+        if let targetStats = try targetContext.fetch(targetStatsDescriptor).first {
+            targetStats.totalXP = max(targetStats.totalXP, legacyStats.totalXP)
+        } else {
+            targetContext.insert(XPStatsEntity(key: "global", totalXP: legacyStats.totalXP))
+        }
+    }
+
+    private static func mergeLegacyUserPreferences(from legacyContext: ModelContext, into targetContext: ModelContext) throws {
+        let descriptor = FetchDescriptor<UserPreferences>(
+            predicate: #Predicate<UserPreferences> { preferences in
+                preferences.key == "global"
+            }
+        )
+        guard let legacyPreferences = try legacyContext.fetch(descriptor).first else { return }
+
+        if let targetPreferences = try targetContext.fetch(descriptor).first {
+            if targetPreferences.dailyGoalCards == 20 {
+                targetPreferences.dailyGoalCards = legacyPreferences.dailyGoalCards
+            }
+            targetPreferences.hasCompletedOnboarding = targetPreferences.hasCompletedOnboarding || legacyPreferences.hasCompletedOnboarding
+
+            if (targetPreferences.preferredThemeRaw?.isEmpty ?? true),
+               let legacyTheme = legacyPreferences.preferredThemeRaw,
+               legacyTheme.isEmpty == false {
+                targetPreferences.preferredThemeRaw = legacyTheme
+            }
+
+            if (targetPreferences.preferredLanguageRaw?.isEmpty ?? true),
+               let legacyLanguage = legacyPreferences.preferredLanguageRaw,
+               legacyLanguage.isEmpty == false {
+                targetPreferences.preferredLanguageRaw = legacyLanguage
+            }
+        } else {
+            targetContext.insert(
+                UserPreferences(
+                    key: legacyPreferences.key,
+                    dailyGoalCards: legacyPreferences.dailyGoalCards,
+                    hasCompletedOnboarding: legacyPreferences.hasCompletedOnboarding,
+                    preferredThemeRaw: legacyPreferences.preferredThemeRaw,
+                    preferredLanguageRaw: legacyPreferences.preferredLanguageRaw
+                )
+            )
+        }
     }
 
     private static func storeURL(named fileName: String) -> URL {
@@ -269,6 +391,8 @@ private struct HomeLaunchGateView: View {
     @AppStorage("apple_given_name") private var appleGivenName: String = ""
     @AppStorage("apple_email") private var appleEmail: String = ""
     @AppStorage("profile_display_name") private var profileDisplayName: String = ""
+    @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
+    @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
 
     var body: some View {
         Group {
@@ -314,6 +438,12 @@ private struct HomeLaunchGateView: View {
 
         let preferences = try? modelContext.fetch(descriptor).first
         if preferences?.hasCompletedOnboarding == true {
+            if let theme = preferences?.preferredThemeRaw, theme.isEmpty == false {
+                appThemeRawValue = theme
+            }
+            if let language = preferences?.preferredLanguageRaw, language.isEmpty == false {
+                appLanguageRawValue = language
+            }
             hasCompletedOnboarding = true
             recoveredCloudSession = nil
             isLoading = false

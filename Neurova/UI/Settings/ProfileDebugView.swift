@@ -352,12 +352,12 @@ struct ProfileDebugView: View {
                 Subject.self,
                 Deck.self,
                 Card.self,
-                CloudAccountProfile.self
-            ])
-            let localOnlySchema = Schema([
+                CloudAccountProfile.self,
                 XPEventEntity.self,
                 XPStatsEntity.self,
-                UserPreferences.self,
+                UserPreferences.self
+            ])
+            let localOnlySchema = Schema([
                 ScanEntity.self
             ])
             let cloudConfiguration = ModelConfiguration("cloudProbe", schema: cloudSchema)
