@@ -15,6 +15,7 @@ struct OnboardingView: View {
     @AppStorage("apple_email") private var appleEmail: String = ""
     @AppStorage("profile_display_name") private var profileDisplayName: String = ""
     @AppStorage("cloudkit_sync_enabled") private var cloudKitSyncEnabled: Bool = true
+    @AppStorage("auth_session_confirmed") private var authSessionConfirmed: Bool = false
 
     private let onFinish: () -> Void
 
@@ -49,13 +50,18 @@ struct OnboardingView: View {
     var body: some View {
         VStack(spacing: NSpacing.lg) {
             progressHeader
-            stepContent
-            Spacer(minLength: 0)
+            if step == .welcome {
+                stepContent
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                stepContent
+                Spacer(minLength: 0)
+            }
             actionFooter
         }
         .padding(.horizontal, NSpacing.md + NSpacing.xs)
         .padding(.top, NSpacing.lg)
-        .padding(.bottom, NSpacing.lg)
+        .padding(.bottom, step == .welcome ? 10 : NSpacing.lg)
         .background(backgroundView.ignoresSafeArea())
         .fullScreenCover(isPresented: $isPresentingFirstStudy) {
             if let createdDeck {
@@ -77,14 +83,26 @@ struct OnboardingView: View {
     private var progressHeader: some View {
         VStack(alignment: .leading, spacing: NSpacing.sm) {
             Text(AppCopy.text(locale, en: "Welcome to Neurova", es: "Bienvenido a Neurova"))
-                .font(NTypography.title.weight(.bold))
-                .foregroundStyle(NColors.Text.textPrimary)
+                .font(.system(size: step == .welcome ? 22 : 46, weight: .bold, design: .rounded))
+                .foregroundStyle(primaryTitleColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.94)
+                .allowsTightening(true)
+                .padding(.trailing, step == .welcome ? 74 : 0)
 
-            NProgressBar(progress: progressValue)
+            if step == .welcome {
+                welcomeProgressBar
+            } else {
+                NProgressBar(progress: progressValue)
+            }
 
             Text(stepSubtitle)
-                .font(NTypography.caption)
-                .foregroundStyle(secondaryTextColor)
+                .font(.system(size: step == .welcome ? 14 : 17, weight: step == .welcome ? .regular : .semibold, design: .rounded))
+                .foregroundStyle(step == .welcome ? welcomeHeaderSubtitleColor : secondaryTextColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.92)
+                .allowsTightening(true)
+                .padding(.trailing, step == .welcome ? 56 : 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -93,10 +111,7 @@ struct OnboardingView: View {
     private var stepContent: some View {
         switch step {
         case .welcome:
-            onboardingCard(
-                title: AppCopy.text(locale, en: "Your study control center", es: "Tu centro de estudio"),
-                message: AppCopy.text(locale, en: "Set up your daily goal and create your first deck in less than a minute.", es: "Configura tu meta diaria y crea tu primer deck en menos de un minuto.")
-            )
+            welcomeStepView
         case .dailyGoal:
             dailyGoalCard
         case .subject:
@@ -153,16 +168,24 @@ struct OnboardingView: View {
                 .frame(height: 50)
                 .clipShape(RoundedRectangle(cornerRadius: NRadius.button, style: .continuous))
                 .disabled(isSaving || isAuthenticating)
-
-                NSecondaryButton(AppCopy.text(locale, en: "Skip for now", es: "Omitir por ahora")) {
-                    persistOnboarding()
-                }
-                .disabled(isSaving || isAuthenticating)
             } else {
-                NPrimaryButton(primaryButtonTitle) {
-                    handlePrimaryAction()
+                if step == .welcome {
+                    OnboardingAnimatedPrimaryButton(
+                        title: primaryButtonTitle,
+                        isDark: colorScheme == .dark,
+                        gradientColors: colorScheme == .dark
+                            ? [Color(red: 0.30, green: 0.63, blue: 0.95), Color(red: 0.50, green: 0.34, blue: 0.95)]
+                            : [Color(red: 0.34, green: 0.55, blue: 0.90), Color(red: 0.45, green: 0.31, blue: 0.88)]
+                    ) {
+                        handlePrimaryAction()
+                    }
+                    .disabled(canContinue == false || isSaving)
+                } else {
+                    NPrimaryButton(primaryButtonTitle) {
+                        handlePrimaryAction()
+                    }
+                    .disabled(canContinue == false || isSaving)
                 }
-                .disabled(canContinue == false || isSaving)
 
                 if step != .welcome {
                     NSecondaryButton(AppCopy.text(locale, en: "Back", es: "Atrás")) {
@@ -206,6 +229,136 @@ struct OnboardingView: View {
                     }
                 }
             }
+        }
+    }
+
+    private var welcomeStepView: some View {
+        ZStack {
+            VStack(spacing: 0) {
+                welcomeInfoCard
+                    .padding(.top, 6)
+
+                Spacer(minLength: 0)
+
+                HStack(spacing: 14) {
+                    welcomeFeatureChip(
+                        icon: "book.pages",
+                        text: AppCopy.text(locale, en: "Unlimited decks", es: "Decks ilimitados")
+                    )
+                    welcomeFeatureChip(
+                        icon: "sparkles",
+                        text: AppCopy.text(locale, en: "Smart review", es: "Repaso inteligente")
+                    )
+                }
+            }
+
+            NImages.Mascot.neruWave
+                .resizable()
+                .scaledToFit()
+                .frame(width: 206, height: 206)
+                .padding(.bottom, 20)
+        }
+    }
+
+    private var welcomeInfoCard: some View {
+        RoundedRectangle(cornerRadius: 24, style: .continuous)
+            .fill(welcomeCardBackground)
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(welcomeCardBorder, lineWidth: 1)
+            )
+            .frame(height: 102)
+            .overlay(
+                HStack(alignment: .top, spacing: 16) {
+                    Circle()
+                        .fill(welcomeCardIconBackground)
+                        .frame(width: 36, height: 36)
+                        .overlay(
+                            Image(systemName: "book")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(welcomeCardIconColor)
+                        )
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(AppCopy.text(locale, en: "Your study control center", es: "Tu centro de estudio"))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .foregroundStyle(primaryTitleColor)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.9)
+
+                        Text(AppCopy.text(locale, en: "Set up your daily goal and create your first deck in less than a minute.", es: "Configura tu meta diaria y crea tu primer deck en menos de un minuto."))
+                            .font(.system(size: 14, weight: .regular, design: .rounded))
+                            .foregroundStyle(welcomeCardBodyTextColor)
+                            .lineLimit(2)
+                    }
+
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12),
+                alignment: .leading
+            )
+    }
+
+    private func welcomeFeatureChip(icon: String, text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .regular))
+                .foregroundStyle(welcomeChipIconColor)
+            Text(text)
+                .font(.system(size: 12, weight: .regular, design: .rounded))
+                .foregroundStyle(welcomeChipTextColor)
+                .lineLimit(1)
+                .minimumScaleFactor(0.9)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 54)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(welcomeChipBackground)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(welcomeChipBorder, lineWidth: 1)
+        )
+    }
+
+    private var welcomeProgressBar: some View {
+        TimelineView(.animation) { timeline in
+            GeometryReader { proxy in
+                let activeWidth = max(26, proxy.size.width * 0.16)
+                let tickTime = timeline.date.timeIntervalSinceReferenceDate
+                let phase = (tickTime / 2.0).truncatingRemainder(dividingBy: 1.0)
+                let xOffset = (activeWidth * 1.8 * phase) - (activeWidth * 0.9)
+
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(welcomeProgressTrackColor)
+                        .frame(height: 5)
+
+                    Capsule()
+                        .fill(welcomeProgressActiveGradient)
+                        .frame(width: activeWidth, height: 5)
+                        .overlay {
+                            Capsule()
+                                .fill(.clear)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [.clear, Color.white.opacity(0.30), .clear],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .frame(width: 34, height: 8)
+                                        .offset(x: xOffset)
+                                )
+                                .clipShape(Capsule())
+                        }
+                }
+            }
+            .frame(height: 5)
         }
     }
 
@@ -495,6 +648,7 @@ struct OnboardingView: View {
             if email.isEmpty == false {
                 appleEmail = email
             }
+            authSessionConfirmed = true
 
             let displayNameForCloud = firstNonEmpty([givenName, profileDisplayName, appleGivenName])
             let emailForCloud = firstNonEmpty([email, appleEmail])
@@ -607,15 +761,183 @@ struct OnboardingView: View {
     private var backgroundView: some View {
         LinearGradient(
             colors: colorScheme == .light
-                ? [NColors.Home.backgroundLightTop, NColors.Home.backgroundLightBottom]
-                : [NColors.Home.backgroundDarkTop, NColors.Home.backgroundDarkBottom],
+                ? [Color(red: 0.94, green: 0.94, blue: 0.96), Color(red: 0.93, green: 0.93, blue: 0.95)]
+                : [Color(red: 0.04, green: 0.05, blue: 0.11), Color(red: 0.03, green: 0.04, blue: 0.09)],
             startPoint: .top,
             endPoint: .bottom
         )
     }
 
     private var secondaryTextColor: Color {
-        colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark
+        colorScheme == .light
+            ? Color(red: 0.40, green: 0.43, blue: 0.51)
+            : Color(red: 0.34, green: 0.40, blue: 0.53)
+    }
+
+    private var welcomeHeaderSubtitleColor: Color {
+        colorScheme == .light
+            ? Color(red: 0.37, green: 0.41, blue: 0.50)
+            : Color(red: 0.53, green: 0.58, blue: 0.70)
+    }
+
+    private var primaryTitleColor: Color {
+        colorScheme == .light
+            ? Color(red: 0.05, green: 0.08, blue: 0.16)
+            : Color(red: 0.93, green: 0.95, blue: 0.99)
+    }
+
+    private var welcomeCardBackground: Color {
+        colorScheme == .light
+            ? Color(red: 0.89, green: 0.90, blue: 0.93)
+            : Color(red: 0.08, green: 0.10, blue: 0.18)
+    }
+
+    private var welcomeCardBorder: Color {
+        colorScheme == .light
+            ? Color.white.opacity(0.32)
+            : Color.white.opacity(0.08)
+    }
+
+    private var welcomeCardIconBackground: Color {
+        colorScheme == .light
+            ? Color(red: 0.82, green: 0.87, blue: 0.97)
+            : Color(red: 0.12, green: 0.17, blue: 0.30)
+    }
+
+    private var welcomeCardIconColor: Color {
+        colorScheme == .light
+            ? Color(red: 0.46, green: 0.63, blue: 0.96)
+            : Color(red: 0.45, green: 0.66, blue: 0.97)
+    }
+
+    private var welcomeChipBackground: Color {
+        colorScheme == .light
+            ? Color(red: 0.88, green: 0.89, blue: 0.92)
+            : Color(red: 0.10, green: 0.12, blue: 0.20)
+    }
+
+    private var welcomeChipBorder: Color {
+        colorScheme == .light ? Color.white.opacity(0.22) : Color.white.opacity(0.06)
+    }
+
+    private var welcomeChipTextColor: Color {
+        colorScheme == .light
+            ? Color(red: 0.40, green: 0.44, blue: 0.53)
+            : Color(red: 0.38, green: 0.43, blue: 0.56)
+    }
+
+    private var welcomeChipIconColor: Color {
+        colorScheme == .light
+            ? Color(red: 0.49, green: 0.64, blue: 0.95)
+            : Color(red: 0.42, green: 0.62, blue: 0.96)
+    }
+
+    private var welcomeProgressTrackColor: Color {
+        colorScheme == .light
+            ? Color(red: 0.81, green: 0.82, blue: 0.86)
+            : Color(red: 0.13, green: 0.15, blue: 0.23)
+    }
+
+    private var welcomeProgressActiveGradient: LinearGradient {
+        LinearGradient(
+            colors: colorScheme == .light
+                ? [Color(red: 0.36, green: 0.56, blue: 0.92), Color(red: 0.48, green: 0.32, blue: 0.89)]
+                : [Color(red: 0.16, green: 0.63, blue: 0.98), Color(red: 0.48, green: 0.30, blue: 0.96)],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
+
+    private var welcomeCardBodyTextColor: Color {
+        colorScheme == .light
+            ? Color(red: 0.45, green: 0.49, blue: 0.57)
+            : Color(red: 0.38, green: 0.43, blue: 0.54)
+    }
+}
+
+private struct OnboardingAnimatedPrimaryButton: View {
+    let title: String
+    let isDark: Bool
+    let gradientColors: [Color]
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .foregroundStyle(isDark ? Color(red: 0.05, green: 0.08, blue: 0.16) : .white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 58)
+            .background(
+                LinearGradient(
+                    colors: gradientColors,
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                TimelineView(.animation) { timeline in
+                    GeometryReader { proxy in
+                        let width = proxy.size.width
+                        let tickTime = timeline.date.timeIntervalSinceReferenceDate
+                        let phase = (tickTime / 2.15).truncatingRemainder(dividingBy: 1.0)
+                        let shinePhase = -1.45 + (2.9 * phase)
+                        let xOffset = width * shinePhase
+
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(.clear)
+                            .overlay(
+                                Ellipse()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                .clear,
+                                                Color.white.opacity(0.10),
+                                                Color.white.opacity(0.30),
+                                                Color.white.opacity(0.10),
+                                                .clear
+                                            ],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(width: 188, height: 126)
+                                    .rotationEffect(.degrees(20))
+                                    .blur(radius: 9)
+                                    .offset(x: xOffset)
+                            )
+                            .blendMode(.screen)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.white.opacity(0.20), lineWidth: 0.9)
+            }
+            .overlay(alignment: .top) {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.20),
+                                Color.white.opacity(0.0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(height: 20)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .allowsHitTesting(false)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 
