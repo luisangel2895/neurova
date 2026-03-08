@@ -83,7 +83,7 @@ struct OnboardingView: View {
     private var progressHeader: some View {
         VStack(alignment: .leading, spacing: NSpacing.sm) {
             Text(AppCopy.text(locale, en: "Welcome to Neurova", es: "Bienvenido a Neurova"))
-                .font(.system(size: step == .welcome ? 30 : 46, weight: .bold, design: .rounded))
+                .font(.system(size: step == .welcome ? 32 : 46, weight: .bold, design: .rounded))
                 .foregroundStyle(primaryTitleColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.80)
@@ -96,7 +96,7 @@ struct OnboardingView: View {
             }
 
             Text(stepSubtitle)
-                .font(.system(size: step == .welcome ? 13 : 17, weight: step == .welcome ? .regular : .semibold, design: .rounded))
+                .font(.system(size: step == .welcome ? 15 : 17, weight: step == .welcome ? .regular : .semibold, design: .rounded))
                 .foregroundStyle(step == .welcome ? welcomeHeaderSubtitleColor : secondaryTextColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
@@ -280,7 +280,7 @@ struct OnboardingView: View {
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(AppCopy.text(locale, en: "Your study control center", es: "Tu centro de estudio"))
-                            .font(.system(size: 15, weight: .bold, design: .rounded))
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
                             .foregroundStyle(primaryTitleColor)
                             .lineLimit(1)
                             .minimumScaleFactor(0.9)
