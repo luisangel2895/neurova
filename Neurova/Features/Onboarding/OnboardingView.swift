@@ -60,10 +60,12 @@ struct OnboardingView: View {
             }
             actionFooter
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.horizontal, NSpacing.md + NSpacing.xs)
         .padding(.top, NSpacing.lg)
         .padding(.bottom, (step == .welcome || step == .dailyGoal || step == .subject || step == .deck || step == .firstCard) ? 0 : NSpacing.lg)
         .background(backgroundView.ignoresSafeArea())
+        .ignoresSafeArea(.keyboard)
         .fullScreenCover(isPresented: $isPresentingFirstStudy) {
             if let createdDeck {
                 NavigationStack {
@@ -444,6 +446,12 @@ struct OnboardingView: View {
             .font(.system(size: 15, weight: .regular, design: .rounded))
             .foregroundStyle(primaryTitleColor)
             .focused($isDeckInputFocused)
+            .submitLabel(.done)
+            .autocorrectionDisabled(true)
+            .textInputAutocapitalization(.words)
+            .onSubmit {
+                isDeckInputFocused = false
+            }
             .padding(.horizontal, 16)
             .frame(height: 64)
             .background(deckInputBackground)
@@ -452,12 +460,6 @@ struct OnboardingView: View {
                     .stroke(isDeckInputFocused ? deckInputActiveBorder : deckInputBorder, lineWidth: isDeckInputFocused ? 1.6 : 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .onChange(of: step, initial: true) { _, newStep in
-                guard newStep == .deck else { return }
-                if deckTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    deckTitle = defaultDeckSuggestion
-                }
-            }
 
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(deckPreviewBackground)
@@ -534,12 +536,6 @@ struct OnboardingView: View {
                     )
                     Spacer(minLength: 0)
                 }
-            }
-        }
-        .onChange(of: subjectName, initial: true) { _, _ in
-            guard step == .deck else { return }
-            if deckTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                deckTitle = defaultDeckSuggestion
             }
         }
     }
@@ -864,8 +860,7 @@ struct OnboardingView: View {
     }
 
     private var deckTitleDisplay: String {
-        let trimmed = deckTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? defaultDeckSuggestion : trimmed
+        deckTitle.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private var stepSubtitle: String {
@@ -901,7 +896,7 @@ struct OnboardingView: View {
         case .welcome, .dailyGoal, .account, .done:
             return true
         case .subject:
-            return true
+            return subjectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
         case .deck:
             return deckTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
         case .firstCard:
@@ -929,6 +924,10 @@ struct OnboardingView: View {
     }
 
     private func handlePrimaryAction() {
+        if step == .subject, deckTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            deckTitle = defaultDeckSuggestion
+        }
+
         if step == .firstCard {
             withAnimation(.easeInOut(duration: 0.2)) {
                 step = .account
