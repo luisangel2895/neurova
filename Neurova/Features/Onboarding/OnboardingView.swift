@@ -173,7 +173,7 @@ struct OnboardingView: View {
                         isDark: colorScheme == .dark,
                         gradientColors: colorScheme == .dark
                             ? [Color(red: 0.30, green: 0.63, blue: 0.95), Color(red: 0.50, green: 0.34, blue: 0.95)]
-                            : [Color(red: 0.34, green: 0.55, blue: 0.90), Color(red: 0.45, green: 0.31, blue: 0.88)]
+                            : [Color(red: 0.24, green: 0.50, blue: 0.90), Color(red: 0.30, green: 0.46, blue: 0.87), Color(red: 0.39, green: 0.27, blue: 0.82)]
                     ) {
                         handlePrimaryAction()
                     }
@@ -761,7 +761,7 @@ struct OnboardingView: View {
     private var backgroundView: some View {
         LinearGradient(
             colors: colorScheme == .light
-                ? [Color(red: 0.94, green: 0.94, blue: 0.96), Color(red: 0.93, green: 0.93, blue: 0.95)]
+                ? [Color(red: 0.93, green: 0.93, blue: 0.95), Color(red: 0.92, green: 0.92, blue: 0.94)]
                 : [Color(red: 0.04, green: 0.05, blue: 0.11), Color(red: 0.03, green: 0.04, blue: 0.09)],
             startPoint: .top,
             endPoint: .bottom
@@ -770,78 +770,80 @@ struct OnboardingView: View {
 
     private var secondaryTextColor: Color {
         colorScheme == .light
-            ? Color(red: 0.40, green: 0.43, blue: 0.51)
+            ? Color(red: 0.39, green: 0.43, blue: 0.52)
             : Color(red: 0.34, green: 0.40, blue: 0.53)
     }
 
     private var welcomeHeaderSubtitleColor: Color {
         colorScheme == .light
-            ? Color(red: 0.37, green: 0.41, blue: 0.50)
+            ? Color(red: 0.40, green: 0.44, blue: 0.53)
             : Color(red: 0.53, green: 0.58, blue: 0.70)
     }
 
     private var primaryTitleColor: Color {
         colorScheme == .light
-            ? Color(red: 0.05, green: 0.08, blue: 0.16)
+            ? Color(red: 0.06, green: 0.08, blue: 0.15)
             : Color(red: 0.93, green: 0.95, blue: 0.99)
     }
 
     private var welcomeCardBackground: Color {
         colorScheme == .light
-            ? Color(red: 0.89, green: 0.90, blue: 0.93)
+            ? Color(red: 0.88, green: 0.89, blue: 0.92)
             : Color(red: 0.08, green: 0.10, blue: 0.18)
     }
 
     private var welcomeCardBorder: Color {
         colorScheme == .light
-            ? Color.white.opacity(0.32)
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
             : Color.white.opacity(0.08)
     }
 
     private var welcomeCardIconBackground: Color {
         colorScheme == .light
-            ? Color(red: 0.82, green: 0.87, blue: 0.97)
+            ? Color(red: 0.81, green: 0.86, blue: 0.97)
             : Color(red: 0.12, green: 0.17, blue: 0.30)
     }
 
     private var welcomeCardIconColor: Color {
         colorScheme == .light
-            ? Color(red: 0.46, green: 0.63, blue: 0.96)
+            ? Color(red: 0.45, green: 0.62, blue: 0.95)
             : Color(red: 0.45, green: 0.66, blue: 0.97)
     }
 
     private var welcomeChipBackground: Color {
         colorScheme == .light
-            ? Color(red: 0.88, green: 0.89, blue: 0.92)
+            ? Color(red: 0.86, green: 0.87, blue: 0.90)
             : Color(red: 0.10, green: 0.12, blue: 0.20)
     }
 
     private var welcomeChipBorder: Color {
-        colorScheme == .light ? Color.white.opacity(0.22) : Color.white.opacity(0.06)
+        colorScheme == .light
+            ? Color(red: 0.78, green: 0.80, blue: 0.84).opacity(0.9)
+            : Color.white.opacity(0.06)
     }
 
     private var welcomeChipTextColor: Color {
         colorScheme == .light
-            ? Color(red: 0.40, green: 0.44, blue: 0.53)
+            ? Color(red: 0.39, green: 0.43, blue: 0.52)
             : Color(red: 0.38, green: 0.43, blue: 0.56)
     }
 
     private var welcomeChipIconColor: Color {
         colorScheme == .light
-            ? Color(red: 0.49, green: 0.64, blue: 0.95)
+            ? Color(red: 0.48, green: 0.63, blue: 0.94)
             : Color(red: 0.42, green: 0.62, blue: 0.96)
     }
 
     private var welcomeProgressTrackColor: Color {
         colorScheme == .light
-            ? Color(red: 0.81, green: 0.82, blue: 0.86)
+            ? Color(red: 0.81, green: 0.82, blue: 0.85)
             : Color(red: 0.13, green: 0.15, blue: 0.23)
     }
 
     private var welcomeProgressActiveGradient: LinearGradient {
         LinearGradient(
             colors: colorScheme == .light
-                ? [Color(red: 0.36, green: 0.56, blue: 0.92), Color(red: 0.48, green: 0.32, blue: 0.89)]
+                ? [Color(red: 0.37, green: 0.56, blue: 0.92), Color(red: 0.45, green: 0.34, blue: 0.90)]
                 : [Color(red: 0.16, green: 0.63, blue: 0.98), Color(red: 0.48, green: 0.30, blue: 0.96)],
             startPoint: .leading,
             endPoint: .trailing
@@ -850,7 +852,7 @@ struct OnboardingView: View {
 
     private var welcomeCardBodyTextColor: Color {
         colorScheme == .light
-            ? Color(red: 0.45, green: 0.49, blue: 0.57)
+            ? Color(red: 0.40, green: 0.44, blue: 0.53)
             : Color(red: 0.38, green: 0.43, blue: 0.54)
     }
 }
