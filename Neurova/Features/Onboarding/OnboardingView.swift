@@ -61,7 +61,7 @@ struct OnboardingView: View {
         }
         .padding(.horizontal, NSpacing.md + NSpacing.xs)
         .padding(.top, NSpacing.lg)
-        .padding(.bottom, step == .welcome ? 0 : NSpacing.lg)
+        .padding(.bottom, (step == .welcome || step == .dailyGoal) ? 0 : NSpacing.lg)
         .background(backgroundView.ignoresSafeArea())
         .fullScreenCover(isPresented: $isPresentingFirstStudy) {
             if let createdDeck {
@@ -83,21 +83,19 @@ struct OnboardingView: View {
     private var progressHeader: some View {
         VStack(alignment: .leading, spacing: NSpacing.sm) {
             Text(AppCopy.text(locale, en: "Welcome to Neurova", es: "Bienvenido a Neurova"))
-                .font(.system(size: step == .welcome ? 32 : 46, weight: .bold, design: .rounded))
+                .font(.system(size: 32, weight: .bold, design: .rounded))
                 .foregroundStyle(primaryTitleColor)
                 .lineLimit(1)
-                .minimumScaleFactor(0.80)
-                .allowsTightening(true)
 
-            if step == .welcome {
+            if showsOnboardingProgressStyle {
                 welcomeProgressBar
             } else {
                 NProgressBar(progress: progressValue)
             }
 
             Text(stepSubtitle)
-                .font(.system(size: step == .welcome ? 15 : 17, weight: step == .welcome ? .regular : .semibold, design: .rounded))
-                .foregroundStyle(step == .welcome ? welcomeHeaderSubtitleColor : secondaryTextColor)
+                .font(.system(size: 15, weight: .regular, design: .rounded))
+                .foregroundStyle(welcomeHeaderSubtitleColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
                 .allowsTightening(true)
@@ -167,7 +165,7 @@ struct OnboardingView: View {
                 .clipShape(RoundedRectangle(cornerRadius: NRadius.button, style: .continuous))
                 .disabled(isSaving || isAuthenticating)
             } else {
-                if step == .welcome {
+                if usesAnimatedPrimaryButton {
                     OnboardingAnimatedPrimaryButton(
                         title: primaryButtonTitle,
                         isDark: colorScheme == .dark,
@@ -185,7 +183,7 @@ struct OnboardingView: View {
                     .disabled(canContinue == false || isSaving)
                 }
 
-                if step != .welcome {
+                if step != .welcome && step != .dailyGoal {
                     NSecondaryButton(AppCopy.text(locale, en: "Back", es: "Atrás")) {
                         goBack()
                     }
@@ -195,39 +193,121 @@ struct OnboardingView: View {
     }
 
     private var dailyGoalCard: some View {
-        NCard {
-            VStack(alignment: .leading, spacing: NSpacing.md) {
-                Text(AppCopy.text(locale, en: "Pick your daily goal", es: "Elige tu meta diaria"))
-                    .font(NTypography.bodyEmphasis.weight(.semibold))
-                    .foregroundStyle(NColors.Text.textPrimary)
+        VStack(spacing: 16) {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(dailyGoalInfoCardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(dailyGoalInfoCardBorder, lineWidth: 1)
+                )
+                .frame(height: 100)
+                .overlay(alignment: .leading) {
+                    HStack(spacing: 16) {
+                        Circle()
+                            .fill(dailyGoalInfoIconBackground)
+                            .frame(width: 36, height: 36)
+                            .overlay(
+                                Image(systemName: "scope")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(dailyGoalInfoIconColor)
+                            )
 
-                HStack(spacing: NSpacing.sm) {
-                    ForEach([10, 20, 30, 50], id: \.self) { goal in
-                        Button {
-                            selectedDailyGoal = goal
-                        } label: {
-                            Text("\(goal)")
-                                .font(NTypography.bodyEmphasis.weight(.semibold))
-                                .foregroundStyle(selectedDailyGoal == goal ? NColors.Brand.neuroBlue : NColors.Text.textPrimary)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 42)
-                                .background(
-                                    RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                                        .fill(selectedDailyGoal == goal ? NColors.Home.surfaceL1 : NColors.Neutrals.surfaceAlt)
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                                        .stroke(
-                                            selectedDailyGoal == goal ? NColors.Brand.neuroBlue : NColors.Neutrals.border,
-                                            lineWidth: 1
-                                        )
-                                )
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(AppCopy.text(locale, en: "Your daily goal", es: "Tu meta diaria"))
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundStyle(primaryTitleColor)
+                            Text(AppCopy.text(locale, en: "How many cards do you want to review each day?", es: "¿Cuántas tarjetas quieres repasar cada día?"))
+                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .foregroundStyle(dailyGoalSecondaryText)
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
-                        .buttonStyle(.plain)
+                        Spacer(minLength: 0)
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                }
+
+            VStack(spacing: 12) {
+                HStack(spacing: 12) {
+                    dailyGoalOptionCard(goal: 10, title: AppCopy.text(locale, en: "Relaxed", es: "Relajado"), icon: "bolt")
+                    dailyGoalOptionCard(goal: 20, title: AppCopy.text(locale, en: "Steady", es: "Constante"), icon: "flame")
+                }
+                HStack(spacing: 12) {
+                    dailyGoalOptionCard(goal: 30, title: AppCopy.text(locale, en: "Dedicated", es: "Dedicado"), icon: "trophy")
+                    dailyGoalOptionCard(goal: 50, title: AppCopy.text(locale, en: "Intense", es: "Intenso"), icon: "crown")
                 }
             }
+
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(dailyGoalHintBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(dailyGoalHintBorder, lineWidth: 1)
+                )
+                .frame(height: 40)
+                .overlay {
+                    HStack(spacing: 8) {
+                        Image(systemName: "flame")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(dailyGoalInfoIconColor)
+                        Text(AppCopy.text(locale, en: "Recommended: 20 cards to start", es: "Recomendado: 20 tarjetas para empezar"))
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(dailyGoalHintText)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.9)
+                    }
+                }
         }
+    }
+
+    private func dailyGoalOptionCard(goal: Int, title: String, icon: String) -> some View {
+        let isSelected = selectedDailyGoal == goal
+        return Button {
+            selectedDailyGoal = goal
+        } label: {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(isSelected ? dailyGoalOptionSelectedBackground : dailyGoalOptionBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(isSelected ? dailyGoalOptionSelectedBorder : dailyGoalOptionBorder, lineWidth: isSelected ? 2 : 1)
+                )
+                .frame(maxWidth: .infinity)
+                .frame(height: 170)
+                .overlay(alignment: .topTrailing) {
+                    if isSelected {
+                        Circle()
+                            .fill(dailyGoalCheckBackground)
+                            .frame(width: 22, height: 22)
+                            .overlay(
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundStyle(.white)
+                            )
+                            .padding(.top, 10)
+                            .padding(.trailing, 10)
+                    }
+                }
+                .overlay {
+                    VStack(spacing: 10) {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(dailyGoalIconBadgeBackground)
+                            .frame(width: 48, height: 48)
+                            .overlay(
+                                Image(systemName: icon)
+                                    .font(.system(size: 19, weight: .semibold))
+                                    .foregroundStyle(dailyGoalIconColor)
+                            )
+                        Text("\(goal)")
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundStyle(primaryTitleColor)
+                        Text(title)
+                            .font(.system(size: 12.5, weight: .semibold, design: .rounded))
+                            .foregroundStyle(isSelected ? dailyGoalSelectedLabelColor : dailyGoalSecondaryText)
+                    }
+                }
+        }
+        .buttonStyle(.plain)
     }
 
     private var welcomeStepView: some View {
@@ -326,7 +406,7 @@ struct OnboardingView: View {
     private var welcomeProgressBar: some View {
         TimelineView(.animation) { timeline in
             GeometryReader { proxy in
-                let activeWidth = max(26, proxy.size.width * 0.16)
+                let activeWidth = max(26, proxy.size.width * max(0.16, progressValue))
                 let tickTime = timeline.date.timeIntervalSinceReferenceDate
                 let phase = (tickTime / 2.0).truncatingRemainder(dividingBy: 1.0)
                 let xOffset = (activeWidth * 1.8 * phase) - (activeWidth * 0.9)
@@ -518,7 +598,7 @@ struct OnboardingView: View {
         case .welcome:
             return AppCopy.text(locale, en: "Quick setup to start studying.", es: "Configuración rápida para empezar a estudiar.")
         case .dailyGoal:
-            return AppCopy.text(locale, en: "You can change this later in settings.", es: "Puedes cambiar esto luego en ajustes.")
+            return AppCopy.text(locale, en: "Quick setup to start studying.", es: "Configuración rápida para empezar a estudiar.")
         case .subject:
             return AppCopy.text(locale, en: "This groups your decks.", es: "Esto agrupa tus decks.")
         case .deck:
@@ -552,6 +632,24 @@ struct OnboardingView: View {
         case .firstCard:
             return cardFront.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false &&
                 cardBack.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        }
+    }
+
+    private var usesAnimatedPrimaryButton: Bool {
+        switch step {
+        case .welcome, .dailyGoal, .subject, .deck, .firstCard:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private var showsOnboardingProgressStyle: Bool {
+        switch step {
+        case .welcome, .dailyGoal, .subject, .deck, .firstCard:
+            return true
+        default:
+            return false
         }
     }
 
@@ -854,6 +952,74 @@ struct OnboardingView: View {
         colorScheme == .light
             ? Color(red: 0.40, green: 0.44, blue: 0.53)
             : Color(red: 0.38, green: 0.43, blue: 0.54)
+    }
+
+    private var dailyGoalInfoCardBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+    }
+
+    private var dailyGoalInfoCardBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color.white.opacity(0.08)
+    }
+
+    private var dailyGoalInfoIconBackground: Color {
+        colorScheme == .light ? Color(red: 0.80, green: 0.86, blue: 0.97) : Color(red: 0.11, green: 0.17, blue: 0.31)
+    }
+
+    private var dailyGoalInfoIconColor: Color {
+        colorScheme == .light ? Color(red: 0.36, green: 0.55, blue: 0.92) : Color(red: 0.31, green: 0.59, blue: 0.98)
+    }
+
+    private var dailyGoalSecondaryText: Color {
+        colorScheme == .light ? Color(red: 0.39, green: 0.43, blue: 0.52) : Color(red: 0.36, green: 0.42, blue: 0.55)
+    }
+
+    private var dailyGoalOptionBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+    }
+
+    private var dailyGoalOptionBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color(red: 0.16, green: 0.19, blue: 0.30)
+    }
+
+    private var dailyGoalOptionSelectedBackground: Color {
+        colorScheme == .light ? Color(red: 0.79, green: 0.82, blue: 0.89) : Color(red: 0.11, green: 0.16, blue: 0.28)
+    }
+
+    private var dailyGoalOptionSelectedBorder: Color {
+        colorScheme == .light ? Color(red: 0.26, green: 0.50, blue: 0.91) : Color(red: 0.25, green: 0.55, blue: 0.98)
+    }
+
+    private var dailyGoalIconBadgeBackground: Color {
+        colorScheme == .light ? Color(red: 0.84, green: 0.85, blue: 0.89) : Color(red: 0.12, green: 0.15, blue: 0.24)
+    }
+
+    private var dailyGoalIconColor: Color {
+        colorScheme == .light ? Color(red: 0.32, green: 0.36, blue: 0.45) : Color(red: 0.50, green: 0.55, blue: 0.66)
+    }
+
+    private var dailyGoalSelectedLabelColor: Color {
+        colorScheme == .light ? Color(red: 0.28, green: 0.50, blue: 0.90) : Color(red: 0.30, green: 0.57, blue: 0.97)
+    }
+
+    private var dailyGoalCheckBackground: Color {
+        colorScheme == .light ? Color(red: 0.34, green: 0.41, blue: 0.89) : Color(red: 0.35, green: 0.45, blue: 0.96)
+    }
+
+    private var dailyGoalHintBackground: Color {
+        colorScheme == .light ? Color(red: 0.84, green: 0.87, blue: 0.93) : Color(red: 0.07, green: 0.13, blue: 0.24)
+    }
+
+    private var dailyGoalHintBorder: Color {
+        colorScheme == .light ? Color(red: 0.75, green: 0.79, blue: 0.89) : Color(red: 0.16, green: 0.27, blue: 0.46)
+    }
+
+    private var dailyGoalHintText: Color {
+        colorScheme == .light ? Color(red: 0.33, green: 0.37, blue: 0.48) : Color(red: 0.53, green: 0.58, blue: 0.68)
     }
 }
 
