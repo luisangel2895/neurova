@@ -61,7 +61,7 @@ struct OnboardingView: View {
         }
         .padding(.horizontal, NSpacing.md + NSpacing.xs)
         .padding(.top, NSpacing.lg)
-        .padding(.bottom, step == .welcome ? 10 : NSpacing.lg)
+        .padding(.bottom, step == .welcome ? 0 : NSpacing.lg)
         .background(backgroundView.ignoresSafeArea())
         .fullScreenCover(isPresented: $isPresentingFirstStudy) {
             if let createdDeck {
@@ -83,12 +83,11 @@ struct OnboardingView: View {
     private var progressHeader: some View {
         VStack(alignment: .leading, spacing: NSpacing.sm) {
             Text(AppCopy.text(locale, en: "Welcome to Neurova", es: "Bienvenido a Neurova"))
-                .font(.system(size: step == .welcome ? 22 : 46, weight: .bold, design: .rounded))
+                .font(.system(size: step == .welcome ? 30 : 46, weight: .bold, design: .rounded))
                 .foregroundStyle(primaryTitleColor)
                 .lineLimit(1)
-                .minimumScaleFactor(0.94)
+                .minimumScaleFactor(0.80)
                 .allowsTightening(true)
-                .padding(.trailing, step == .welcome ? 74 : 0)
 
             if step == .welcome {
                 welcomeProgressBar
@@ -97,12 +96,11 @@ struct OnboardingView: View {
             }
 
             Text(stepSubtitle)
-                .font(.system(size: step == .welcome ? 14 : 17, weight: step == .welcome ? .regular : .semibold, design: .rounded))
+                .font(.system(size: step == .welcome ? 13 : 17, weight: step == .welcome ? .regular : .semibold, design: .rounded))
                 .foregroundStyle(step == .welcome ? welcomeHeaderSubtitleColor : secondaryTextColor)
                 .lineLimit(1)
-                .minimumScaleFactor(0.92)
+                .minimumScaleFactor(0.85)
                 .allowsTightening(true)
-                .padding(.trailing, step == .welcome ? 56 : 0)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -233,30 +231,31 @@ struct OnboardingView: View {
     }
 
     private var welcomeStepView: some View {
-        ZStack {
-            VStack(spacing: 0) {
+        GeometryReader { proxy in
+            ZStack(alignment: .top) {
                 welcomeInfoCard
-                    .padding(.top, 6)
+                    .padding(.top, 18)
 
-                Spacer(minLength: 0)
+                VStack(spacing: 20) {
+                    NImages.Mascot.neruWave
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 206, height: 206)
 
-                HStack(spacing: 14) {
-                    welcomeFeatureChip(
-                        icon: "book.pages",
-                        text: AppCopy.text(locale, en: "Unlimited decks", es: "Decks ilimitados")
-                    )
-                    welcomeFeatureChip(
-                        icon: "sparkles",
-                        text: AppCopy.text(locale, en: "Smart review", es: "Repaso inteligente")
-                    )
+                    HStack(spacing: 5) {
+                        welcomeFeatureChip(
+                            icon: "book.pages",
+                            text: AppCopy.text(locale, en: "Unlimited decks", es: "Decks ilimitados")
+                        )
+                        welcomeFeatureChip(
+                            icon: "sparkles",
+                            text: AppCopy.text(locale, en: "Smart review", es: "Repaso inteligente")
+                        )
+                    }
                 }
+                .frame(maxWidth: .infinity)
+                .position(x: proxy.size.width / 2, y: proxy.size.height / 2)
             }
-
-            NImages.Mascot.neruWave
-                .resizable()
-                .scaledToFit()
-                .frame(width: 206, height: 206)
-                .padding(.bottom, 20)
         }
     }
 
@@ -267,9 +266,9 @@ struct OnboardingView: View {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .stroke(welcomeCardBorder, lineWidth: 1)
             )
-            .frame(height: 102)
+            .frame(height: 100)
             .overlay(
-                HStack(alignment: .top, spacing: 16) {
+                HStack(alignment: .center, spacing: 16) {
                     Circle()
                         .fill(welcomeCardIconBackground)
                         .frame(width: 36, height: 36)
@@ -306,13 +305,14 @@ struct OnboardingView: View {
                 .font(.system(size: 12, weight: .regular))
                 .foregroundStyle(welcomeChipIconColor)
             Text(text)
-                .font(.system(size: 12, weight: .regular, design: .rounded))
+                .font(.system(size: 13, weight: .regular, design: .rounded))
                 .foregroundStyle(welcomeChipTextColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.9)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 54)
+        .frame(height: 40)
+        .padding(.horizontal, 0)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
                 .fill(welcomeChipBackground)
@@ -865,9 +865,9 @@ private struct OnboardingAnimatedPrimaryButton: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Text(title)
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .font(.system(size: 18, weight: .regular, design: .rounded))
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 14, weight: .regular))
             }
             .foregroundStyle(isDark ? Color(red: 0.05, green: 0.08, blue: 0.16) : .white)
             .frame(maxWidth: .infinity)
