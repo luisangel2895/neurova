@@ -32,6 +32,7 @@ struct OnboardingView: View {
     @State private var isPresentingFirstStudy = false
     @State private var isAuthenticating = false
     @State private var isWavingMascot = false
+    @FocusState private var isDeckInputFocused: Bool
 
     private enum Step: Int, CaseIterable {
         case welcome
@@ -61,7 +62,7 @@ struct OnboardingView: View {
         }
         .padding(.horizontal, NSpacing.md + NSpacing.xs)
         .padding(.top, NSpacing.lg)
-        .padding(.bottom, (step == .welcome || step == .dailyGoal || step == .subject) ? 0 : NSpacing.lg)
+        .padding(.bottom, (step == .welcome || step == .dailyGoal || step == .subject || step == .deck || step == .firstCard) ? 0 : NSpacing.lg)
         .background(backgroundView.ignoresSafeArea())
         .fullScreenCover(isPresented: $isPresentingFirstStudy) {
             if let createdDeck {
@@ -113,11 +114,7 @@ struct OnboardingView: View {
         case .subject:
             subjectStepView
         case .deck:
-            textInputCard(
-                title: AppCopy.text(locale, en: "Create your first deck", es: "Crea tu primer deck"),
-                placeholder: AppCopy.text(locale, en: "Example: Cell Biology Basics", es: "Ejemplo: Bases de Biología Celular"),
-                text: $deckTitle
-            )
+            deckStepView
         case .firstCard:
             firstCardEditor
         case .account:
@@ -179,7 +176,7 @@ struct OnboardingView: View {
                     .disabled(canContinue == false || isSaving)
                 }
 
-                if step != .welcome && step != .dailyGoal && step != .subject {
+                if step != .welcome && step != .dailyGoal && step != .subject && step != .deck {
                     NSecondaryButton(AppCopy.text(locale, en: "Back", es: "Atrás")) {
                         goBack()
                     }
@@ -401,6 +398,172 @@ struct OnboardingView: View {
                     }
                     .padding(.horizontal, 14)
                 }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var deckStepView: some View {
+        VStack(spacing: 16) {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(deckInfoCardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(deckInfoCardBorder, lineWidth: 1)
+                )
+                .frame(height: 85)
+                .overlay(alignment: .leading) {
+                    HStack(spacing: 16) {
+                        Circle()
+                            .fill(deckInfoIconBackground)
+                            .frame(width: 36, height: 36)
+                            .overlay(
+                                Image(systemName: "square.stack.3d.down.forward")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(deckInfoIconColor)
+                            )
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(AppCopy.text(locale, en: "Create your first deck", es: "Crea tu primer mazo"))
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundStyle(primaryTitleColor)
+                            Text(AppCopy.text(locale, en: "Decks group cards around a specific topic inside your subject.", es: "Los mazos agrupan tarjetas sobre un tema específico dentro de tu materia."))
+                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .foregroundStyle(deckSecondaryText)
+                                .lineLimit(2)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                }
+
+            TextField(
+                AppCopy.text(locale, en: "Example: Cell Biology Basics", es: "Ejemplo: Bases de Biología Celular"),
+                text: $deckTitle
+            )
+            .font(.system(size: 15, weight: .regular, design: .rounded))
+            .foregroundStyle(primaryTitleColor)
+            .focused($isDeckInputFocused)
+            .padding(.horizontal, 16)
+            .frame(height: 64)
+            .background(deckInputBackground)
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(isDeckInputFocused ? deckInputActiveBorder : deckInputBorder, lineWidth: isDeckInputFocused ? 1.6 : 1)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .onChange(of: step, initial: true) { _, newStep in
+                guard newStep == .deck else { return }
+                if deckTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    deckTitle = defaultDeckSuggestion
+                }
+            }
+
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(deckPreviewBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(deckPreviewBorder, lineWidth: 1)
+                )
+                .frame(height: 96)
+                .overlay(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 10) {
+                            Circle()
+                                .fill(deckPreviewIconBackground)
+                                .frame(width: 36, height: 36)
+                                .overlay(
+                                    Image(systemName: "square.stack.3d.down.forward.fill")
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundStyle(deckPreviewIconColor)
+                                )
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(deckTitleDisplay)
+                                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                                    .foregroundStyle(primaryTitleColor)
+                                    .lineLimit(1)
+                                Text(AppCopy.text(locale, en: "0 cards · New", es: "0 tarjetas · Nuevo"))
+                                    .font(.system(size: 14, weight: .regular, design: .rounded))
+                                    .foregroundStyle(deckSecondaryText)
+                                    .lineLimit(1)
+                            }
+                            Spacer(minLength: 0)
+                        }
+
+                        HStack(spacing: 8) {
+                            Capsule().fill(deckPreviewSkeleton).frame(height: 4)
+                            Capsule().fill(deckPreviewSkeleton).frame(height: 4)
+                            Capsule().fill(deckPreviewSkeleton).frame(height: 4)
+                            Capsule().fill(deckPreviewSkeleton).frame(height: 4)
+                        }
+                    }
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                }
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text(AppCopy.text(locale, en: "Or choose a suggestion:", es: "O elige una sugerencia:"))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(deckSecondaryText)
+
+                HStack(spacing: 8) {
+                    deckSuggestionChip(
+                        label: AppCopy.text(locale, en: "🧠 Human Anatomy", es: "🧠 Anatomía Humana"),
+                        value: AppCopy.text(locale, en: "Human Anatomy", es: "Anatomía Humana")
+                    )
+                    deckSuggestionChip(
+                        label: AppCopy.text(locale, en: "🧪 Key Formulas", es: "🧪 Fórmulas Clave"),
+                        value: AppCopy.text(locale, en: "Key Formulas", es: "Fórmulas Clave")
+                    )
+                }
+                HStack(spacing: 8) {
+                    deckSuggestionChip(
+                        label: AppCopy.text(locale, en: "📖 Vocabulary", es: "📖 Vocabulario"),
+                        value: AppCopy.text(locale, en: "Vocabulary", es: "Vocabulario")
+                    )
+                    deckSuggestionChip(
+                        label: AppCopy.text(locale, en: "⚡ Core Concepts", es: "⚡ Conceptos Base"),
+                        value: AppCopy.text(locale, en: "Core Concepts", es: "Conceptos Base")
+                    )
+                }
+                HStack(spacing: 8) {
+                    deckSuggestionChip(
+                        label: AppCopy.text(locale, en: "✏️ Practice", es: "✏️ Práctica"),
+                        value: AppCopy.text(locale, en: "Practice", es: "Práctica")
+                    )
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .onChange(of: subjectName, initial: true) { _, _ in
+            guard step == .deck else { return }
+            if deckTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                deckTitle = defaultDeckSuggestion
+            }
+        }
+    }
+
+    private func deckSuggestionChip(label: String, value: String) -> some View {
+        let isSelected = deckTitle == value
+        return Button {
+            deckTitle = value
+            isDeckInputFocused = false
+        } label: {
+            Text(label)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(isSelected ? deckSuggestionSelectedText : deckSuggestionText)
+                .lineLimit(1)
+                .padding(.horizontal, 14)
+                .frame(height: 38)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .fill(deckSuggestionBackground)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(isSelected ? deckSuggestionSelectedBorder : deckSuggestionBorder, lineWidth: isSelected ? 1.5 : 1)
+                )
         }
         .buttonStyle(.plain)
     }
@@ -687,6 +850,24 @@ struct OnboardingView: View {
         Double(step.rawValue + 1) / Double(Step.allCases.count)
     }
 
+    private var defaultDeckSuggestion: String {
+        switch subjectName {
+        case AppCopy.text(locale, en: "Mathematics", es: "Matemáticas"):
+            return AppCopy.text(locale, en: "Key Formulas", es: "Fórmulas Clave")
+        case AppCopy.text(locale, en: "Medicine", es: "Medicina"):
+            return AppCopy.text(locale, en: "Human Anatomy", es: "Anatomía Humana")
+        case AppCopy.text(locale, en: "Programming", es: "Programación"):
+            return AppCopy.text(locale, en: "Core Concepts", es: "Conceptos Base")
+        default:
+            return AppCopy.text(locale, en: "Human Anatomy", es: "Anatomía Humana")
+        }
+    }
+
+    private var deckTitleDisplay: String {
+        let trimmed = deckTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? defaultDeckSuggestion : trimmed
+    }
+
     private var stepSubtitle: String {
         switch step {
         case .welcome:
@@ -696,7 +877,7 @@ struct OnboardingView: View {
         case .subject:
             return AppCopy.text(locale, en: "Quick setup to start studying.", es: "Configuración rápida para empezar a estudiar.")
         case .deck:
-            return AppCopy.text(locale, en: "Your first study container.", es: "Tu primer contenedor de estudio.")
+            return AppCopy.text(locale, en: "Quick setup to start studying.", es: "Configuración rápida para empezar a estudiar.")
         case .firstCard:
             return AppCopy.text(locale, en: "Create one card to launch your first session.", es: "Crea una tarjeta para lanzar tu primera sesión.")
         case .account:
@@ -1173,6 +1354,86 @@ struct OnboardingView: View {
 
     private var subjectSelectedText: Color {
         colorScheme == .light ? Color(red: 0.19, green: 0.28, blue: 0.48) : Color(red: 0.88, green: 0.91, blue: 0.98)
+    }
+
+    private var deckInfoCardBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+    }
+
+    private var deckInfoCardBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color.white.opacity(0.08)
+    }
+
+    private var deckInfoIconBackground: Color {
+        colorScheme == .light ? Color(red: 0.82, green: 0.86, blue: 0.96) : Color(red: 0.11, green: 0.17, blue: 0.31)
+    }
+
+    private var deckInfoIconColor: Color {
+        colorScheme == .light ? Color(red: 0.41, green: 0.61, blue: 0.94) : Color(red: 0.37, green: 0.64, blue: 0.97)
+    }
+
+    private var deckSecondaryText: Color {
+        colorScheme == .light ? Color(red: 0.40, green: 0.44, blue: 0.53) : Color(red: 0.38, green: 0.43, blue: 0.54)
+    }
+
+    private var deckInputBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+    }
+
+    private var deckInputBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color(red: 0.16, green: 0.19, blue: 0.30)
+    }
+
+    private var deckInputActiveBorder: Color {
+        colorScheme == .light ? Color(red: 0.30, green: 0.51, blue: 0.92) : Color(red: 0.25, green: 0.55, blue: 0.98)
+    }
+
+    private var deckPreviewBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+    }
+
+    private var deckPreviewBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color.white.opacity(0.08)
+    }
+
+    private var deckPreviewIconBackground: Color {
+        colorScheme == .light ? Color(red: 0.33, green: 0.47, blue: 0.89) : Color(red: 0.35, green: 0.31, blue: 0.92)
+    }
+
+    private var deckPreviewIconColor: Color {
+        Color(red: 0.84, green: 0.91, blue: 1.0)
+    }
+
+    private var deckPreviewSkeleton: Color {
+        colorScheme == .light ? Color(red: 0.80, green: 0.82, blue: 0.87) : Color(red: 0.20, green: 0.23, blue: 0.32)
+    }
+
+    private var deckSuggestionBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+    }
+
+    private var deckSuggestionBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color(red: 0.16, green: 0.19, blue: 0.30)
+    }
+
+    private var deckSuggestionSelectedBorder: Color {
+        colorScheme == .light ? Color(red: 0.30, green: 0.51, blue: 0.92) : Color(red: 0.25, green: 0.55, blue: 0.98)
+    }
+
+    private var deckSuggestionText: Color {
+        colorScheme == .light ? Color(red: 0.40, green: 0.43, blue: 0.51) : Color(red: 0.58, green: 0.62, blue: 0.72)
+    }
+
+    private var deckSuggestionSelectedText: Color {
+        colorScheme == .light ? Color(red: 0.20, green: 0.28, blue: 0.48) : Color(red: 0.86, green: 0.90, blue: 0.98)
     }
 }
 
