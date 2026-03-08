@@ -1,6 +1,7 @@
 import SwiftData
 import SwiftUI
 import AuthenticationServices
+import UIKit
 
 struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
@@ -32,7 +33,7 @@ struct OnboardingView: View {
     @State private var isPresentingFirstStudy = false
     @State private var isAuthenticating = false
     @State private var isWavingMascot = false
-    @FocusState private var isDeckInputFocused: Bool
+    @State private var isDeckInputFocused = false
     @State private var lockedViewportHeight: CGFloat = 0
 
     private enum Step: Int, CaseIterable {
@@ -180,6 +181,7 @@ struct OnboardingView: View {
                     OnboardingAnimatedPrimaryButton(
                         title: primaryButtonTitle,
                         isDark: colorScheme == .dark,
+                        animateEffects: true,
                         gradientColors: colorScheme == .dark
                             ? [Color(red: 0.30, green: 0.63, blue: 0.95), Color(red: 0.50, green: 0.34, blue: 0.95)]
                             : [Color(red: 0.24, green: 0.50, blue: 0.90), Color(red: 0.30, green: 0.46, blue: 0.87), Color(red: 0.39, green: 0.27, blue: 0.82)]
@@ -455,17 +457,12 @@ struct OnboardingView: View {
                     .padding(.vertical, 12)
                 }
 
-            TextField(
-                AppCopy.text(locale, en: "Example: Cell Biology Basics", es: "Ejemplo: Bases de Biología Celular"),
-                text: $deckTitle
-            )
-            .font(.system(size: 15, weight: .regular, design: .rounded))
-            .foregroundStyle(primaryTitleColor)
-            .focused($isDeckInputFocused)
-            .submitLabel(.done)
-            .autocorrectionDisabled(true)
-            .textInputAutocapitalization(.words)
-            .onSubmit {
+            OnboardingDeckTextField(
+                placeholder: AppCopy.text(locale, en: "Example: Cell Biology Basics", es: "Ejemplo: Bases de Biología Celular"),
+                text: $deckTitle,
+                isFocused: $isDeckInputFocused,
+                isDark: colorScheme == .dark
+            ) {
                 isDeckInputFocused = false
             }
             .padding(.horizontal, 16)
@@ -710,6 +707,7 @@ struct OnboardingView: View {
             .frame(height: 5)
         }
     }
+
 
     private func textInputCard(title: String, placeholder: String, text: Binding<String>) -> some View {
         NCard {
@@ -1452,9 +1450,110 @@ struct OnboardingView: View {
     }
 }
 
+private struct OnboardingDeckTextField: UIViewRepresentable {
+    let placeholder: String
+    @Binding var text: String
+    @Binding var isFocused: Bool
+    let isDark: Bool
+    let onSubmit: () -> Void
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    func makeUIView(context: Context) -> UITextField {
+        KeyboardWarmup.prepareServicesIfNeeded()
+
+        let textField = UITextField(frame: .zero)
+        textField.delegate = context.coordinator
+        textField.returnKeyType = .done
+        textField.autocorrectionType = .no
+        textField.autocapitalizationType = .words
+        textField.spellCheckingType = .no
+        textField.smartDashesType = .no
+        textField.smartQuotesType = .no
+        textField.smartInsertDeleteType = .no
+        textField.textContentType = .none
+        textField.clearButtonMode = .never
+        textField.adjustsFontForContentSizeCategory = true
+        textField.font = .systemFont(ofSize: 15, weight: .regular)
+        textField.text = text
+        textField.placeholder = placeholder
+        textField.textColor = uiTextColor
+        textField.tintColor = UIColor(red: 0.30, green: 0.51, blue: 0.92, alpha: 1.0)
+        textField.addTarget(context.coordinator, action: #selector(Coordinator.textDidChange(_:)), for: .editingChanged)
+        return textField
+    }
+
+    func updateUIView(_ uiView: UITextField, context: Context) {
+        if uiView.text != text {
+            uiView.text = text
+        }
+        if uiView.placeholder != placeholder {
+            uiView.placeholder = placeholder
+        }
+        uiView.textColor = uiTextColor
+
+        if isFocused, uiView.isFirstResponder == false {
+            uiView.becomeFirstResponder()
+        } else if isFocused == false, uiView.isFirstResponder {
+            uiView.resignFirstResponder()
+        }
+    }
+
+    private var uiTextColor: UIColor {
+        isDark
+            ? UIColor(red: 0.93, green: 0.95, blue: 0.99, alpha: 1.0)
+            : UIColor(red: 0.06, green: 0.08, blue: 0.15, alpha: 1.0)
+    }
+
+    final class Coordinator: NSObject, UITextFieldDelegate {
+        private var parent: OnboardingDeckTextField
+
+        init(_ parent: OnboardingDeckTextField) {
+            self.parent = parent
+        }
+
+        @objc
+        func textDidChange(_ textField: UITextField) {
+            parent.text = textField.text ?? ""
+        }
+
+        func textFieldDidBeginEditing(_ textField: UITextField) {
+            parent.isFocused = true
+            let end = textField.endOfDocument
+            textField.selectedTextRange = textField.textRange(from: end, to: end)
+        }
+
+        func textFieldDidEndEditing(_ textField: UITextField) {
+            parent.isFocused = false
+        }
+
+        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            parent.onSubmit()
+            parent.isFocused = false
+            textField.resignFirstResponder()
+            return false
+        }
+    }
+}
+
+private enum KeyboardWarmup {
+    private static var hasPrepared = false
+
+    static func prepareServicesIfNeeded() {
+        guard hasPrepared == false else { return }
+        hasPrepared = true
+
+        _ = UITextInputMode.activeInputModes
+        _ = UITextChecker()
+    }
+}
+
 private struct OnboardingAnimatedPrimaryButton: View {
     let title: String
     let isDark: Bool
+    let animateEffects: Bool
     let gradientColors: [Color]
     let action: () -> Void
 
@@ -1478,40 +1577,42 @@ private struct OnboardingAnimatedPrimaryButton: View {
             )
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay {
-                TimelineView(.animation) { timeline in
-                    GeometryReader { proxy in
-                        let width = proxy.size.width
-                        let tickTime = timeline.date.timeIntervalSinceReferenceDate
-                        let phase = (tickTime / 2.15).truncatingRemainder(dividingBy: 1.0)
-                        let shinePhase = -1.45 + (2.9 * phase)
-                        let xOffset = width * shinePhase
+                if animateEffects {
+                    TimelineView(.animation) { timeline in
+                        GeometryReader { proxy in
+                            let width = proxy.size.width
+                            let tickTime = timeline.date.timeIntervalSinceReferenceDate
+                            let phase = (tickTime / 2.15).truncatingRemainder(dividingBy: 1.0)
+                            let shinePhase = -1.45 + (2.9 * phase)
+                            let xOffset = width * shinePhase
 
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(.clear)
-                            .overlay(
-                                Ellipse()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                .clear,
-                                                Color.white.opacity(0.10),
-                                                Color.white.opacity(0.30),
-                                                Color.white.opacity(0.10),
-                                                .clear
-                                            ],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(.clear)
+                                .overlay(
+                                    Ellipse()
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [
+                                                    .clear,
+                                                    Color.white.opacity(0.10),
+                                                    Color.white.opacity(0.30),
+                                                    Color.white.opacity(0.10),
+                                                    .clear
+                                                ],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
                                         )
-                                    )
-                                    .frame(width: 188, height: 126)
-                                    .rotationEffect(.degrees(20))
-                                    .blur(radius: 9)
-                                    .offset(x: xOffset)
-                            )
-                            .blendMode(.screen)
+                                        .frame(width: 188, height: 126)
+                                        .rotationEffect(.degrees(20))
+                                        .blur(radius: 9)
+                                        .offset(x: xOffset)
+                                )
+                                .blendMode(.screen)
+                        }
                     }
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
