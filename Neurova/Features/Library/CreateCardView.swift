@@ -85,6 +85,8 @@ struct CreateCardView: View {
             TextEditor(text: text)
                 .font(NTypography.body)
                 .foregroundStyle(NColors.Text.textPrimary)
+                .autocorrectionDisabled(true)
+                .textInputAutocapitalization(.sentences)
                 .scrollContentBackground(.hidden)
                 .frame(minHeight: 140)
                 .focused($focusedField, equals: field)

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct CreateDeckView: View {
     @Environment(\.dismiss) private var dismiss
@@ -77,25 +78,29 @@ struct CreateDeckView: View {
     }
 
     private var titleField: some View {
-        TextField(AppCopy.text(locale, en: "Deck title", es: "Titulo del mazo"), text: $title)
-            .font(NTypography.body)
-            .foregroundStyle(NColors.Text.textPrimary)
-            .padding(.horizontal, NSpacing.md)
-            .frame(height: 48)
-            .background(NColors.Neutrals.surfaceAlt)
-            .overlay(
-                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                    .stroke(focusedField == .title ? NColors.Brand.neuroBlue : NColors.Neutrals.border, lineWidth: 1)
-            )
-            .clipShape(
-                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-            )
-            .focused($focusedField, equals: .title)
-            .submitLabel(.next)
-            .tint(NColors.Brand.neuroBlue)
-            .onSubmit {
-                focusedField = .description
-            }
+        NOptimizedTextField(
+            placeholder: AppCopy.text(locale, en: "Deck title", es: "Titulo del mazo"),
+            text: $title,
+            isFocused: titleFocusBinding,
+            returnKeyType: .next,
+            autocapitalization: .sentences,
+            font: .systemFont(ofSize: 17, weight: .regular),
+            textColor: UIColor(NColors.Text.textPrimary),
+            tintColor: UIColor(NColors.Brand.neuroBlue),
+            onSubmit: { focusedField = .description }
+        )
+        .font(NTypography.body)
+        .foregroundStyle(NColors.Text.textPrimary)
+        .padding(.horizontal, NSpacing.md)
+        .frame(height: 48)
+        .background(NColors.Neutrals.surfaceAlt)
+        .overlay(
+            RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                .stroke(focusedField == .title ? NColors.Brand.neuroBlue : NColors.Neutrals.border, lineWidth: 1)
+        )
+        .clipShape(
+            RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+        )
     }
 
     private var descriptionField: some View {
@@ -104,29 +109,48 @@ struct CreateDeckView: View {
                 .font(NTypography.caption)
                 .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
 
-            TextField(
-                AppCopy.text(locale, en: "Add a short description", es: "Agrega una descripcion corta"),
-                text: $descriptionText
+            NOptimizedTextField(
+                placeholder: AppCopy.text(locale, en: "Add a short description", es: "Agrega una descripcion corta"),
+                text: $descriptionText,
+                isFocused: descriptionFocusBinding,
+                returnKeyType: .done,
+                autocapitalization: .sentences,
+                font: .systemFont(ofSize: 17, weight: .regular),
+                textColor: UIColor(NColors.Text.textPrimary),
+                tintColor: UIColor(NColors.Brand.neuroBlue),
+                onSubmit: { focusedField = nil }
             )
-                .font(NTypography.body)
-                .foregroundStyle(NColors.Text.textPrimary)
-                .padding(.horizontal, NSpacing.md)
-                .frame(height: 48)
-                .focused($focusedField, equals: .description)
-                .submitLabel(.done)
-                .tint(NColors.Brand.neuroBlue)
-                .onSubmit {
-                    focusedField = nil
-                }
-                .background(NColors.Neutrals.surfaceAlt)
-                .overlay(
-                    RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                        .stroke(focusedField == .description ? NColors.Brand.neuroBlue : NColors.Neutrals.border, lineWidth: 1)
-                )
-                .clipShape(
-                    RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                )
+            .font(NTypography.body)
+            .foregroundStyle(NColors.Text.textPrimary)
+            .padding(.horizontal, NSpacing.md)
+            .frame(height: 48)
+            .background(NColors.Neutrals.surfaceAlt)
+            .overlay(
+                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                    .stroke(focusedField == .description ? NColors.Brand.neuroBlue : NColors.Neutrals.border, lineWidth: 1)
+            )
+            .clipShape(
+                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+            )
         }
+    }
+
+    private var titleFocusBinding: Binding<Bool> {
+        Binding(
+            get: { focusedField == .title },
+            set: { isFocused in
+                focusedField = isFocused ? .title : (focusedField == .title ? nil : focusedField)
+            }
+        )
+    }
+
+    private var descriptionFocusBinding: Binding<Bool> {
+        Binding(
+            get: { focusedField == .description },
+            set: { isFocused in
+                focusedField = isFocused ? .description : (focusedField == .description ? nil : focusedField)
+            }
+        )
     }
 
     private var backgroundView: some View {

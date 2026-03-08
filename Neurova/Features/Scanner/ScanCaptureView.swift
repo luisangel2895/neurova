@@ -223,6 +223,8 @@ struct ScanCaptureView: View {
                     TextEditor(text: $csvTextInput)
                         .font(NTypography.body)
                         .foregroundStyle(NColors.Text.textPrimary)
+                        .autocorrectionDisabled(true)
+                        .textInputAutocapitalization(.never)
                         .scrollContentBackground(.hidden)
                         .frame(height: 320)
                         .padding(NSpacing.sm)

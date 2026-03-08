@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct CreateSubjectView: View {
     @Environment(\.dismiss) private var dismiss
@@ -8,7 +9,7 @@ struct CreateSubjectView: View {
     private let subject: Subject?
     private let onSave: (String, String?, String?) throws -> Void
 
-    @FocusState private var isNameFocused: Bool
+    @State private var isNameFocused = false
     @State private var name: String
     @State private var selectedSymbolName: String
     @State private var selectedColorToken: String
@@ -81,24 +82,30 @@ struct CreateSubjectView: View {
     }
 
     private var nameField: some View {
-        TextField(AppCopy.text(locale, en: "Subject name", es: "Nombre de la materia"), text: $name)
-            .font(NTypography.body)
-            .foregroundStyle(NColors.Text.textPrimary)
-            .padding(.horizontal, NSpacing.md)
-            .frame(height: 48)
-            .background(NColors.Neutrals.surfaceAlt)
-            .overlay(
-                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                    .stroke(
-                        isNameFocused ? NColors.Brand.neuroBlue : NColors.Neutrals.border,
-                        lineWidth: 1
-                    )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: NRadius.button, style: .continuous))
-            .focused($isNameFocused)
-            .submitLabel(.done)
-            .tint(NColors.Brand.neuroBlue)
-            .onSubmit { isNameFocused = false }
+        NOptimizedTextField(
+            placeholder: AppCopy.text(locale, en: "Subject name", es: "Nombre de la materia"),
+            text: $name,
+            isFocused: $isNameFocused,
+            returnKeyType: .done,
+            autocapitalization: .words,
+            font: .systemFont(ofSize: 17, weight: .regular),
+            textColor: UIColor(NColors.Text.textPrimary),
+            tintColor: UIColor(NColors.Brand.neuroBlue),
+            onSubmit: { isNameFocused = false }
+        )
+        .font(NTypography.body)
+        .foregroundStyle(NColors.Text.textPrimary)
+        .padding(.horizontal, NSpacing.md)
+        .frame(height: 48)
+        .background(NColors.Neutrals.surfaceAlt)
+        .overlay(
+            RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                .stroke(
+                    isNameFocused ? NColors.Brand.neuroBlue : NColors.Neutrals.border,
+                    lineWidth: 1
+                )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: NRadius.button, style: .continuous))
     }
 
     private var previewCard: some View {

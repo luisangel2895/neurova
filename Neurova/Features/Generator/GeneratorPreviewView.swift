@@ -1,5 +1,6 @@
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct GeneratorPreviewView: View {
     @Environment(\.dismiss) private var dismiss
@@ -188,9 +189,14 @@ struct GeneratorPreviewView: View {
                 .font(NTypography.caption)
                 .foregroundStyle(NColors.Text.textSecondary)
 
-            TextField(
-                AppCopy.text(locale, en: "Subject name", es: "Nombre de la materia"),
-                text: $newSubjectName
+            NOptimizedInputField(
+                placeholder: AppCopy.text(locale, en: "Subject name", es: "Nombre de la materia"),
+                text: $newSubjectName,
+                returnKeyType: .done,
+                autocapitalization: .words,
+                font: .systemFont(ofSize: 17, weight: .regular),
+                textColor: UIColor(NColors.Text.textPrimary),
+                tintColor: UIColor(NColors.Brand.neuroBlue)
             )
             .font(NTypography.body)
             .padding(.horizontal, NSpacing.sm)
@@ -215,9 +221,14 @@ struct GeneratorPreviewView: View {
                 .font(NTypography.caption)
                 .foregroundStyle(NColors.Text.textSecondary)
 
-            TextField(
-                AppCopy.text(locale, en: "Deck title", es: "Título del deck"),
-                text: $newDeckTitle
+            NOptimizedInputField(
+                placeholder: AppCopy.text(locale, en: "Deck title", es: "Título del deck"),
+                text: $newDeckTitle,
+                returnKeyType: .done,
+                autocapitalization: .sentences,
+                font: .systemFont(ofSize: 17, weight: .regular),
+                textColor: UIColor(NColors.Text.textPrimary),
+                tintColor: UIColor(NColors.Brand.neuroBlue)
             )
             .font(NTypography.body)
             .padding(.horizontal, NSpacing.sm)
@@ -249,12 +260,17 @@ struct GeneratorPreviewView: View {
                                     .font(NTypography.caption.weight(.semibold))
                                     .foregroundStyle(NColors.Text.textSecondary)
 
-                                TextField(
-                                    AppCopy.text(locale, en: "Front", es: "Frente"),
+                                NOptimizedInputField(
+                                    placeholder: AppCopy.text(locale, en: "Front", es: "Frente"),
                                     text: Binding(
                                         get: { draft.front },
                                         set: { drafts[index].front = $0 }
-                                    )
+                                    ),
+                                    returnKeyType: .done,
+                                    autocapitalization: .sentences,
+                                    font: .systemFont(ofSize: 17, weight: .regular),
+                                    textColor: UIColor(NColors.Text.textPrimary),
+                                    tintColor: UIColor(NColors.Brand.neuroBlue)
                                 )
                                 .font(NTypography.bodyEmphasis)
 
@@ -266,6 +282,9 @@ struct GeneratorPreviewView: View {
                                     ),
                                     axis: .vertical
                                 )
+                                .autocorrectionDisabled(true)
+                                .textInputAutocapitalization(.sentences)
+                                .submitLabel(.done)
                                 .font(NTypography.body)
                             }
                         }

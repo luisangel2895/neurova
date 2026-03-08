@@ -716,17 +716,25 @@ struct OnboardingView: View {
                     .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundStyle(primaryTitleColor)
 
-                TextField(placeholder, text: text)
-                    .font(.system(size: 15, weight: .regular, design: .rounded))
-                    .foregroundStyle(primaryTitleColor)
-                    .padding(.horizontal, NSpacing.md)
-                    .frame(height: 48)
-                    .background(NColors.Neutrals.surfaceAlt)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                            .stroke(NColors.Neutrals.border, lineWidth: 1)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: NRadius.button, style: .continuous))
+                NOptimizedInputField(
+                    placeholder: placeholder,
+                    text: text,
+                    returnKeyType: .done,
+                    autocapitalization: .sentences,
+                    font: .systemFont(ofSize: 15, weight: .regular),
+                    textColor: UIColor(primaryTitleColor),
+                    tintColor: UIColor(NColors.Brand.neuroBlue)
+                )
+                .font(.system(size: 15, weight: .regular, design: .rounded))
+                .foregroundStyle(primaryTitleColor)
+                .padding(.horizontal, NSpacing.md)
+                .frame(height: 48)
+                .background(NColors.Neutrals.surfaceAlt)
+                .overlay(
+                    RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                        .stroke(NColors.Neutrals.border, lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: NRadius.button, style: .continuous))
             }
         }
     }
@@ -745,6 +753,8 @@ struct OnboardingView: View {
                     TextEditor(text: $cardFront)
                         .font(.system(size: 14, weight: .regular, design: .rounded))
                         .foregroundStyle(primaryTitleColor)
+                        .autocorrectionDisabled(true)
+                        .textInputAutocapitalization(.sentences)
                         .scrollContentBackground(.hidden)
                         .frame(minHeight: 88)
                         .padding(NSpacing.sm)
@@ -763,6 +773,8 @@ struct OnboardingView: View {
                     TextEditor(text: $cardBack)
                         .font(.system(size: 14, weight: .regular, design: .rounded))
                         .foregroundStyle(primaryTitleColor)
+                        .autocorrectionDisabled(true)
+                        .textInputAutocapitalization(.sentences)
                         .scrollContentBackground(.hidden)
                         .frame(minHeight: 88)
                         .padding(NSpacing.sm)

@@ -2,6 +2,7 @@ import AuthenticationServices
 import CloudKit
 import SwiftData
 import SwiftUI
+import UIKit
 
 struct ProfileDebugView: View {
     @Environment(\.modelContext) private var modelContext
@@ -173,9 +174,14 @@ struct ProfileDebugView: View {
                     .font(NTypography.micro.weight(.bold))
                     .foregroundStyle(NColors.Text.textTertiary)
 
-                    TextField(
-                        AppCopy.text(locale, en: "Example: Angel", es: "Ejemplo: Angel"),
-                        text: $profileDisplayName
+                    NOptimizedInputField(
+                        placeholder: AppCopy.text(locale, en: "Example: Angel", es: "Ejemplo: Angel"),
+                        text: $profileDisplayName,
+                        returnKeyType: .done,
+                        autocapitalization: .words,
+                        font: .systemFont(ofSize: 17, weight: .regular),
+                        textColor: UIColor(NColors.Text.textPrimary),
+                        tintColor: UIColor(NColors.Brand.neuroBlue)
                     )
                     .font(NTypography.body)
                     .padding(.horizontal, NSpacing.md)
