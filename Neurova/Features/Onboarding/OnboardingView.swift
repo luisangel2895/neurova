@@ -61,7 +61,7 @@ struct OnboardingView: View {
         }
         .padding(.horizontal, NSpacing.md + NSpacing.xs)
         .padding(.top, NSpacing.lg)
-        .padding(.bottom, (step == .welcome || step == .dailyGoal) ? 0 : NSpacing.lg)
+        .padding(.bottom, (step == .welcome || step == .dailyGoal || step == .subject) ? 0 : NSpacing.lg)
         .background(backgroundView.ignoresSafeArea())
         .fullScreenCover(isPresented: $isPresentingFirstStudy) {
             if let createdDeck {
@@ -83,7 +83,7 @@ struct OnboardingView: View {
     private var progressHeader: some View {
         VStack(alignment: .leading, spacing: NSpacing.sm) {
             Text(AppCopy.text(locale, en: "Welcome to Neurova", es: "Bienvenido a Neurova"))
-                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .font(.system(size: 30, weight: .bold, design: .rounded))
                 .foregroundStyle(primaryTitleColor)
                 .lineLimit(1)
 
@@ -111,11 +111,7 @@ struct OnboardingView: View {
         case .dailyGoal:
             dailyGoalCard
         case .subject:
-            textInputCard(
-                title: AppCopy.text(locale, en: "Create your first subject", es: "Crea tu primera materia"),
-                placeholder: AppCopy.text(locale, en: "Example: Biology", es: "Ejemplo: Biología"),
-                text: $subjectName
-            )
+            subjectStepView
         case .deck:
             textInputCard(
                 title: AppCopy.text(locale, en: "Create your first deck", es: "Crea tu primer deck"),
@@ -183,7 +179,7 @@ struct OnboardingView: View {
                     .disabled(canContinue == false || isSaving)
                 }
 
-                if step != .welcome && step != .dailyGoal {
+                if step != .welcome && step != .dailyGoal && step != .subject {
                     NSecondaryButton(AppCopy.text(locale, en: "Back", es: "Atrás")) {
                         goBack()
                     }
@@ -200,7 +196,7 @@ struct OnboardingView: View {
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
                         .stroke(dailyGoalInfoCardBorder, lineWidth: 1)
                 )
-                .frame(height: 100)
+                .frame(height: 85)
                 .overlay(alignment: .leading) {
                     HStack(spacing: 16) {
                         Circle()
@@ -310,11 +306,109 @@ struct OnboardingView: View {
         .buttonStyle(.plain)
     }
 
+    private var subjectStepView: some View {
+        VStack(spacing: 16) {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(subjectInfoCardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(subjectInfoCardBorder, lineWidth: 1)
+                )
+                .frame(height: 85)
+                .overlay(alignment: .leading) {
+                    HStack(spacing: 16) {
+                        Circle()
+                            .fill(subjectInfoIconBackground)
+                            .frame(width: 36, height: 36)
+                            .overlay(
+                                Image(systemName: "graduationcap")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(subjectInfoIconColor)
+                            )
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(AppCopy.text(locale, en: "Create your first subject", es: "Crea tu primera materia"))
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundStyle(primaryTitleColor)
+                            Text(AppCopy.text(locale, en: "Organize your studies by subject for better tracking.", es: "Organiza tus estudios por materias para un mejor seguimiento."))
+                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .foregroundStyle(subjectSecondaryText)
+                                .lineLimit(2)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                }
+
+            VStack(spacing: 12) {
+                HStack(spacing: 12) {
+                    subjectOptionCard(title: AppCopy.text(locale, en: "Mathematics", es: "Matemáticas"), icon: "plus.forwardslash.minus")
+                    subjectOptionCard(title: AppCopy.text(locale, en: "Science", es: "Ciencias"), icon: "atom")
+                }
+                HStack(spacing: 12) {
+                    subjectOptionCard(title: AppCopy.text(locale, en: "Languages", es: "Idiomas"), icon: "globe")
+                    subjectOptionCard(title: AppCopy.text(locale, en: "Art", es: "Arte"), icon: "paintpalette")
+                }
+                HStack(spacing: 12) {
+                    subjectOptionCard(title: AppCopy.text(locale, en: "Music", es: "Música"), icon: "music.note")
+                    subjectOptionCard(title: AppCopy.text(locale, en: "Programming", es: "Programación"), icon: "chevron.left.forwardslash.chevron.right")
+                }
+                HStack(spacing: 12) {
+                    subjectOptionCard(title: AppCopy.text(locale, en: "Medicine", es: "Medicina"), icon: "stethoscope")
+                    subjectOptionCard(title: AppCopy.text(locale, en: "Other", es: "Otra"), icon: "book")
+                }
+            }
+
+            Text(AppCopy.text(locale, en: "You can create more subjects later", es: "Podrás crear más materias después"))
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(subjectSecondaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 2)
+        }
+    }
+
+    private func subjectOptionCard(title: String, icon: String) -> some View {
+        let isSelected = subjectName == title
+        return Button {
+            subjectName = title
+        } label: {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(isSelected ? subjectOptionSelectedBackground : subjectOptionBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(isSelected ? subjectOptionSelectedBorder : subjectOptionBorder, lineWidth: isSelected ? 2 : 1)
+                )
+                .frame(maxWidth: .infinity)
+                .frame(height: 82)
+                .overlay {
+                    HStack(spacing: 12) {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(subjectIconBadgeBackground)
+                            .frame(width: 40, height: 40)
+                            .overlay(
+                                Image(systemName: icon)
+                                    .font(.system(size: 16, weight: .regular))
+                                    .foregroundStyle(subjectIconColor)
+                            )
+
+                        Text(title)
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundStyle(isSelected ? subjectSelectedText : subjectOptionText)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.85)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 14)
+                }
+        }
+        .buttonStyle(.plain)
+    }
+
     private var welcomeStepView: some View {
         GeometryReader { proxy in
             ZStack(alignment: .top) {
                 welcomeInfoCard
-                    .padding(.top, 18)
 
                 VStack(spacing: 20) {
                     NImages.Mascot.neruWave
@@ -346,7 +440,7 @@ struct OnboardingView: View {
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
                     .stroke(welcomeCardBorder, lineWidth: 1)
             )
-            .frame(height: 100)
+            .frame(height: 85)
             .overlay(
                 HStack(alignment: .center, spacing: 16) {
                     Circle()
@@ -446,12 +540,12 @@ struct OnboardingView: View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
                 Text(title)
-                    .font(NTypography.bodyEmphasis.weight(.semibold))
-                    .foregroundStyle(NColors.Text.textPrimary)
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(primaryTitleColor)
 
                 TextField(placeholder, text: text)
-                    .font(NTypography.body)
-                    .foregroundStyle(NColors.Text.textPrimary)
+                    .font(.system(size: 15, weight: .regular, design: .rounded))
+                    .foregroundStyle(primaryTitleColor)
                     .padding(.horizontal, NSpacing.md)
                     .frame(height: 48)
                     .background(NColors.Neutrals.surfaceAlt)
@@ -468,16 +562,16 @@ struct OnboardingView: View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
                 Text(AppCopy.text(locale, en: "Create your first card", es: "Crea tu primera tarjeta"))
-                    .font(NTypography.bodyEmphasis.weight(.semibold))
-                    .foregroundStyle(NColors.Text.textPrimary)
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(primaryTitleColor)
 
                 VStack(alignment: .leading, spacing: NSpacing.xs) {
                     Text(AppCopy.text(locale, en: "Front", es: "Frente"))
-                        .font(NTypography.caption)
-                        .foregroundStyle(secondaryTextColor)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(welcomeHeaderSubtitleColor)
                     TextEditor(text: $cardFront)
-                        .font(NTypography.body)
-                        .foregroundStyle(NColors.Text.textPrimary)
+                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .foregroundStyle(primaryTitleColor)
                         .scrollContentBackground(.hidden)
                         .frame(minHeight: 88)
                         .padding(NSpacing.sm)
@@ -491,11 +585,11 @@ struct OnboardingView: View {
 
                 VStack(alignment: .leading, spacing: NSpacing.xs) {
                     Text(AppCopy.text(locale, en: "Back", es: "Reverso"))
-                        .font(NTypography.caption)
-                        .foregroundStyle(secondaryTextColor)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(welcomeHeaderSubtitleColor)
                     TextEditor(text: $cardBack)
-                        .font(NTypography.body)
-                        .foregroundStyle(NColors.Text.textPrimary)
+                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .foregroundStyle(primaryTitleColor)
                         .scrollContentBackground(.hidden)
                         .frame(minHeight: 88)
                         .padding(NSpacing.sm)
@@ -514,8 +608,8 @@ struct OnboardingView: View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.sm + NSpacing.xs) {
                 Text(AppCopy.text(locale, en: "Create account to sync your progress", es: "Crea una cuenta para sincronizar tu progreso"))
-                    .font(NTypography.bodyEmphasis.weight(.bold))
-                    .foregroundStyle(NColors.Text.textPrimary)
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(primaryTitleColor)
 
                 Text(
                     AppCopy.text(
@@ -524,8 +618,8 @@ struct OnboardingView: View {
                         es: "Inicia sesión con Apple para mantener tus decks, tarjetas y progreso entre dispositivos."
                     )
                 )
-                .font(NTypography.caption)
-                .foregroundStyle(secondaryTextColor)
+                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .foregroundStyle(welcomeHeaderSubtitleColor)
                 .fixedSize(horizontal: false, vertical: true)
 
                 if isAuthenticating {
@@ -533,8 +627,8 @@ struct OnboardingView: View {
                         ProgressView()
                             .controlSize(.small)
                         Text(AppCopy.text(locale, en: "Signing in…", es: "Iniciando sesión…"))
-                            .font(NTypography.caption)
-                            .foregroundStyle(secondaryTextColor)
+                            .font(.system(size: 13, weight: .regular, design: .rounded))
+                            .foregroundStyle(welcomeHeaderSubtitleColor)
                     }
                     .padding(.top, NSpacing.xs)
                 }
@@ -547,12 +641,12 @@ struct OnboardingView: View {
         NCard {
             VStack(alignment: .leading, spacing: NSpacing.md) {
                 Text(AppCopy.text(locale, en: "Setup complete", es: "Configuración lista"))
-                    .font(NTypography.bodyEmphasis.weight(.bold))
-                    .foregroundStyle(NColors.Text.textPrimary)
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(primaryTitleColor)
 
                 Text(AppCopy.text(locale, en: "You are ready to start your first study session.", es: "Ya puedes comenzar tu primera sesión de estudio."))
-                    .font(NTypography.body)
-                    .foregroundStyle(secondaryTextColor)
+                    .font(.system(size: 14, weight: .regular, design: .rounded))
+                    .foregroundStyle(welcomeHeaderSubtitleColor)
 
                 HStack {
                     Spacer(minLength: 0)
@@ -600,7 +694,7 @@ struct OnboardingView: View {
         case .dailyGoal:
             return AppCopy.text(locale, en: "Quick setup to start studying.", es: "Configuración rápida para empezar a estudiar.")
         case .subject:
-            return AppCopy.text(locale, en: "This groups your decks.", es: "Esto agrupa tus decks.")
+            return AppCopy.text(locale, en: "Quick setup to start studying.", es: "Configuración rápida para empezar a estudiar.")
         case .deck:
             return AppCopy.text(locale, en: "Your first study container.", es: "Tu primer contenedor de estudio.")
         case .firstCard:
@@ -626,7 +720,7 @@ struct OnboardingView: View {
         case .welcome, .dailyGoal, .account, .done:
             return true
         case .subject:
-            return subjectName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+            return true
         case .deck:
             return deckTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
         case .firstCard:
@@ -685,7 +779,10 @@ struct OnboardingView: View {
             let cardRepository = SwiftDataCardRepository(context: modelContext)
 
             let createdSubject = try subjectRepository.createSubject(
-                name: subjectName.trimmingCharacters(in: .whitespacesAndNewlines),
+                name: firstNonEmpty([
+                    subjectName.trimmingCharacters(in: .whitespacesAndNewlines),
+                    AppCopy.text(locale, en: "General", es: "General")
+                ]) ?? AppCopy.text(locale, en: "General", es: "General"),
                 systemImageName: "book",
                 colorTokenReference: nil
             )
@@ -1020,6 +1117,62 @@ struct OnboardingView: View {
 
     private var dailyGoalHintText: Color {
         colorScheme == .light ? Color(red: 0.33, green: 0.37, blue: 0.48) : Color(red: 0.53, green: 0.58, blue: 0.68)
+    }
+
+    private var subjectInfoCardBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+    }
+
+    private var subjectInfoCardBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color.white.opacity(0.08)
+    }
+
+    private var subjectInfoIconBackground: Color {
+        colorScheme == .light ? Color(red: 0.82, green: 0.86, blue: 0.96) : Color(red: 0.11, green: 0.17, blue: 0.31)
+    }
+
+    private var subjectInfoIconColor: Color {
+        colorScheme == .light ? Color(red: 0.41, green: 0.61, blue: 0.94) : Color(red: 0.37, green: 0.64, blue: 0.97)
+    }
+
+    private var subjectSecondaryText: Color {
+        colorScheme == .light ? Color(red: 0.40, green: 0.44, blue: 0.53) : Color(red: 0.38, green: 0.43, blue: 0.54)
+    }
+
+    private var subjectOptionBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+    }
+
+    private var subjectOptionBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color(red: 0.16, green: 0.19, blue: 0.30)
+    }
+
+    private var subjectOptionSelectedBackground: Color {
+        colorScheme == .light ? Color(red: 0.80, green: 0.83, blue: 0.90) : Color(red: 0.11, green: 0.16, blue: 0.28)
+    }
+
+    private var subjectOptionSelectedBorder: Color {
+        colorScheme == .light ? Color(red: 0.26, green: 0.50, blue: 0.91) : Color(red: 0.25, green: 0.55, blue: 0.98)
+    }
+
+    private var subjectIconBadgeBackground: Color {
+        colorScheme == .light ? Color(red: 0.84, green: 0.85, blue: 0.89) : Color(red: 0.12, green: 0.15, blue: 0.24)
+    }
+
+    private var subjectIconColor: Color {
+        colorScheme == .light ? Color(red: 0.42, green: 0.45, blue: 0.53) : Color(red: 0.50, green: 0.55, blue: 0.66)
+    }
+
+    private var subjectOptionText: Color {
+        colorScheme == .light ? Color(red: 0.35, green: 0.37, blue: 0.44) : Color(red: 0.74, green: 0.77, blue: 0.84)
+    }
+
+    private var subjectSelectedText: Color {
+        colorScheme == .light ? Color(red: 0.19, green: 0.28, blue: 0.48) : Color(red: 0.88, green: 0.91, blue: 0.98)
     }
 }
 
