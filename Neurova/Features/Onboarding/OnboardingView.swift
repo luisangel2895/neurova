@@ -33,6 +33,7 @@ struct OnboardingView: View {
     @State private var isAuthenticating = false
     @State private var isWavingMascot = false
     @FocusState private var isDeckInputFocused: Bool
+    @State private var lockedViewportHeight: CGFloat = 0
 
     private enum Step: Int, CaseIterable {
         case welcome
@@ -49,16 +50,31 @@ struct OnboardingView: View {
     }
 
     var body: some View {
-        VStack(spacing: NSpacing.lg) {
-            progressHeader
-            if step == .welcome {
-                stepContent
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                stepContent
-                Spacer(minLength: 0)
+        GeometryReader { proxy in
+            let effectiveHeight = lockedViewportHeight > 0 ? lockedViewportHeight : proxy.size.height
+
+            VStack(spacing: NSpacing.lg) {
+                progressHeader
+                if step == .welcome {
+                    stepContent
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    stepContent
+                    Spacer(minLength: 0)
+                }
+                actionFooter
             }
-            actionFooter
+            .frame(width: proxy.size.width, height: effectiveHeight, alignment: .top)
+            .onAppear {
+                if lockedViewportHeight == 0 {
+                    lockedViewportHeight = proxy.size.height
+                }
+            }
+            .onChange(of: proxy.size.height, initial: false) { _, newHeight in
+                if lockedViewportHeight == 0 {
+                    lockedViewportHeight = newHeight
+                }
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .padding(.horizontal, NSpacing.md + NSpacing.xs)
