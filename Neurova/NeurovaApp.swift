@@ -597,12 +597,12 @@ private struct DarkSplashView: View {
 
     var body: some View {
         ZStack {
-            Color(red: 0.03, green: 0.05, blue: 0.12)
+            Color(red: 0.02, green: 0.03, blue: 0.09)
 
             LinearGradient(
                 colors: [
-                    Color(red: 0.09, green: 0.13, blue: 0.28).opacity(0.40),
-                    Color(red: 0.04, green: 0.06, blue: 0.14).opacity(0.0)
+                    Color(red: 0.07, green: 0.10, blue: 0.22).opacity(0.26),
+                    Color(red: 0.03, green: 0.04, blue: 0.10).opacity(0.0)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -612,35 +612,35 @@ private struct DarkSplashView: View {
                 .fill(
                     RadialGradient(
                         colors: [
-                            Color(red: 0.20, green: 0.39, blue: 0.96).opacity(0.30),
-                            Color(red: 0.15, green: 0.30, blue: 0.74).opacity(0.16),
-                            Color(red: 0.09, green: 0.18, blue: 0.44).opacity(0.06),
+                            Color(red: 0.20, green: 0.39, blue: 0.96).opacity(0.17),
+                            Color(red: 0.15, green: 0.30, blue: 0.74).opacity(0.09),
+                            Color(red: 0.09, green: 0.18, blue: 0.44).opacity(0.03),
                             .clear
                         ],
                         center: .center,
                         startRadius: 0,
-                        endRadius: 520
+                        endRadius: 250
                     )
                 )
-                .frame(width: 780, height: 620)
-                .blur(radius: 26)
-                .offset(y: -12)
+                .frame(width: 360, height: 320)
+                .blur(radius: 14)
+                .offset(y: -10)
 
             Ellipse()
                 .fill(
                     RadialGradient(
                         colors: [
-                            Color(red: 0.28, green: 0.44, blue: 0.98).opacity(0.14),
+                            Color(red: 0.28, green: 0.44, blue: 0.98).opacity(0.07),
                             .clear
                         ],
                         center: .center,
                         startRadius: 0,
-                        endRadius: 460
+                        endRadius: 210
                     )
                 )
-                .frame(width: 650, height: 520)
-                .blur(radius: 38)
-                .offset(y: 18)
+                .frame(width: 320, height: 280)
+                .blur(radius: 18)
+                .offset(y: 10)
 
             VStack(spacing: 22) {
                 ZStack {
@@ -658,7 +658,7 @@ private struct DarkSplashView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 124)
-                        .shadow(color: Color(red: 0.22, green: 0.40, blue: 0.95).opacity(0.32), radius: 20, x: 0, y: 8)
+                        .shadow(color: Color(red: 0.22, green: 0.40, blue: 0.95).opacity(0.20), radius: 12, x: 0, y: 6)
                         .scaleEffect(logoVisible ? (pulsing ? 1.045 : 1.0) : 0.82)
                         .opacity(logoVisible ? (exiting ? 0.0 : 1.0) : 0.0)
                 }

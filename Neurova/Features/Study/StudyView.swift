@@ -33,8 +33,6 @@ struct StudyView: View {
     @State private var cardTravelDistance: CGFloat = 0
     @State private var selectedQuality: ReviewQuality = .good
     @State private var pressedQuality: ReviewQuality?
-    @State private var didAutoDowngradeToHard = false
-    @State private var frontTimerToken = UUID()
     @State private var isPresentingSummary = false
     @State private var sessionSummary: SessionSummary?
     @State private var hasLoadedSession = false
@@ -69,13 +67,10 @@ struct StudyView: View {
         }
         .padding(.horizontal, NSpacing.md + NSpacing.xs)
         .padding(.top, NSpacing.md)
-        .padding(.bottom, NSpacing.lg)
+        .padding(.bottom, 0)
         .background(studyBackground.ignoresSafeArea())
         .task {
             loadSessionIfNeeded()
-        }
-        .task(id: frontTimerToken) {
-            await armFrontHardFallbackTimer()
         }
         .fullScreenCover(isPresented: $isPresentingSummary) {
             if let sessionSummary {
@@ -95,35 +90,110 @@ struct StudyView: View {
     }
 
     private var topBar: some View {
-        HStack {
-            Button {
-                onBack()
-                dismiss()
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(NTypography.bodyEmphasis)
-                    .foregroundStyle(NColors.Text.textPrimary)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
+        VStack(spacing: 10) {
+            HStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(colorScheme == .light ? Color(red: 0.89, green: 0.91, blue: 0.97) : Color(red: 0.10, green: 0.16, blue: 0.28))
+                        .frame(width: 30, height: 30)
+                        .overlay(
+                            Image(systemName: "book")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(NColors.Brand.neuroBlue)
+                        )
+
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(subjectTitle)
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundStyle(NColors.Text.textPrimary)
+                        Text(deckSubtitle)
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(secondaryTextColor)
+                    }
+                }
+
+                Spacer(minLength: 0)
+
+                HStack(spacing: 8) {
+                    HStack(spacing: 5) {
+                        Image(systemName: "bolt.fill")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.orange)
+                        Text(sessionCounterText)
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(NColors.Text.textPrimary)
+                    }
+                    .padding(.horizontal, 10)
+                    .frame(height: 30)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(colorScheme == .light ? Color(red: 0.94, green: 0.94, blue: 0.96) : Color(red: 0.12, green: 0.14, blue: 0.22))
+                    )
+
+                    Button {
+                        onBack()
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(Color(red: 0.45, green: 0.49, blue: 0.57))
+                            .frame(width: 30, height: 30)
+                            .background(
+                                Circle()
+                                    .fill(colorScheme == .light ? Color(red: 0.92, green: 0.92, blue: 0.95) : Color(red: 0.12, green: 0.14, blue: 0.22))
+                            )
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .buttonStyle(.plain)
 
-            Spacer()
+            animatedProgressBar(progress: sessionProgress)
+        }
+    }
 
-            VStack(spacing: NSpacing.xs) {
-                Text(deckTitle)
-                    .font(NTypography.bodyEmphasis.weight(.semibold))
-                    .foregroundStyle(NColors.Text.textPrimary)
+    private func animatedProgressBar(progress: Double) -> some View {
+        TimelineView(.animation) { timeline in
+            GeometryReader { proxy in
+                let clamped = min(max(progress, 0), 1)
+                let activeWidth = max(26, proxy.size.width * clamped)
+                let tickTime = timeline.date.timeIntervalSinceReferenceDate
+                let phase = (tickTime / 2.0).truncatingRemainder(dividingBy: 1.0)
+                let xOffset = (activeWidth * 1.8 * phase) - (activeWidth * 0.9)
 
-                Text(progressText)
-                    .font(NTypography.caption)
-                    .foregroundStyle(secondaryTextColor)
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(colorScheme == .light ? Color(red: 0.82, green: 0.83, blue: 0.86) : Color(red: 0.17, green: 0.19, blue: 0.28))
+                        .frame(height: 4)
+
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(red: 0.31, green: 0.53, blue: 0.94), Color(red: 0.45, green: 0.34, blue: 0.90)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: activeWidth, height: 4)
+                        .overlay {
+                            Capsule()
+                                .fill(.clear)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 2, style: .continuous)
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [.clear, Color.white.opacity(0.35), .clear],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .frame(width: 30, height: 7)
+                                        .offset(x: xOffset)
+                                )
+                                .clipShape(Capsule())
+                        }
+                }
             }
-
-            Spacer()
-
-            Color.clear
-                .frame(width: 44, height: 44)
+            .frame(height: 4)
         }
     }
 
@@ -187,17 +257,10 @@ struct StudyView: View {
                 .frame(minHeight: 320)
                 .contentShape(Rectangle())
                 .allowsHitTesting(allowsInteraction)
-                .onTapGesture(count: 2) {
+                .onTapGesture {
                     guard allowsInteraction else { return }
                     flipCard()
                 }
-                .gesture(
-                    DragGesture(minimumDistance: 16)
-                        .onEnded { value in
-                            guard allowsInteraction, value.translation.width < -56 else { return }
-                            handlePrimaryAdvanceAction()
-                        }
-                )
         }
         .opacity(opacity)
         .offset(x: offset)
@@ -216,9 +279,23 @@ struct StudyView: View {
 
     private func studyCardContent(for card: Card, showsBack: Bool) -> some View {
         VStack {
-            Text(cardSideLabel(for: showsBack))
-                .font(NTypography.caption)
-                .foregroundStyle(secondaryTextColor)
+            HStack {
+                Text(cardPositionText)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundStyle(secondaryTextColor)
+
+                Spacer(minLength: 0)
+
+                Text(cardSideLabel(for: showsBack))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color(red: 0.30, green: 0.54, blue: 0.94))
+                    .padding(.horizontal, 11)
+                    .padding(.vertical, 5)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(colorScheme == .light ? Color(red: 0.90, green: 0.93, blue: 0.98) : Color(red: 0.16, green: 0.18, blue: 0.27))
+                    )
+            }
 
             Spacer(minLength: 0)
 
@@ -229,6 +306,16 @@ struct StudyView: View {
             .frame(maxWidth: .infinity)
 
             Spacer(minLength: 0)
+
+            if showsBack == false {
+                HStack(spacing: 8) {
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.system(size: 14, weight: .medium))
+                    Text(AppCopy.text(locale, en: "Tap to see answer", es: "Toca para ver la respuesta"))
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                }
+                .foregroundStyle(secondaryTextColor.opacity(0.78))
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -273,47 +360,84 @@ struct StudyView: View {
 
     private var reviewButtons: some View {
         VStack(spacing: NSpacing.sm) {
-            HStack(spacing: NSpacing.sm) {
-                NSecondaryButton(flipButtonTitle) {
+            if isShowingBack {
+                Text(AppCopy.text(locale, en: "How well did you know it?", es: "¿Qué tan bien la sabías?"))
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(secondaryTextColor)
+                    .padding(.bottom, 2)
+
+                HStack(spacing: 10) {
+                    reviewButton(
+                        title: AppCopy.text(locale, en: "Hard", es: "Difícil"),
+                        subtitle: AppCopy.text(locale, en: "<1 min", es: "<1 min"),
+                        quality: .hard,
+                        titleColor: Color(red: 0.86, green: 0.35, blue: 0.35)
+                    )
+                    reviewButton(
+                        title: AppCopy.text(locale, en: "Good", es: "Bien"),
+                        subtitle: AppCopy.text(locale, en: "~10 min", es: "~10 min"),
+                        quality: .good,
+                        titleColor: Color(red: 0.26, green: 0.49, blue: 0.89)
+                    )
+                    reviewButton(
+                        title: AppCopy.text(locale, en: "Easy", es: "Fácil"),
+                        subtitle: AppCopy.text(locale, en: "~4 days", es: "~4 días"),
+                        quality: .easy,
+                        titleColor: Color(red: 0.30, green: 0.69, blue: 0.37)
+                    )
+                }
+            } else {
+                HStack(spacing: 10) {
+                    NImages.Mascot.neruDefault
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 32, height: 32)
+                    Text(AppCopy.text(locale, en: "Take your time to think...", es: "Tómate tu tiempo para pensar..."))
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(secondaryTextColor)
+                    Spacer(minLength: 0)
+                }
+                .padding(.bottom, 8)
+
+                StudyGradientButton(
+                    title: AppCopy.text(locale, en: "Show answer", es: "Mostrar respuesta"),
+                    iconSystemName: "arrow.uturn.backward"
+                ) {
                     flipCard()
                 }
-                .frame(maxWidth: .infinity)
-                .disabled(hasStudyCard == false || isTransitioning)
-
-                NSecondaryButton(primaryAdvanceButtonTitle) {
-                    handlePrimaryAdvanceAction()
-                }
-                .frame(maxWidth: .infinity)
-                .disabled(hasStudyCard == false || isTransitioning)
-            }
-
-            HStack(spacing: NSpacing.sm) {
-                reviewButton(title: AppCopy.text(locale, en: "Hard", es: "Dificil"), quality: .hard)
-                reviewButton(title: AppCopy.text(locale, en: "Good", es: "Bien"), quality: .good)
-                reviewButton(title: AppCopy.text(locale, en: "Easy", es: "Facil"), quality: .easy)
             }
         }
         .opacity((hasStudyCard || (queue.isEmpty && hasLoadedSession && initialCount == 0)) ? 1 : 0.5)
     }
 
-    private func reviewButton(title: String, quality: ReviewQuality) -> some View {
+    private func reviewButton(title: String, subtitle: String, quality: ReviewQuality, titleColor: Color) -> some View {
         let isSelected = selectedQuality == quality
 
-        return NSecondaryButton(title) {
+        return Button {
             selectedQuality = quality
-            frontTimerToken = UUID()
+            submitReview(quality)
+        } label: {
+            VStack(spacing: 4) {
+                Text(title)
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(titleColor)
+                Text(subtitle)
+                    .font(.system(size: 12, weight: .regular, design: .rounded))
+                    .foregroundStyle(secondaryTextColor)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 62)
+            .background(
+                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                    .fill(isSelected ? NColors.Home.surfaceL1 : .clear)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                    .stroke(isSelected ? NColors.Brand.neuroBlue : NColors.Neutrals.border, lineWidth: isSelected ? 1.5 : 1)
+            )
         }
-        .frame(maxWidth: .infinity)
         .scaleEffect(buttonScale(for: quality))
         .opacity(buttonOpacity(for: quality))
-        .background(
-            RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                .fill(isSelected ? NColors.Home.surfaceL1 : .clear)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                .stroke(isSelected ? NColors.Brand.neuroBlue : .clear, lineWidth: isSelected ? 1.5 : 0)
-        )
         .shadow(
             color: isSelected ? NColors.Brand.neuroBlue.opacity(colorScheme == .light ? 0.12 : 0.18) : .clear,
             radius: isSelected ? NSpacing.xs : 0,
@@ -334,19 +458,10 @@ struct StudyView: View {
         )
     }
 
-    private var progressText: String {
-        guard initialCount > 0 else {
-            return "0 / 0"
-        }
-
-        let currentIndex = min(totalReviewed + (hasStudyCard ? 1 : 0), initialCount)
-        return "\(currentIndex) / \(initialCount)"
-    }
-
     private func cardSideLabel(for showsBack: Bool) -> String {
         showsBack
-            ? AppCopy.text(locale, en: "Back", es: "Reverso")
-            : AppCopy.text(locale, en: "Front", es: "Frente")
+            ? AppCopy.text(locale, en: "Back", es: "Respuesta")
+            : AppCopy.text(locale, en: "Front", es: "Pregunta")
     }
 
     private var secondaryTextColor: Color {
@@ -385,6 +500,30 @@ struct StudyView: View {
         currentCard != nil
     }
 
+    private var subjectTitle: String {
+        currentCard?.deck?.subject?.name ?? deckTitle
+    }
+
+    private var deckSubtitle: String {
+        currentCard?.deck?.title ?? AppCopy.text(locale, en: "Flashcards", es: "Flashcards")
+    }
+
+    private var sessionCounterText: String {
+        guard initialCount > 0 else { return "0/0" }
+        return "\(min(totalReviewed, initialCount))/\(initialCount)"
+    }
+
+    private var sessionProgress: Double {
+        guard initialCount > 0 else { return 0 }
+        return min(1, Double(totalReviewed) / Double(initialCount))
+    }
+
+    private var cardPositionText: String {
+        guard initialCount > 0 else { return AppCopy.text(locale, en: "Card 0 of 0", es: "Tarjeta 0 de 0") }
+        let index = min(totalReviewed + 1, initialCount)
+        return AppCopy.text(locale, en: "Card \(index) of \(initialCount)", es: "Tarjeta \(index) de \(initialCount)")
+    }
+
     private func loadSessionIfNeeded() {
         guard hasLoadedSession == false else { return }
         resetSessionState()
@@ -401,7 +540,6 @@ struct StudyView: View {
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.225) {
             isShowingBack.toggle()
-            frontTimerToken = UUID()
             cardRotation = -90
 
             withAnimation(.easeInOut(duration: 0.225)) {
@@ -414,36 +552,15 @@ struct StudyView: View {
         }
     }
 
-    private var flipButtonTitle: String {
-        isShowingBack
-            ? AppCopy.text(locale, en: "Show Front", es: "Mostrar Frente")
-            : AppCopy.text(locale, en: "Show Back", es: "Mostrar Reverso")
-    }
-
-    private var primaryAdvanceButtonTitle: String {
-        isShowingBack
-            ? AppCopy.text(locale, en: "Next", es: "Siguiente")
-            : AppCopy.text(locale, en: "Skip", es: "Saltar")
-    }
-
-    private func handlePrimaryAdvanceAction() {
-        if isShowingBack {
-            submitReview(selectedQuality)
-        } else {
-            submitReview(.hard)
-        }
-    }
-
     private func submitReview(_ quality: ReviewQuality) {
         guard let card = currentCard, isTransitioning == false else { return }
         pressedQuality = nil
-        let eventType = xpEventType(for: quality)
 
         do {
             try reviewService.review(
                 card: card,
                 quality: quality,
-                eventType: eventType,
+                eventType: nil,
                 at: .now,
                 in: modelContext
             )
@@ -479,8 +596,6 @@ struct StudyView: View {
 
         isShowingBack = false
         selectedQuality = .good
-        didAutoDowngradeToHard = false
-        frontTimerToken = UUID()
         cardRotation = 0
 
         if queue.isEmpty {
@@ -540,8 +655,6 @@ struct StudyView: View {
         wrongCount = 0
         xpEarned = 0
         selectedQuality = .good
-        didAutoDowngradeToHard = false
-        frontTimerToken = UUID()
         isShowingBack = false
         cardRotation = 0
         currentCardOffset = 0
@@ -577,38 +690,6 @@ struct StudyView: View {
         isPresentingSummary = true
     }
 
-    private func armFrontHardFallbackTimer() async {
-        guard hasStudyCard, isShowingBack == false, selectedQuality == .good else { return }
-
-        do {
-            try await Task.sleep(nanoseconds: 10_000_000_000)
-        } catch {
-            return
-        }
-
-        guard Task.isCancelled == false else { return }
-        guard hasStudyCard, isShowingBack == false, selectedQuality == .good else { return }
-
-        await MainActor.run {
-            withAnimation(.easeInOut(duration: 0.18)) {
-                selectedQuality = .hard
-                didAutoDowngradeToHard = true
-            }
-        }
-    }
-
-    private func xpEventType(for quality: ReviewQuality) -> XPEventType? {
-        if isShowingBack == false {
-            return .skipHard
-        }
-
-        if quality == .hard, didAutoDowngradeToHard {
-            return .autoHardTimeout
-        }
-
-        return nil
-    }
-
     private func xp(for quality: ReviewQuality) -> Int {
         switch quality {
         case .again:
@@ -631,6 +712,93 @@ struct StudyView: View {
 
     private func buttonOpacity(for quality: ReviewQuality) -> Double {
         selectedQuality == quality ? 1 : 0.72
+    }
+}
+
+private struct StudyGradientButton: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let title: String
+    let iconSystemName: String?
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                if let iconSystemName {
+                    Image(systemName: iconSystemName)
+                        .font(.system(size: 16, weight: .regular))
+                }
+                Text(title)
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+            }
+            .foregroundStyle(colorScheme == .dark ? Color(red: 0.05, green: 0.08, blue: 0.16) : .white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 58)
+            .background(
+                LinearGradient(
+                    colors: colorScheme == .dark
+                        ? [Color(red: 0.30, green: 0.63, blue: 0.95), Color(red: 0.50, green: 0.34, blue: 0.95)]
+                        : [Color(red: 0.24, green: 0.50, blue: 0.90), Color(red: 0.30, green: 0.46, blue: 0.87), Color(red: 0.39, green: 0.27, blue: 0.82)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                TimelineView(.animation) { timeline in
+                    GeometryReader { proxy in
+                        let width = proxy.size.width
+                        let tickTime = timeline.date.timeIntervalSinceReferenceDate
+                        let phase = (tickTime / 2.15).truncatingRemainder(dividingBy: 1.0)
+                        let shinePhase = -1.45 + (2.9 * phase)
+                        let xOffset = width * shinePhase
+
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(.clear)
+                            .overlay(
+                                Ellipse()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                .clear,
+                                                Color.white.opacity(0.10),
+                                                Color.white.opacity(0.30),
+                                                Color.white.opacity(0.10),
+                                                .clear
+                                            ],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(width: 188, height: 126)
+                                    .rotationEffect(.degrees(20))
+                                    .blur(radius: 9)
+                                    .offset(x: xOffset)
+                            )
+                            .blendMode(.screen)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.white.opacity(0.20), lineWidth: 0.9)
+            }
+            .overlay(alignment: .top) {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.20), Color.white.opacity(0.0)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(height: 20)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .allowsHitTesting(false)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

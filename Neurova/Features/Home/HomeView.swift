@@ -109,7 +109,7 @@ struct HomeView: View {
             shouldPresentStudyAfterOptionsDismiss = false
             isPresentingStudy = true
         }
-        .sheet(isPresented: $isPresentingStudy) {
+        .fullScreenCover(isPresented: $isPresentingStudy) {
             if let deck = selectedDeckForStudy {
                 NavigationStack {
                     StudyView(

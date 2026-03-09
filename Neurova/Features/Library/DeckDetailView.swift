@@ -87,7 +87,7 @@ struct DeckDetailView: View {
             shouldPresentStudyAfterSheetDismiss = false
             isPresentingStudy = true
         }
-        .sheet(isPresented: $isPresentingStudy) {
+        .fullScreenCover(isPresented: $isPresentingStudy) {
             NavigationStack {
                 StudyView(
                     deckTitle: deck.title,

@@ -9,86 +9,117 @@ struct SummaryView: View {
     let onStudyAgain: () -> Void
 
     var body: some View {
-        VStack(spacing: NSpacing.lg) {
+        VStack(spacing: 18) {
             Spacer(minLength: 0)
-
-            VStack(spacing: NSpacing.sm) {
-                Text(AppCopy.text(locale, en: "Session Complete", es: "Sesion Completada"))
-                    .font(NTypography.title.weight(.semibold))
-                    .foregroundStyle(NColors.Text.textPrimary)
-
-                Text(AppCopy.text(locale, en: "Great work today.", es: "Gran trabajo hoy."))
-                    .font(NTypography.body)
-                    .foregroundStyle(secondaryTextColor)
-            }
 
             NImages.Mascot.neruCelebrate
                 .resizable()
                 .scaledToFit()
-                .frame(width: 180, height: 180)
+                .frame(width: 170, height: 170)
 
-            VStack(spacing: NSpacing.xs) {
-                Text("\(summary.xpEarned) XP")
-                    .font(NTypography.display)
+            VStack(spacing: 6) {
+                Text(AppCopy.text(locale, en: "Session complete!", es: "¡Sesión completada!"))
+                    .font(.system(size: 31, weight: .bold, design: .rounded))
                     .foregroundStyle(NColors.Text.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.9)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .frame(width: UIScreen.main.bounds.width * 0.8)
 
-                Text(AppCopy.text(locale, en: "earned this session", es: "ganado en esta sesion"))
-                    .font(NTypography.body)
-                    .foregroundStyle(secondaryTextColor)
+                Text(
+                    AppCopy.text(
+                        locale,
+                        en: "You reviewed \(summary.totalReviewed) cards. Great job!",
+                        es: "Revisaste \(summary.totalReviewed) tarjetas. ¡Excelente trabajo!"
+                    )
+                )
+                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .foregroundStyle(secondaryTextColor)
             }
 
-            NCard {
-                VStack(spacing: NSpacing.md) {
-                    statsRow(title: AppCopy.text(locale, en: "Cards reviewed", es: "Tarjetas revisadas"), value: "\(summary.totalReviewed)")
-                    statsRow(title: AppCopy.text(locale, en: "Correct", es: "Correctas"), value: "\(summary.correctCount)")
-                    statsRow(title: AppCopy.text(locale, en: "Incorrect", es: "Incorrectas"), value: "\(summary.wrongCount)")
-                    statsRow(title: AppCopy.text(locale, en: "Duration", es: "Duracion"), value: durationText)
-                }
+            HStack(spacing: 12) {
+                statCard(
+                    icon: "bolt",
+                    title: "+\(summary.xpEarned) XP",
+                    subtitle: AppCopy.text(locale, en: "XP earned", es: "Experiencia ganada"),
+                    tint: Color.orange
+                )
+                statCard(
+                    icon: "clock",
+                    title: durationTextLong,
+                    subtitle: AppCopy.text(locale, en: "Study time", es: "Tiempo de estudio"),
+                    tint: NColors.Brand.neuroBlue,
+                    isHighlighted: true
+                )
             }
+            .padding(.top, 4)
 
             Spacer(minLength: 0)
 
-            VStack(spacing: NSpacing.sm) {
-                NPrimaryButton(AppCopy.text(locale, en: "Back to Deck", es: "Volver al Mazo")) {
-                    onBackToDeck()
-                }
-
-                NSecondaryButton(AppCopy.text(locale, en: "Study Again", es: "Estudiar de Nuevo")) {
-                    onStudyAgain()
-                }
+            SummaryGradientButton(
+                title: AppCopy.text(locale, en: "Continue", es: "Continuar")
+            ) {
+                onBackToDeck()
             }
         }
         .padding(.horizontal, NSpacing.md + NSpacing.xs)
-        .padding(.top, NSpacing.xl)
-        .padding(.bottom, NSpacing.lg)
+        .padding(.top, 22)
+        .padding(.bottom, 0)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(backgroundView.ignoresSafeArea())
     }
 
-    private func statsRow(title: String, value: String) -> some View {
-        HStack {
-            Text(title)
-                .font(NTypography.body)
-                .foregroundStyle(secondaryTextColor)
+    private func statCard(icon: String, title: String, subtitle: String, tint: Color, isHighlighted: Bool = false) -> some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(
+                isHighlighted
+                    ? (colorScheme == .light ? Color(red: 0.87, green: 0.90, blue: 0.97) : Color(red: 0.11, green: 0.14, blue: 0.24))
+                    : (colorScheme == .light ? Color(red: 0.89, green: 0.90, blue: 0.93) : Color(red: 0.10, green: 0.12, blue: 0.19))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(
+                        isHighlighted
+                            ? (colorScheme == .light ? Color(red: 0.67, green: 0.76, blue: 0.95) : Color(red: 0.18, green: 0.35, blue: 0.70))
+                            : (colorScheme == .light ? Color(red: 0.80, green: 0.84, blue: 0.93) : Color.white.opacity(0.10)),
+                        lineWidth: 1
+                    )
+            )
+            .frame(maxWidth: .infinity)
+            .frame(height: 104)
+            .overlay {
+                VStack(spacing: 6) {
+                    Image(systemName: icon)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(tint)
 
-            Spacer(minLength: 0)
+                    Text(title)
+                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .foregroundStyle(NColors.Text.textPrimary)
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
 
-            Text(value)
-                .font(NTypography.bodyEmphasis.weight(.semibold))
-                .foregroundStyle(NColors.Text.textPrimary)
-        }
+                    Text(subtitle)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .foregroundStyle(secondaryTextColor)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.85)
+                }
+                .padding(.horizontal, 8)
+            }
     }
 
-    private var durationText: String {
-        let minutes = max(1, Int(round(Double(summary.durationSeconds) / 60.0)))
-        if AppCopy.language(for: locale) == .spanish {
-            return "\(minutes) min"
-        }
-        return "\(minutes) min"
+    private var durationTextLong: String {
+        let totalSeconds = max(0, summary.durationSeconds)
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
+        return "\(minutes)m \(seconds)s"
     }
 
     private var secondaryTextColor: Color {
-        colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark
+        colorScheme == .light
+            ? Color(red: 0.42, green: 0.46, blue: 0.54)
+            : Color(red: 0.45, green: 0.49, blue: 0.60)
     }
 
     private var backgroundView: some View {
@@ -102,14 +133,94 @@ struct SummaryView: View {
     }
 }
 
+private struct SummaryGradientButton: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(colorScheme == .dark ? Color(red: 0.05, green: 0.08, blue: 0.16) : .white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 58)
+                .background(
+                    LinearGradient(
+                        colors: colorScheme == .dark
+                            ? [Color(red: 0.30, green: 0.63, blue: 0.95), Color(red: 0.50, green: 0.34, blue: 0.95)]
+                            : [Color(red: 0.24, green: 0.50, blue: 0.90), Color(red: 0.30, green: 0.46, blue: 0.87), Color(red: 0.39, green: 0.27, blue: 0.82)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                TimelineView(.animation) { timeline in
+                    GeometryReader { proxy in
+                        let width = proxy.size.width
+                        let tickTime = timeline.date.timeIntervalSinceReferenceDate
+                        let phase = (tickTime / 2.15).truncatingRemainder(dividingBy: 1.0)
+                        let shinePhase = -1.45 + (2.9 * phase)
+                        let xOffset = width * shinePhase
+
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(.clear)
+                            .overlay(
+                                Ellipse()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [
+                                                .clear,
+                                                Color.white.opacity(0.10),
+                                                Color.white.opacity(0.30),
+                                                Color.white.opacity(0.10),
+                                                .clear
+                                            ],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(width: 188, height: 126)
+                                    .rotationEffect(.degrees(20))
+                                    .blur(radius: 9)
+                                    .offset(x: xOffset)
+                            )
+                            .blendMode(.screen)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(Color.white.opacity(0.20), lineWidth: 0.9)
+            }
+            .overlay(alignment: .top) {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color.white.opacity(0.20), Color.white.opacity(0.0)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                    .frame(height: 20)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .allowsHitTesting(false)
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 #Preview("Summary Light") {
     SummaryView(
         summary: SessionSummary(
-            xpEarned: 45,
-            totalReviewed: 5,
-            correctCount: 4,
-            wrongCount: 1,
-            durationSeconds: 420
+            xpEarned: 30,
+            totalReviewed: 3,
+            correctCount: 3,
+            wrongCount: 0,
+            durationSeconds: 83
         ),
         onBackToDeck: {},
         onStudyAgain: {}
@@ -120,11 +231,11 @@ struct SummaryView: View {
 #Preview("Summary Dark") {
     SummaryView(
         summary: SessionSummary(
-            xpEarned: 45,
-            totalReviewed: 5,
-            correctCount: 4,
-            wrongCount: 1,
-            durationSeconds: 420
+            xpEarned: 30,
+            totalReviewed: 3,
+            correctCount: 3,
+            wrongCount: 0,
+            durationSeconds: 83
         ),
         onBackToDeck: {},
         onStudyAgain: {}

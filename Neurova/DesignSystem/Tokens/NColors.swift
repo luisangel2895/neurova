@@ -8,10 +8,10 @@ enum NColors {
     }
 
     enum Home {
-        static let backgroundLightTop = Neutrals.surface.opacity(0.96)
-        static let backgroundLightBottom = Neutrals.background
-        static let backgroundDarkTop = Brand.neuroBlueDeep.opacity(0.28)
-        static let backgroundDarkBottom = Neutrals.background
+        static let backgroundLightTop = Color(red: 0.93, green: 0.93, blue: 0.95)
+        static let backgroundLightBottom = Color(red: 0.92, green: 0.92, blue: 0.94)
+        static let backgroundDarkTop = Color(red: 0.07, green: 0.08, blue: 0.13)
+        static let backgroundDarkBottom = Color(red: 0.06, green: 0.07, blue: 0.12)
         static let surfaceL0 = Neutrals.background
         static let surfaceL1 = Neutrals.surface
         static let surfaceL2 = Neutrals.surfaceAlt
@@ -26,22 +26,64 @@ enum NColors {
     }
 
     enum Brand {
-        static let neuroBlue = Color("NeuroBlue")
-        static let neuroBlueDeep = Color("NeuroBlueDeep")
-        static let neuralMint = Color("NeuralMint")
+        static let neuroBlue = Color(red: 0.30, green: 0.53, blue: 0.94)
+        static let neuroBlueDeep = Color(red: 0.45, green: 0.34, blue: 0.90)
+        static let neuralMint = Color(red: 0.39, green: 0.27, blue: 0.82)
     }
 
     enum Neutrals {
-        static let background = Color("Background")
-        static let surface = Color("Surface")
-        static let surfaceAlt = Color("SurfaceAlt")
-        static let border = Color("Border")
+        static let background = Color(
+            UIColor { trait in
+                trait.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.07, green: 0.08, blue: 0.13, alpha: 1)
+                    : UIColor(red: 0.93, green: 0.93, blue: 0.95, alpha: 1)
+            }
+        )
+        static let surface = Color(
+            UIColor { trait in
+                trait.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.10, green: 0.11, blue: 0.17, alpha: 1)
+                    : UIColor(red: 0.88, green: 0.89, blue: 0.92, alpha: 1)
+            }
+        )
+        static let surfaceAlt = Color(
+            UIColor { trait in
+                trait.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.12, green: 0.13, blue: 0.20, alpha: 1)
+                    : UIColor(red: 0.84, green: 0.86, blue: 0.91, alpha: 1)
+            }
+        )
+        static let border = Color(
+            UIColor { trait in
+                trait.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.17, green: 0.19, blue: 0.30, alpha: 1)
+                    : UIColor(red: 0.79, green: 0.80, blue: 0.85, alpha: 1)
+            }
+        )
     }
 
     enum Text {
-        static let textPrimary = Color("TextPrimary")
-        static let textSecondary = Color("TextSecondary")
-        static let textTertiary = Color("TextTertiary")
+        static let textPrimary = Color(
+            UIColor { trait in
+                trait.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.92, green: 0.94, blue: 0.98, alpha: 1)
+                    : UIColor(red: 0.06, green: 0.08, blue: 0.15, alpha: 1)
+            }
+        )
+        static let textSecondary = Color(
+            UIColor { trait in
+                trait.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.63, green: 0.67, blue: 0.77, alpha: 1)
+                    : UIColor(red: 0.26, green: 0.30, blue: 0.39, alpha: 1)
+            }
+        )
+        static let textTertiary = Color(
+            UIColor { trait in
+                trait.userInterfaceStyle == .dark
+                    ? UIColor(red: 0.48, green: 0.52, blue: 0.63, alpha: 1)
+                    : UIColor(red: 0.42, green: 0.46, blue: 0.54, alpha: 1)
+            }
+        )
     }
 
     enum Feedback {
