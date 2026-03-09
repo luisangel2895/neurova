@@ -781,6 +781,7 @@ private struct HomeLaunchGateView: View {
     @State private var isLoading = true
     @State private var hasCompletedOnboarding = false
     @State private var recoveredCloudSession: RecoveredCloudSession?
+    @State private var isOnboardingActive = false
 
     @AppStorage("apple_user_id") private var appleUserID: String = ""
     @AppStorage("apple_given_name") private var appleGivenName: String = ""
@@ -809,6 +810,12 @@ private struct HomeLaunchGateView: View {
             } else {
                 OnboardingView {
                     hasCompletedOnboarding = true
+                }
+                .onAppear {
+                    isOnboardingActive = true
+                }
+                .onDisappear {
+                    isOnboardingActive = false
                 }
             }
         }
@@ -924,12 +931,17 @@ private struct HomeLaunchGateView: View {
     private func pollForRecoveredCloudSession() async {
         guard hasCompletedOnboarding == false else { return }
         guard recoveredCloudSession == nil else { return }
+        guard isOnboardingActive == false else { return }
 
         for _ in 0..<20 {
             if hasCompletedOnboarding {
                 return
             }
+            if isOnboardingActive {
+                return
+            }
             if let session = fetchRecoveredCloudSession() {
+                guard isOnboardingActive == false else { return }
                 recoveredCloudSession = session
                 return
             }

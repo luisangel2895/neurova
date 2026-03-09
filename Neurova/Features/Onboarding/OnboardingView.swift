@@ -32,8 +32,9 @@ struct OnboardingView: View {
     @State private var createdCards: [Card] = []
     @State private var isPresentingFirstStudy = false
     @State private var isAuthenticating = false
-    @State private var isWavingMascot = false
     @State private var isDeckInputFocused = false
+    @State private var isFirstCardFrontFocused = false
+    @State private var isFirstCardBackFocused = false
     @State private var lockedViewportHeight: CGFloat = 0
 
     private enum Step: Int, CaseIterable {
@@ -153,16 +154,21 @@ struct OnboardingView: View {
             }
 
             if step == .done {
-                NPrimaryButton(AppCopy.text(locale, en: "Start first study session", es: "Iniciar primera sesión")) {
+                OnboardingAnimatedPrimaryButton(
+                    title: AppCopy.text(locale, en: "Start studying", es: "Comenzar a estudiar"),
+                    isDark: colorScheme == .dark,
+                    animateEffects: true,
+                    gradientColors: colorScheme == .dark
+                        ? [Color(red: 0.30, green: 0.63, blue: 0.95), Color(red: 0.50, green: 0.34, blue: 0.95)]
+                        : [Color(red: 0.24, green: 0.50, blue: 0.90), Color(red: 0.30, green: 0.46, blue: 0.87), Color(red: 0.39, green: 0.27, blue: 0.82)],
+                    leadingSymbolName: "sparkles",
+                    showsChevron: false
+                ) {
                     guard createdCards.isEmpty == false else {
                         finishOnboarding()
                         return
                     }
                     isPresentingFirstStudy = true
-                }
-
-                NSecondaryButton(AppCopy.text(locale, en: "Go to app", es: "Ir a la app")) {
-                    finishOnboarding()
                 }
             } else if step == .account {
                 SignInWithAppleButton(.continue) { request in
@@ -173,8 +179,8 @@ struct OnboardingView: View {
                     handleAppleSignIn(result: result)
                 }
                 .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
-                .frame(height: 50)
-                .clipShape(RoundedRectangle(cornerRadius: NRadius.button, style: .continuous))
+                .frame(height: 58)
+                .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
                 .disabled(isSaving || isAuthenticating)
             } else {
                 if usesAnimatedPrimaryButton {
@@ -196,7 +202,7 @@ struct OnboardingView: View {
                     .disabled(canContinue == false || isSaving)
                 }
 
-                if step != .welcome && step != .dailyGoal && step != .subject && step != .deck {
+                if step != .welcome && step != .dailyGoal && step != .subject && step != .deck && step != .firstCard {
                     NSecondaryButton(AppCopy.text(locale, en: "Back", es: "Atrás")) {
                         goBack()
                     }
@@ -583,10 +589,13 @@ struct OnboardingView: View {
                 welcomeInfoCard
 
                 VStack(spacing: 20) {
-                    NImages.Mascot.neruWave
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 206, height: 206)
+                    TimelineView(.animation) { timeline in
+                        NImages.Mascot.neruWave
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 206, height: 206)
+                            .rotationEffect(.degrees(welcomeWaveAngle(for: timeline.date)), anchor: .center)
+                    }
 
                     HStack(spacing: 5) {
                         welcomeFeatureChip(
@@ -740,118 +749,364 @@ struct OnboardingView: View {
     }
 
     private var firstCardEditor: some View {
-        NCard {
-            VStack(alignment: .leading, spacing: NSpacing.md) {
-                Text(AppCopy.text(locale, en: "Create your first card", es: "Crea tu primera tarjeta"))
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundStyle(primaryTitleColor)
+        VStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(firstCardInfoBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(firstCardInfoBorder, lineWidth: 1)
+                )
+                .frame(height: 100)
+                .overlay(alignment: .leading) {
+                    HStack(spacing: 16) {
+                        Circle()
+                            .fill(firstCardInfoIconBackground)
+                            .frame(width: 36, height: 36)
+                            .overlay(
+                                Image(systemName: "rectangle.stack.badge.plus")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(firstCardInfoIconColor)
+                            )
 
-                VStack(alignment: .leading, spacing: NSpacing.xs) {
-                    Text(AppCopy.text(locale, en: "Front", es: "Frente"))
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(welcomeHeaderSubtitleColor)
-                    TextEditor(text: $cardFront)
-                        .font(.system(size: 14, weight: .regular, design: .rounded))
-                        .foregroundStyle(primaryTitleColor)
-                        .autocorrectionDisabled(true)
-                        .textInputAutocapitalization(.sentences)
-                        .scrollContentBackground(.hidden)
-                        .frame(minHeight: 88)
-                        .padding(NSpacing.sm)
-                        .background(NColors.Home.surfaceL1)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                                .stroke(NColors.Home.cardBorder, lineWidth: 1)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: NRadius.card, style: .continuous))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(AppCopy.text(locale, en: "Create your first card", es: "Crea tu primera tarjeta"))
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundStyle(primaryTitleColor)
+                            Text(AppCopy.text(locale, en: "Write the front and back of your first flashcard to start studying.", es: "Escribe el frente y reverso de tu primera flashcard para empezar a estudiar."))
+                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .foregroundStyle(firstCardSecondaryText)
+                                .lineLimit(3)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
                 }
 
-                VStack(alignment: .leading, spacing: NSpacing.xs) {
-                    Text(AppCopy.text(locale, en: "Back", es: "Reverso"))
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(welcomeHeaderSubtitleColor)
-                    TextEditor(text: $cardBack)
-                        .font(.system(size: 14, weight: .regular, design: .rounded))
-                        .foregroundStyle(primaryTitleColor)
-                        .autocorrectionDisabled(true)
-                        .textInputAutocapitalization(.sentences)
-                        .scrollContentBackground(.hidden)
-                        .frame(minHeight: 88)
-                        .padding(NSpacing.sm)
-                        .background(NColors.Home.surfaceL1)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                                .stroke(NColors.Home.cardBorder, lineWidth: 1)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: NRadius.card, style: .continuous))
-                }
+            VStack(alignment: .leading, spacing: 8) {
+                Text(AppCopy.text(locale, en: "FRONT", es: "FRENTE"))
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(firstCardFrontLabel)
+                    .tracking(0.8)
+
+                NOptimizedTextField(
+                    placeholder: AppCopy.text(locale, en: "Ex: What is mitochondria?", es: "Ej: ¿Qué es la mitocondria?"),
+                    text: $cardFront,
+                    isFocused: $isFirstCardFrontFocused,
+                    returnKeyType: .done,
+                    autocapitalization: .sentences,
+                    font: .systemFont(ofSize: 16, weight: .medium),
+                    textColor: UIColor(primaryTitleColor),
+                    tintColor: UIColor(NColors.Brand.neuroBlue),
+                    onSubmit: { isFirstCardFrontFocused = false }
+                )
+                .padding(.horizontal, 16)
+                .frame(height: 58)
+                .background(firstCardInputBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(isFirstCardFrontFocused ? firstCardInputActiveBorder : firstCardInputBorder, lineWidth: isFirstCardFrontFocused ? 1.6 : 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(AppCopy.text(locale, en: "BACK", es: "REVERSO"))
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(firstCardBackLabel)
+                    .tracking(0.8)
+
+                NOptimizedTextField(
+                    placeholder: AppCopy.text(locale, en: "Ex: Organelle that produces energy (ATP).", es: "Ej: Orgánulo que produce energía (ATP)."),
+                    text: $cardBack,
+                    isFocused: $isFirstCardBackFocused,
+                    returnKeyType: .done,
+                    autocapitalization: .sentences,
+                    font: .systemFont(ofSize: 16, weight: .medium),
+                    textColor: UIColor(primaryTitleColor),
+                    tintColor: UIColor(NColors.Brand.neuroBlue),
+                    onSubmit: { isFirstCardBackFocused = false }
+                )
+                .padding(.horizontal, 16)
+                .frame(height: 58)
+                .background(firstCardInputBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(isFirstCardBackFocused ? firstCardInputActiveBorder : firstCardInputBorder, lineWidth: isFirstCardBackFocused ? 1.6 : 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+
+            TimelineView(.animation) { timeline in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let yOffset = sin(t * 1.25) * 8
+
+                NImages.Mascot.neruHappy
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 116, height: 116)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 4)
+                    .offset(y: yOffset)
+            }
+
+            Text(AppCopy.text(locale, en: "Your first card is about to be born! 🎉", es: "¡Tu primera tarjeta está a punto de nacer! 🎉"))
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(firstCardSecondaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(firstCardTipBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(firstCardTipBorder, lineWidth: 1)
+                )
+                .frame(minHeight: 56)
+                .overlay(alignment: .leading) {
+                    HStack(alignment: .center, spacing: 8) {
+                        Image(systemName: "lightbulb")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(firstCardTipIcon)
+                        Text(AppCopy.text(locale, en: "Tip: simple, concrete questions improve retention.", es: "Tip: preguntas simples y concretas mejoran la retención."))
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(firstCardTipText)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                }
+                .padding(.top, 2)
         }
     }
 
     private var accountStepCard: some View {
-        NCard {
-            VStack(alignment: .leading, spacing: NSpacing.sm + NSpacing.xs) {
-                Text(AppCopy.text(locale, en: "Create account to sync your progress", es: "Crea una cuenta para sincronizar tu progreso"))
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundStyle(primaryTitleColor)
-
-                Text(
-                    AppCopy.text(
-                        locale,
-                        en: "Sign in with Apple to keep your decks, cards, and progress across devices.",
-                        es: "Inicia sesión con Apple para mantener tus decks, tarjetas y progreso entre dispositivos."
-                    )
+        VStack(spacing: 16) {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(accountInfoBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(accountInfoBorder, lineWidth: 1)
                 )
-                .font(.system(size: 14, weight: .regular, design: .rounded))
-                .foregroundStyle(welcomeHeaderSubtitleColor)
-                .fixedSize(horizontal: false, vertical: true)
+                .frame(height: 95)
+                .overlay(alignment: .leading) {
+                    HStack(spacing: 16) {
+                        Circle()
+                            .fill(accountInfoIconBackground)
+                            .frame(width: 36, height: 36)
+                            .overlay(
+                                Image(systemName: "shield")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(accountInfoIconColor)
+                            )
 
-                if isAuthenticating {
-                    HStack(spacing: NSpacing.xs) {
-                        ProgressView()
-                            .controlSize(.small)
-                        Text(AppCopy.text(locale, en: "Signing in…", es: "Iniciando sesión…"))
-                            .font(.system(size: 13, weight: .regular, design: .rounded))
-                            .foregroundStyle(welcomeHeaderSubtitleColor)
-                    }
-                    .padding(.top, NSpacing.xs)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private var doneStepCard: some View {
-        NCard {
-            VStack(alignment: .leading, spacing: NSpacing.md) {
-                Text(AppCopy.text(locale, en: "Setup complete", es: "Configuración lista"))
-                    .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundStyle(primaryTitleColor)
-
-                Text(AppCopy.text(locale, en: "You are ready to start your first study session.", es: "Ya puedes comenzar tu primera sesión de estudio."))
-                    .font(.system(size: 14, weight: .regular, design: .rounded))
-                    .foregroundStyle(welcomeHeaderSubtitleColor)
-
-                HStack {
-                    Spacer(minLength: 0)
-                    NImages.Mascot.neruWave
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 132, height: 132)
-                        .rotationEffect(.degrees(isWavingMascot ? 15 : 0), anchor: .bottomTrailing)
-                        .onAppear {
-                            isWavingMascot = false
-                            withAnimation(.easeInOut(duration: 1.15).repeatForever(autoreverses: true)) {
-                                isWavingMascot = true
-                            }
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(AppCopy.text(locale, en: "Sign in with Apple", es: "Inicia sesión con Apple"))
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundStyle(primaryTitleColor)
+                            Text(AppCopy.text(locale, en: "Required to sync your progress and protect your data.", es: "Obligatorio para sincronizar tu progreso y proteger tus datos."))
+                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .foregroundStyle(accountSecondaryText)
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
-                    Spacer(minLength: 0)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                }
+
+            TimelineView(.animation) { timeline in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let yOffset = sin(t * 1.25) * 8
+
+                NImages.Mascot.neruThinking
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 128, height: 128)
+                    .frame(maxWidth: .infinity)
+                    .offset(y: yOffset)
+            }
+
+            Text(AppCopy.text(locale, en: "One tap to protect your progress and access it from any device.", es: "Un solo toque para proteger tu progreso y acceder desde cualquier dispositivo."))
+                .font(.system(size: 14, weight: .regular, design: .rounded))
+                .foregroundStyle(accountSecondaryText)
+                .multilineTextAlignment(.center)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 24)
+
+            VStack(spacing: 10) {
+                accountFeatureRow(
+                    icon: "lock",
+                    text: AppCopy.text(locale, en: "End-to-end encryption", es: "Cifrado de extremo a extremo")
+                )
+                accountFeatureRow(
+                    icon: "arrow.triangle.2.circlepath",
+                    text: AppCopy.text(locale, en: "Automatic sync across devices", es: "Sincronización automática en todos tus dispositivos"),
+                    maxLines: 2,
+                    minHeight: 62
+                )
+                accountFeatureRow(
+                    icon: "bolt",
+                    text: AppCopy.text(locale, en: "No passwords, one tap and done", es: "Sin contraseñas, un toque y listo")
+                )
+            }
+            .padding(.top, 20)
+
+            if isAuthenticating {
+                HStack(spacing: NSpacing.xs) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(AppCopy.text(locale, en: "Signing in…", es: "Iniciando sesión…"))
+                        .font(.system(size: 13, weight: .regular, design: .rounded))
+                        .foregroundStyle(accountSecondaryText)
                 }
                 .padding(.top, NSpacing.xs)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    private func accountFeatureRow(icon: String, text: String, maxLines: Int = 1, minHeight: CGFloat = 50) -> some View {
+        RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .fill(accountFeatureBackground)
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(accountFeatureBorder, lineWidth: 1)
+            )
+            .frame(minHeight: minHeight)
+            .overlay(alignment: .leading) {
+                HStack(alignment: .center, spacing: 12) {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(accountFeatureIconBackground)
+                        .frame(width: 30, height: 30)
+                        .overlay(
+                            Image(systemName: icon)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(accountFeatureIconColor)
+                        )
+
+                    Text(text)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(accountSecondaryText)
+                        .lineLimit(maxLines)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .minimumScaleFactor(0.9)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 12)
+            }
+    }
+
+    private var doneStepCard: some View {
+        VStack(spacing: 16) {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(doneInfoBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 24, style: .continuous)
+                        .stroke(doneInfoBorder, lineWidth: 1)
+                )
+                .frame(height: 90)
+                .overlay(alignment: .leading) {
+                    HStack(spacing: 12) {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(doneInfoIconBackground)
+                            .frame(width: 32, height: 32)
+                            .overlay(
+                                Image(systemName: "wand.and.stars")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(doneInfoIconColor)
+                            )
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(AppCopy.text(locale, en: "All set!", es: "¡Todo listo!"))
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundStyle(primaryTitleColor)
+                            Text(AppCopy.text(locale, en: "Your account is configured and ready to start.", es: "Tu cuenta está configurada y lista para comenzar."))
+                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .foregroundStyle(welcomeHeaderSubtitleColor)
+                                .lineLimit(2)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 16)
+                }
+
+            Circle()
+                .fill(welcomeProgressActiveGradient)
+                .frame(width: 90, height: 90)
+                .overlay(
+                    Image(systemName: "checkmark.circle")
+                        .font(.system(size: 38, weight: .semibold))
+                        .foregroundStyle(Color.white.opacity(0.92))
+                )
+                .overlay(
+                    Circle()
+                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                )
+                .padding(.top, 2)
+
+            TimelineView(.animation) { timeline in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                let yOffset = sin(t * 0.95) * 8
+                let rotation = sin(t * 1.9) * 4
+
+                NImages.Mascot.neruCelebrate
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 122, height: 122)
+                    .frame(maxWidth: .infinity)
+                    .offset(y: yOffset)
+                    .rotationEffect(.degrees(rotation))
+            }
+
+            HStack(spacing: 10) {
+                doneStatTile(icon: "book", value: "1", label: AppCopy.text(locale, en: "Subject", es: "Materia"))
+                doneStatTile(icon: "sparkles", value: "1", label: AppCopy.text(locale, en: "Deck", es: "Mazo"))
+                doneStatTile(icon: "brain.head.profile", value: "\(selectedDailyGoal)", label: AppCopy.text(locale, en: "Goal/day", es: "Meta/día"))
+            }
+
+            Text(AppCopy.text(locale, en: "You are about to master your learning! 🚀", es: "¡Estás a punto de dominar tu aprendizaje! 🚀"))
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(welcomeHeaderSubtitleColor)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 2)
+        }
+    }
+
+    private func doneStatTile(icon: String, value: String, label: String) -> some View {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+            .fill(doneStatBackground)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(doneStatBorder, lineWidth: 1)
+            )
+            .frame(maxWidth: .infinity)
+            .frame(height: 116)
+            .overlay {
+                VStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .fill(doneInfoIconBackground)
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            Image(systemName: icon)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(doneInfoIconColor)
+                        )
+                    Text(value)
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .minimumScaleFactor(0.8)
+                        .foregroundStyle(primaryTitleColor)
+                    Text(label)
+                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .foregroundStyle(welcomeHeaderSubtitleColor)
+                }
+                .padding(.horizontal, 8)
+            }
     }
 
     private func onboardingCard(title: String, message: String) -> some View {
@@ -900,11 +1155,11 @@ struct OnboardingView: View {
         case .deck:
             return AppCopy.text(locale, en: "Quick setup to start studying.", es: "Configuración rápida para empezar a estudiar.")
         case .firstCard:
-            return AppCopy.text(locale, en: "Create one card to launch your first session.", es: "Crea una tarjeta para lanzar tu primera sesión.")
+            return AppCopy.text(locale, en: "Quick setup to start studying.", es: "Configuración rápida para empezar a estudiar.")
         case .account:
-            return AppCopy.text(locale, en: "Optional but recommended for multi-device sync.", es: "Opcional pero recomendado para sincronizar en varios dispositivos.")
+            return AppCopy.text(locale, en: "Quick setup to start studying.", es: "Configuración rápida para empezar a estudiar.")
         case .done:
-            return AppCopy.text(locale, en: "Everything is ready.", es: "Todo está listo.")
+            return AppCopy.text(locale, en: "Quick setup to start studying.", es: "Configuración rápida para empezar a estudiar.")
         }
     }
 
@@ -915,6 +1170,18 @@ struct OnboardingView: View {
         default:
             return AppCopy.text(locale, en: "Continue", es: "Continuar")
         }
+    }
+
+    private func welcomeWaveAngle(for date: Date) -> Double {
+        let t = date.timeIntervalSinceReferenceDate
+        let cycleDuration = 4.0
+        let activeDuration = 2.0
+        let phase = t.truncatingRemainder(dividingBy: cycleDuration)
+        guard phase <= activeDuration else { return 0 }
+
+        let progress = phase / activeDuration
+        let envelope = pow(sin(progress * .pi), 2)
+        return sin(progress * .pi * 4) * 6 * envelope
     }
 
     private var canContinue: Bool {
@@ -942,7 +1209,7 @@ struct OnboardingView: View {
 
     private var showsOnboardingProgressStyle: Bool {
         switch step {
-        case .welcome, .dailyGoal, .subject, .deck, .firstCard:
+        case .welcome, .dailyGoal, .subject, .deck, .firstCard, .account, .done:
             return true
         default:
             return false
@@ -1460,6 +1727,136 @@ struct OnboardingView: View {
     private var deckSuggestionSelectedText: Color {
         colorScheme == .light ? Color(red: 0.20, green: 0.28, blue: 0.48) : Color(red: 0.86, green: 0.90, blue: 0.98)
     }
+
+    private var firstCardInfoBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+    }
+
+    private var firstCardInfoBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color.white.opacity(0.08)
+    }
+
+    private var firstCardInfoIconBackground: Color {
+        colorScheme == .light ? Color(red: 0.82, green: 0.86, blue: 0.96) : Color(red: 0.11, green: 0.17, blue: 0.31)
+    }
+
+    private var firstCardInfoIconColor: Color {
+        colorScheme == .light ? Color(red: 0.39, green: 0.60, blue: 0.95) : Color(red: 0.33, green: 0.62, blue: 0.98)
+    }
+
+    private var firstCardSecondaryText: Color {
+        colorScheme == .light ? Color(red: 0.40, green: 0.44, blue: 0.53) : Color(red: 0.36, green: 0.42, blue: 0.55)
+    }
+
+    private var firstCardFrontLabel: Color {
+        colorScheme == .light ? Color(red: 0.20, green: 0.46, blue: 0.94) : Color(red: 0.27, green: 0.57, blue: 0.98)
+    }
+
+    private var firstCardBackLabel: Color {
+        colorScheme == .light ? Color(red: 0.47, green: 0.30, blue: 0.92) : Color(red: 0.56, green: 0.42, blue: 0.96)
+    }
+
+    private var firstCardInputBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+    }
+
+    private var firstCardInputBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color(red: 0.16, green: 0.19, blue: 0.30)
+    }
+
+    private var firstCardInputActiveBorder: Color {
+        colorScheme == .light ? Color(red: 0.30, green: 0.51, blue: 0.92) : Color(red: 0.25, green: 0.55, blue: 0.98)
+    }
+
+    private var firstCardTipBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.11, blue: 0.19)
+    }
+
+    private var firstCardTipBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color(red: 0.14, green: 0.18, blue: 0.30)
+    }
+
+    private var firstCardTipIcon: Color {
+        colorScheme == .light ? Color(red: 0.43, green: 0.62, blue: 0.95) : Color(red: 0.34, green: 0.60, blue: 0.97)
+    }
+
+    private var firstCardTipText: Color {
+        colorScheme == .light ? Color(red: 0.42, green: 0.46, blue: 0.54) : Color(red: 0.42, green: 0.47, blue: 0.58)
+    }
+
+    private var accountInfoBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+    }
+
+    private var accountInfoBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color.white.opacity(0.08)
+    }
+
+    private var accountInfoIconBackground: Color {
+        colorScheme == .light ? Color(red: 0.82, green: 0.86, blue: 0.96) : Color(red: 0.11, green: 0.17, blue: 0.31)
+    }
+
+    private var accountInfoIconColor: Color {
+        colorScheme == .light ? Color(red: 0.39, green: 0.60, blue: 0.95) : Color(red: 0.33, green: 0.62, blue: 0.98)
+    }
+
+    private var accountSecondaryText: Color {
+        colorScheme == .light ? Color(red: 0.40, green: 0.44, blue: 0.53) : Color(red: 0.42, green: 0.47, blue: 0.58)
+    }
+
+    private var accountFeatureBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+    }
+
+    private var accountFeatureBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color(red: 0.16, green: 0.19, blue: 0.30)
+    }
+
+    private var accountFeatureIconBackground: Color {
+        colorScheme == .light ? Color(red: 0.84, green: 0.85, blue: 0.89) : Color(red: 0.12, green: 0.15, blue: 0.24)
+    }
+
+    private var accountFeatureIconColor: Color {
+        colorScheme == .light ? Color(red: 0.36, green: 0.55, blue: 0.92) : Color(red: 0.31, green: 0.59, blue: 0.98)
+    }
+
+    private var doneInfoBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+    }
+
+    private var doneInfoBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color.white.opacity(0.08)
+    }
+
+    private var doneInfoIconBackground: Color {
+        colorScheme == .light ? Color(red: 0.82, green: 0.86, blue: 0.96) : Color(red: 0.11, green: 0.17, blue: 0.31)
+    }
+
+    private var doneInfoIconColor: Color {
+        colorScheme == .light ? Color(red: 0.39, green: 0.60, blue: 0.95) : Color(red: 0.33, green: 0.62, blue: 0.98)
+    }
+
+    private var doneStatBackground: Color {
+        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+    }
+
+    private var doneStatBorder: Color {
+        colorScheme == .light
+            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
+            : Color(red: 0.16, green: 0.19, blue: 0.30)
+    }
 }
 
 private struct OnboardingDeckTextField: UIViewRepresentable {
@@ -1567,15 +1964,23 @@ private struct OnboardingAnimatedPrimaryButton: View {
     let isDark: Bool
     let animateEffects: Bool
     let gradientColors: [Color]
+    var leadingSymbolName: String? = nil
+    var showsChevron: Bool = true
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
+                if let leadingSymbolName {
+                    Image(systemName: leadingSymbolName)
+                        .font(.system(size: 14, weight: .regular))
+                }
                 Text(title)
                     .font(.system(size: 18, weight: .regular, design: .rounded))
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .regular))
+                if showsChevron {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .regular))
+                }
             }
             .foregroundStyle(isDark ? Color(red: 0.05, green: 0.08, blue: 0.16) : .white)
             .frame(maxWidth: .infinity)
