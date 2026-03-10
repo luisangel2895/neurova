@@ -1423,434 +1423,370 @@ struct OnboardingView: View {
 
     private var backgroundView: some View {
         LinearGradient(
-            colors: colorScheme == .light
-                ? [Color(red: 0.93, green: 0.93, blue: 0.95), Color(red: 0.92, green: 0.92, blue: 0.94)]
-                : [Color(red: 0.04, green: 0.05, blue: 0.11), Color(red: 0.03, green: 0.04, blue: 0.09)],
+            colors: [NColors.Onboarding.backgroundTop, NColors.Onboarding.backgroundBottom],
             startPoint: .top,
             endPoint: .bottom
         )
     }
 
     private var secondaryTextColor: Color {
-        colorScheme == .light
-            ? Color(red: 0.39, green: 0.43, blue: 0.52)
-            : Color(red: 0.34, green: 0.40, blue: 0.53)
+        NColors.Onboarding.secondaryText
     }
 
     private var welcomeHeaderSubtitleColor: Color {
-        colorScheme == .light
-            ? Color(red: 0.40, green: 0.44, blue: 0.53)
-            : Color(red: 0.53, green: 0.58, blue: 0.70)
+        NColors.Onboarding.headerSubtitle
     }
 
     private var primaryTitleColor: Color {
-        colorScheme == .light
-            ? Color(red: 0.06, green: 0.08, blue: 0.15)
-            : Color(red: 0.93, green: 0.95, blue: 0.99)
+        NColors.Onboarding.title
     }
 
     private var welcomeCardBackground: Color {
-        colorScheme == .light
-            ? Color(red: 0.88, green: 0.89, blue: 0.92)
-            : Color(red: 0.08, green: 0.10, blue: 0.18)
+        NColors.Onboarding.cardBackground
     }
 
     private var welcomeCardBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color.white.opacity(0.08)
+        NColors.Onboarding.cardBorder
     }
 
     private var welcomeCardIconBackground: Color {
-        colorScheme == .light
-            ? Color(red: 0.81, green: 0.86, blue: 0.97)
-            : Color(red: 0.12, green: 0.17, blue: 0.30)
+        NColors.Onboarding.cardIconBackground
     }
 
     private var welcomeCardIconColor: Color {
-        colorScheme == .light
-            ? Color(red: 0.45, green: 0.62, blue: 0.95)
-            : Color(red: 0.45, green: 0.66, blue: 0.97)
+        NColors.Onboarding.cardIconColor
     }
 
     private var welcomeChipBackground: Color {
-        colorScheme == .light
-            ? Color(red: 0.86, green: 0.87, blue: 0.90)
-            : Color(red: 0.10, green: 0.12, blue: 0.20)
+        NColors.Onboarding.chipBackground
     }
 
     private var welcomeChipBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.78, green: 0.80, blue: 0.84).opacity(0.9)
-            : Color.white.opacity(0.06)
+        NColors.Onboarding.chipBorder
     }
 
     private var welcomeChipTextColor: Color {
-        colorScheme == .light
-            ? Color(red: 0.39, green: 0.43, blue: 0.52)
-            : Color(red: 0.38, green: 0.43, blue: 0.56)
+        NColors.Onboarding.chipText
     }
 
     private var welcomeChipIconColor: Color {
-        colorScheme == .light
-            ? Color(red: 0.48, green: 0.63, blue: 0.94)
-            : Color(red: 0.42, green: 0.62, blue: 0.96)
+        NColors.Onboarding.chipIcon
     }
 
     private var welcomeProgressTrackColor: Color {
-        colorScheme == .light
-            ? Color(red: 0.81, green: 0.82, blue: 0.85)
-            : Color(red: 0.13, green: 0.15, blue: 0.23)
+        NColors.Onboarding.progressTrack
     }
 
     private var welcomeProgressActiveGradient: LinearGradient {
-        LinearGradient(
-            colors: colorScheme == .light
-                ? [Color(red: 0.37, green: 0.56, blue: 0.92), Color(red: 0.45, green: 0.34, blue: 0.90)]
-                : [Color(red: 0.16, green: 0.63, blue: 0.98), Color(red: 0.48, green: 0.30, blue: 0.96)],
-            startPoint: .leading,
-            endPoint: .trailing
-        )
+        NColors.Onboarding.progressGradient(for: colorScheme)
     }
 
     private var welcomeCardBodyTextColor: Color {
-        colorScheme == .light
-            ? Color(red: 0.40, green: 0.44, blue: 0.53)
-            : Color(red: 0.38, green: 0.43, blue: 0.54)
+        NColors.Onboarding.cardBodyText
     }
 
     private var dailyGoalInfoCardBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+        NColors.Onboarding.infoBackground
     }
 
     private var dailyGoalInfoCardBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color.white.opacity(0.08)
+        NColors.Onboarding.infoBorder
     }
 
     private var dailyGoalInfoIconBackground: Color {
-        colorScheme == .light ? Color(red: 0.80, green: 0.86, blue: 0.97) : Color(red: 0.11, green: 0.17, blue: 0.31)
+        NColors.Onboarding.infoIconBackground
     }
 
     private var dailyGoalInfoIconColor: Color {
-        colorScheme == .light ? Color(red: 0.36, green: 0.55, blue: 0.92) : Color(red: 0.31, green: 0.59, blue: 0.98)
+        NColors.Onboarding.infoIconColor
     }
 
     private var dailyGoalSecondaryText: Color {
-        colorScheme == .light ? Color(red: 0.39, green: 0.43, blue: 0.52) : Color(red: 0.36, green: 0.42, blue: 0.55)
+        NColors.Onboarding.infoSecondaryText
     }
 
     private var dailyGoalOptionBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+        NColors.Onboarding.optionBackground
     }
 
     private var dailyGoalOptionBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color(red: 0.16, green: 0.19, blue: 0.30)
+        NColors.Onboarding.optionBorder
     }
 
     private var dailyGoalOptionSelectedBackground: Color {
-        colorScheme == .light ? Color(red: 0.79, green: 0.82, blue: 0.89) : Color(red: 0.11, green: 0.16, blue: 0.28)
+        NColors.Onboarding.optionSelectedBackground
     }
 
     private var dailyGoalOptionSelectedBorder: Color {
-        colorScheme == .light ? Color(red: 0.26, green: 0.50, blue: 0.91) : Color(red: 0.25, green: 0.55, blue: 0.98)
+        NColors.Onboarding.optionSelectedBorder
     }
 
     private var dailyGoalIconBadgeBackground: Color {
-        colorScheme == .light ? Color(red: 0.84, green: 0.85, blue: 0.89) : Color(red: 0.12, green: 0.15, blue: 0.24)
+        NColors.Onboarding.iconBadgeBackground
     }
 
     private var dailyGoalIconColor: Color {
-        colorScheme == .light ? Color(red: 0.32, green: 0.36, blue: 0.45) : Color(red: 0.50, green: 0.55, blue: 0.66)
+        NColors.Onboarding.iconColor
     }
 
     private var dailyGoalSelectedLabelColor: Color {
-        colorScheme == .light ? Color(red: 0.28, green: 0.50, blue: 0.90) : Color(red: 0.30, green: 0.57, blue: 0.97)
+        NColors.Onboarding.selectedLabel
     }
 
     private var dailyGoalCheckBackground: Color {
-        colorScheme == .light ? Color(red: 0.34, green: 0.41, blue: 0.89) : Color(red: 0.35, green: 0.45, blue: 0.96)
+        NColors.Onboarding.checkBackground
     }
 
     private var dailyGoalHintBackground: Color {
-        colorScheme == .light ? Color(red: 0.84, green: 0.87, blue: 0.93) : Color(red: 0.07, green: 0.13, blue: 0.24)
+        NColors.Onboarding.hintBackground
     }
 
     private var dailyGoalHintBorder: Color {
-        colorScheme == .light ? Color(red: 0.75, green: 0.79, blue: 0.89) : Color(red: 0.16, green: 0.27, blue: 0.46)
+        NColors.Onboarding.hintBorder
     }
 
     private var dailyGoalHintText: Color {
-        colorScheme == .light ? Color(red: 0.33, green: 0.37, blue: 0.48) : Color(red: 0.53, green: 0.58, blue: 0.68)
+        NColors.Onboarding.hintText
     }
 
     private var subjectInfoCardBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+        NColors.Onboarding.infoBackground
     }
 
     private var subjectInfoCardBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color.white.opacity(0.08)
+        NColors.Onboarding.infoBorder
     }
 
     private var subjectInfoIconBackground: Color {
-        colorScheme == .light ? Color(red: 0.82, green: 0.86, blue: 0.96) : Color(red: 0.11, green: 0.17, blue: 0.31)
+        NColors.Onboarding.infoIconBackground
     }
 
     private var subjectInfoIconColor: Color {
-        colorScheme == .light ? Color(red: 0.41, green: 0.61, blue: 0.94) : Color(red: 0.37, green: 0.64, blue: 0.97)
+        NColors.Onboarding.cardIconColor
     }
 
     private var subjectSecondaryText: Color {
-        colorScheme == .light ? Color(red: 0.40, green: 0.44, blue: 0.53) : Color(red: 0.38, green: 0.43, blue: 0.54)
+        NColors.Onboarding.cardBodyText
     }
 
     private var subjectOptionBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+        NColors.Onboarding.optionBackground
     }
 
     private var subjectOptionBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color(red: 0.16, green: 0.19, blue: 0.30)
+        NColors.Onboarding.optionBorder
     }
 
     private var subjectOptionSelectedBackground: Color {
-        colorScheme == .light ? Color(red: 0.80, green: 0.83, blue: 0.90) : Color(red: 0.11, green: 0.16, blue: 0.28)
+        NColors.Onboarding.optionSelectedBackground
     }
 
     private var subjectOptionSelectedBorder: Color {
-        colorScheme == .light ? Color(red: 0.26, green: 0.50, blue: 0.91) : Color(red: 0.25, green: 0.55, blue: 0.98)
+        NColors.Onboarding.optionSelectedBorder
     }
 
     private var subjectIconBadgeBackground: Color {
-        colorScheme == .light ? Color(red: 0.84, green: 0.85, blue: 0.89) : Color(red: 0.12, green: 0.15, blue: 0.24)
+        NColors.Onboarding.iconBadgeBackground
     }
 
     private var subjectIconColor: Color {
-        colorScheme == .light ? Color(red: 0.42, green: 0.45, blue: 0.53) : Color(red: 0.50, green: 0.55, blue: 0.66)
+        NColors.Onboarding.iconColor
     }
 
     private var subjectOptionText: Color {
-        colorScheme == .light ? Color(red: 0.35, green: 0.37, blue: 0.44) : Color(red: 0.74, green: 0.77, blue: 0.84)
+        NColors.Onboarding.subjectOptionText
     }
 
     private var subjectSelectedText: Color {
-        colorScheme == .light ? Color(red: 0.19, green: 0.28, blue: 0.48) : Color(red: 0.88, green: 0.91, blue: 0.98)
+        NColors.Onboarding.subjectSelectedText
     }
 
     private var deckInfoCardBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+        NColors.Onboarding.infoBackground
     }
 
     private var deckInfoCardBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color.white.opacity(0.08)
+        NColors.Onboarding.infoBorder
     }
 
     private var deckInfoIconBackground: Color {
-        colorScheme == .light ? Color(red: 0.82, green: 0.86, blue: 0.96) : Color(red: 0.11, green: 0.17, blue: 0.31)
+        NColors.Onboarding.infoIconBackground
     }
 
     private var deckInfoIconColor: Color {
-        colorScheme == .light ? Color(red: 0.41, green: 0.61, blue: 0.94) : Color(red: 0.37, green: 0.64, blue: 0.97)
+        NColors.Onboarding.cardIconColor
     }
 
     private var deckSecondaryText: Color {
-        colorScheme == .light ? Color(red: 0.40, green: 0.44, blue: 0.53) : Color(red: 0.38, green: 0.43, blue: 0.54)
+        NColors.Onboarding.cardBodyText
     }
 
     private var deckInputBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+        NColors.Onboarding.deckInputBackground
     }
 
     private var deckInputBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color(red: 0.16, green: 0.19, blue: 0.30)
+        NColors.Onboarding.deckInputBorder
     }
 
     private var deckInputActiveBorder: Color {
-        colorScheme == .light ? Color(red: 0.30, green: 0.51, blue: 0.92) : Color(red: 0.25, green: 0.55, blue: 0.98)
+        NColors.Onboarding.deckInputActiveBorder
     }
 
     private var deckPreviewBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+        NColors.Onboarding.deckPreviewBackground
     }
 
     private var deckPreviewBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color.white.opacity(0.08)
+        NColors.Onboarding.deckPreviewBorder
     }
 
     private var deckPreviewIconBackground: Color {
-        colorScheme == .light ? Color(red: 0.33, green: 0.47, blue: 0.89) : Color(red: 0.35, green: 0.31, blue: 0.92)
+        NColors.Onboarding.deckPreviewIconBackground
     }
 
     private var deckPreviewIconColor: Color {
-        Color(red: 0.84, green: 0.91, blue: 1.0)
+        NColors.Onboarding.deckPreviewIconColor
     }
 
     private var deckPreviewSkeleton: Color {
-        colorScheme == .light ? Color(red: 0.80, green: 0.82, blue: 0.87) : Color(red: 0.20, green: 0.23, blue: 0.32)
+        NColors.Onboarding.deckPreviewSkeleton
     }
 
     private var deckSuggestionBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+        NColors.Onboarding.deckSuggestionBackground
     }
 
     private var deckSuggestionBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color(red: 0.16, green: 0.19, blue: 0.30)
+        NColors.Onboarding.deckSuggestionBorder
     }
 
     private var deckSuggestionSelectedBorder: Color {
-        colorScheme == .light ? Color(red: 0.30, green: 0.51, blue: 0.92) : Color(red: 0.25, green: 0.55, blue: 0.98)
+        NColors.Onboarding.deckSuggestionSelectedBorder
     }
 
     private var deckSuggestionText: Color {
-        colorScheme == .light ? Color(red: 0.40, green: 0.43, blue: 0.51) : Color(red: 0.58, green: 0.62, blue: 0.72)
+        NColors.Onboarding.deckSuggestionText
     }
 
     private var deckSuggestionSelectedText: Color {
-        colorScheme == .light ? Color(red: 0.20, green: 0.28, blue: 0.48) : Color(red: 0.86, green: 0.90, blue: 0.98)
+        NColors.Onboarding.deckSuggestionSelectedText
     }
 
     private var firstCardInfoBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+        NColors.Onboarding.infoBackground
     }
 
     private var firstCardInfoBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color.white.opacity(0.08)
+        NColors.Onboarding.infoBorder
     }
 
     private var firstCardInfoIconBackground: Color {
-        colorScheme == .light ? Color(red: 0.82, green: 0.86, blue: 0.96) : Color(red: 0.11, green: 0.17, blue: 0.31)
+        NColors.Onboarding.infoIconBackground
     }
 
     private var firstCardInfoIconColor: Color {
-        colorScheme == .light ? Color(red: 0.39, green: 0.60, blue: 0.95) : Color(red: 0.33, green: 0.62, blue: 0.98)
+        NColors.Onboarding.cardIconColor
     }
 
     private var firstCardSecondaryText: Color {
-        colorScheme == .light ? Color(red: 0.40, green: 0.44, blue: 0.53) : Color(red: 0.36, green: 0.42, blue: 0.55)
+        NColors.Onboarding.infoSecondaryText
     }
 
     private var firstCardFrontLabel: Color {
-        colorScheme == .light ? Color(red: 0.20, green: 0.46, blue: 0.94) : Color(red: 0.27, green: 0.57, blue: 0.98)
+        NColors.Onboarding.firstCardFrontLabel
     }
 
     private var firstCardBackLabel: Color {
-        colorScheme == .light ? Color(red: 0.47, green: 0.30, blue: 0.92) : Color(red: 0.56, green: 0.42, blue: 0.96)
+        NColors.Onboarding.firstCardBackLabel
     }
 
     private var firstCardInputBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+        NColors.Onboarding.firstCardInputBackground
     }
 
     private var firstCardInputBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color(red: 0.16, green: 0.19, blue: 0.30)
+        NColors.Onboarding.firstCardInputBorder
     }
 
     private var firstCardInputActiveBorder: Color {
-        colorScheme == .light ? Color(red: 0.30, green: 0.51, blue: 0.92) : Color(red: 0.25, green: 0.55, blue: 0.98)
+        NColors.Onboarding.firstCardInputActiveBorder
     }
 
     private var firstCardTipBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.11, blue: 0.19)
+        NColors.Onboarding.firstCardTipBackground
     }
 
     private var firstCardTipBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color(red: 0.14, green: 0.18, blue: 0.30)
+        NColors.Onboarding.firstCardTipBorder
     }
 
     private var firstCardTipIcon: Color {
-        colorScheme == .light ? Color(red: 0.43, green: 0.62, blue: 0.95) : Color(red: 0.34, green: 0.60, blue: 0.97)
+        NColors.Onboarding.firstCardTipIcon
     }
 
     private var firstCardTipText: Color {
-        colorScheme == .light ? Color(red: 0.42, green: 0.46, blue: 0.54) : Color(red: 0.42, green: 0.47, blue: 0.58)
+        NColors.Onboarding.firstCardTipText
     }
 
     private var accountInfoBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+        NColors.Onboarding.infoBackground
     }
 
     private var accountInfoBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color.white.opacity(0.08)
+        NColors.Onboarding.infoBorder
     }
 
     private var accountInfoIconBackground: Color {
-        colorScheme == .light ? Color(red: 0.82, green: 0.86, blue: 0.96) : Color(red: 0.11, green: 0.17, blue: 0.31)
+        NColors.Onboarding.infoIconBackground
     }
 
     private var accountInfoIconColor: Color {
-        colorScheme == .light ? Color(red: 0.39, green: 0.60, blue: 0.95) : Color(red: 0.33, green: 0.62, blue: 0.98)
+        NColors.Onboarding.cardIconColor
     }
 
     private var accountSecondaryText: Color {
-        colorScheme == .light ? Color(red: 0.40, green: 0.44, blue: 0.53) : Color(red: 0.42, green: 0.47, blue: 0.58)
+        NColors.Onboarding.infoSecondaryText
     }
 
     private var accountFeatureBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+        NColors.Onboarding.accountFeatureBackground
     }
 
     private var accountFeatureBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color(red: 0.16, green: 0.19, blue: 0.30)
+        NColors.Onboarding.accountFeatureBorder
     }
 
     private var accountFeatureIconBackground: Color {
-        colorScheme == .light ? Color(red: 0.84, green: 0.85, blue: 0.89) : Color(red: 0.12, green: 0.15, blue: 0.24)
+        NColors.Onboarding.accountFeatureIconBackground
     }
 
     private var accountFeatureIconColor: Color {
-        colorScheme == .light ? Color(red: 0.36, green: 0.55, blue: 0.92) : Color(red: 0.31, green: 0.59, blue: 0.98)
+        NColors.Onboarding.accountFeatureIconColor
     }
 
     private var doneInfoBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.08, green: 0.10, blue: 0.18)
+        NColors.Onboarding.infoBackground
     }
 
     private var doneInfoBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color.white.opacity(0.08)
+        NColors.Onboarding.infoBorder
     }
 
     private var doneInfoIconBackground: Color {
-        colorScheme == .light ? Color(red: 0.82, green: 0.86, blue: 0.96) : Color(red: 0.11, green: 0.17, blue: 0.31)
+        NColors.Onboarding.infoIconBackground
     }
 
     private var doneInfoIconColor: Color {
-        colorScheme == .light ? Color(red: 0.39, green: 0.60, blue: 0.95) : Color(red: 0.33, green: 0.62, blue: 0.98)
+        NColors.Onboarding.cardIconColor
     }
 
     private var doneStatBackground: Color {
-        colorScheme == .light ? Color(red: 0.88, green: 0.89, blue: 0.92) : Color(red: 0.09, green: 0.11, blue: 0.19)
+        NColors.Onboarding.doneStatBackground
     }
 
     private var doneStatBorder: Color {
-        colorScheme == .light
-            ? Color(red: 0.79, green: 0.80, blue: 0.85).opacity(0.9)
-            : Color(red: 0.16, green: 0.19, blue: 0.30)
+        NColors.Onboarding.doneStatBorder
     }
 }
 
@@ -1884,7 +1820,7 @@ private struct OnboardingDeckTextField: UIViewRepresentable {
         textField.text = text
         textField.placeholder = placeholder
         textField.textColor = uiTextColor
-        textField.tintColor = UIColor(red: 0.30, green: 0.51, blue: 0.92, alpha: 1.0)
+        textField.tintColor = NColors.Onboarding.textFieldTint
         textField.addTarget(context.coordinator, action: #selector(Coordinator.textDidChange(_:)), for: .editingChanged)
         return textField
     }
@@ -1906,9 +1842,7 @@ private struct OnboardingDeckTextField: UIViewRepresentable {
     }
 
     private var uiTextColor: UIColor {
-        isDark
-            ? UIColor(red: 0.93, green: 0.95, blue: 0.99, alpha: 1.0)
-            : UIColor(red: 0.06, green: 0.08, blue: 0.15, alpha: 1.0)
+        NColors.Onboarding.uiTextColor
     }
 
     final class Coordinator: NSObject, UITextFieldDelegate {

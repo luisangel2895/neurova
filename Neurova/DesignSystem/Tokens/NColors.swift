@@ -362,6 +362,165 @@ enum NColors {
         }
     }
 
+    enum Onboarding {
+        static let backgroundTop = App.backgroundTop
+        static let backgroundBottom = App.backgroundBottom
+        static let secondaryText = Text.textSecondary
+        static let headerSubtitle = Text.textTertiary
+        static let title = Text.textPrimary
+
+        static let cardBackground = Surface.base
+        static let cardBorder = Stroke.standard
+        static let cardIconBackground = Surface.accentBadge
+        static let cardIconColor = Brand.accentBlueStrong
+        static let cardBodyText = dynamicColor(
+            light: RGBA(0.40, 0.44, 0.53),
+            dark: RGBA(0.38, 0.43, 0.54)
+        )
+
+        static let chipBackground = Surface.subdued
+        static let chipBorder = Stroke.subtle
+        static let chipText = dynamicColor(
+            light: RGBA(0.39, 0.43, 0.52),
+            dark: RGBA(0.38, 0.43, 0.56)
+        )
+        static let chipIcon = dynamicColor(
+            light: RGBA(0.48, 0.63, 0.94),
+            dark: RGBA(0.42, 0.62, 0.96)
+        )
+
+        static let progressTrack = dynamicColor(
+            light: RGBA(0.81, 0.82, 0.85),
+            dark: RGBA(0.13, 0.15, 0.23)
+        )
+        static let progressGradientLight = [Color(red: 0.37, green: 0.56, blue: 0.92), Color(red: 0.45, green: 0.34, blue: 0.90)]
+        static let progressGradientDark = [Color(red: 0.16, green: 0.63, blue: 0.98), Color(red: 0.48, green: 0.30, blue: 0.96)]
+
+        static let infoBackground = Surface.base
+        static let infoBorder = Stroke.standard
+        static let infoIconBackground = Surface.accentBadge
+        static let infoIconColor = Brand.accentBlue
+        static let infoSecondaryText = dynamicColor(
+            light: RGBA(0.39, 0.43, 0.52),
+            dark: RGBA(0.36, 0.42, 0.55)
+        )
+
+        static let optionBackground = dynamicColor(
+            light: RGBA(0.88, 0.89, 0.92),
+            dark: RGBA(0.09, 0.11, 0.19)
+        )
+        static let optionBorder = dynamicColor(
+            light: RGBA(0.79, 0.80, 0.85, 0.90),
+            dark: RGBA(0.16, 0.19, 0.30)
+        )
+        static let optionSelectedBackground = Surface.emphasized
+        static let optionSelectedBorder = Stroke.selection
+        static let iconBadgeBackground = dynamicColor(
+            light: RGBA(0.84, 0.85, 0.89),
+            dark: RGBA(0.12, 0.15, 0.24)
+        )
+        static let iconColor = dynamicColor(
+            light: RGBA(0.32, 0.36, 0.45),
+            dark: RGBA(0.50, 0.55, 0.66)
+        )
+        static let selectedLabel = dynamicColor(
+            light: RGBA(0.28, 0.50, 0.90),
+            dark: RGBA(0.30, 0.57, 0.97)
+        )
+        static let checkBackground = dynamicColor(
+            light: RGBA(0.34, 0.41, 0.89),
+            dark: RGBA(0.35, 0.45, 0.96)
+        )
+        static let hintBackground = Surface.accentSoft
+        static let hintBorder = Stroke.strong
+        static let hintText = dynamicColor(
+            light: RGBA(0.33, 0.37, 0.48),
+            dark: RGBA(0.53, 0.58, 0.68)
+        )
+
+        static let subjectOptionText = dynamicColor(
+            light: RGBA(0.35, 0.37, 0.44),
+            dark: RGBA(0.74, 0.77, 0.84)
+        )
+        static let subjectSelectedText = dynamicColor(
+            light: RGBA(0.19, 0.28, 0.48),
+            dark: RGBA(0.88, 0.91, 0.98)
+        )
+
+        static let deckInputBackground = optionBackground
+        static let deckInputBorder = optionBorder
+        static let deckInputActiveBorder = Stroke.inputActive
+        static let deckPreviewBackground = Surface.base
+        static let deckPreviewBorder = Stroke.standard
+        static let deckPreviewIconBackground = dynamicColor(
+            light: RGBA(0.33, 0.47, 0.89),
+            dark: RGBA(0.35, 0.31, 0.92)
+        )
+        static let deckPreviewIconColor = Color(red: 0.84, green: 0.91, blue: 1.0)
+        static let deckPreviewSkeleton = dynamicColor(
+            light: RGBA(0.80, 0.82, 0.87),
+            dark: RGBA(0.20, 0.23, 0.32)
+        )
+        static let deckSuggestionBackground = optionBackground
+        static let deckSuggestionBorder = optionBorder
+        static let deckSuggestionSelectedBorder = Stroke.inputActive
+        static let deckSuggestionText = dynamicColor(
+            light: RGBA(0.40, 0.43, 0.51),
+            dark: RGBA(0.58, 0.62, 0.72)
+        )
+        static let deckSuggestionSelectedText = dynamicColor(
+            light: RGBA(0.20, 0.28, 0.48),
+            dark: RGBA(0.86, 0.90, 0.98)
+        )
+
+        static let firstCardFrontLabel = dynamicColor(
+            light: RGBA(0.20, 0.46, 0.94),
+            dark: RGBA(0.27, 0.57, 0.98)
+        )
+        static let firstCardBackLabel = dynamicColor(
+            light: RGBA(0.47, 0.30, 0.92),
+            dark: RGBA(0.56, 0.42, 0.96)
+        )
+        static let firstCardInputBackground = optionBackground
+        static let firstCardInputBorder = optionBorder
+        static let firstCardInputActiveBorder = Stroke.inputActive
+        static let firstCardTipBackground = dynamicColor(
+            light: RGBA(0.88, 0.89, 0.92),
+            dark: RGBA(0.08, 0.11, 0.19)
+        )
+        static let firstCardTipBorder = dynamicColor(
+            light: RGBA(0.79, 0.80, 0.85, 0.90),
+            dark: RGBA(0.14, 0.18, 0.30)
+        )
+        static let firstCardTipIcon = dynamicColor(
+            light: RGBA(0.43, 0.62, 0.95),
+            dark: RGBA(0.34, 0.60, 0.97)
+        )
+        static let firstCardTipText = dynamicColor(
+            light: RGBA(0.42, 0.46, 0.54),
+            dark: RGBA(0.42, 0.47, 0.58)
+        )
+
+        static let accountFeatureBackground = optionBackground
+        static let accountFeatureBorder = optionBorder
+        static let accountFeatureIconBackground = iconBadgeBackground
+        static let accountFeatureIconColor = Brand.accentBlue
+
+        static let doneStatBackground = optionBackground
+        static let doneStatBorder = optionBorder
+
+        static let textFieldTint = UIColor(Stroke.inputActive)
+        static let uiTextColor = UIColor(Text.textPrimary)
+
+        static func progressGradient(for colorScheme: ColorScheme) -> LinearGradient {
+            LinearGradient(
+                colors: colorScheme == .dark ? progressGradientDark : progressGradientLight,
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        }
+    }
+
     enum Home {
         static let backgroundLightTop = App.backgroundTop
         static let backgroundLightBottom = App.backgroundBottom
