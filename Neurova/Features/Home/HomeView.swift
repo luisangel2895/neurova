@@ -1010,15 +1010,10 @@ private struct HomeTipCard: View {
             .frame(minHeight: 136)
             .overlay(alignment: .leading) {
                 HStack(alignment: .center, spacing: 14) {
-                    RoundedRectangle(cornerRadius: 13, style: .continuous)
-                        .fill(iconBackground)
-                        .frame(width: 40, height: 40)
-                        .overlay(
-                            NImages.Mascot.neruHappy
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 24, height: 24)
-                        )
+                    NImages.Mascot.neruHappy
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 70)
 
                     VStack(alignment: .leading, spacing: 10) {
                         Text(title)
@@ -1062,10 +1057,6 @@ private struct HomeTipCard: View {
         )
     }
 
-    private var iconBackground: Color {
-        colorScheme == .dark ? NColors.Surface.accentSoft.opacity(0.34) : NColors.Surface.accentSoft.opacity(0.78)
-    }
-
     private func tipChip(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 9, weight: .bold, design: .rounded))
@@ -1075,7 +1066,7 @@ private struct HomeTipCard: View {
             .frame(height: 20)
             .background(
                 Capsule(style: .continuous)
-                    .fill(iconBackground)
+                    .fill(colorScheme == .dark ? NColors.Surface.accentSoft.opacity(0.34) : NColors.Surface.accentSoft.opacity(0.78))
             )
     }
 }
