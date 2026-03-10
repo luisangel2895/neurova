@@ -94,7 +94,7 @@ struct StudyView: View {
             HStack(spacing: 10) {
                 HStack(spacing: 10) {
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
-                        .fill(colorScheme == .light ? Color(red: 0.89, green: 0.91, blue: 0.97) : Color(red: 0.10, green: 0.16, blue: 0.28))
+                        .fill(NColors.Study.headerIconBackground)
                         .frame(width: 30, height: 30)
                         .overlay(
                             Image(systemName: "book")
@@ -127,7 +127,7 @@ struct StudyView: View {
                     .frame(height: 30)
                     .background(
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(colorScheme == .light ? Color(red: 0.94, green: 0.94, blue: 0.96) : Color(red: 0.12, green: 0.14, blue: 0.22))
+                            .fill(NColors.Study.counterBackground)
                     )
 
                     Button {
@@ -136,11 +136,11 @@ struct StudyView: View {
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(Color(red: 0.45, green: 0.49, blue: 0.57))
+                            .foregroundStyle(NColors.Study.closeButtonForeground)
                             .frame(width: 30, height: 30)
                             .background(
                                 Circle()
-                                    .fill(colorScheme == .light ? Color(red: 0.92, green: 0.92, blue: 0.95) : Color(red: 0.12, green: 0.14, blue: 0.22))
+                                    .fill(NColors.Study.closeButtonBackground)
                             )
                     }
                     .buttonStyle(.plain)
@@ -162,17 +162,11 @@ struct StudyView: View {
 
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(colorScheme == .light ? Color(red: 0.82, green: 0.83, blue: 0.86) : Color(red: 0.17, green: 0.19, blue: 0.28))
+                        .fill(NColors.Study.progressTrack)
                         .frame(height: 4)
 
                     Capsule()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(red: 0.31, green: 0.53, blue: 0.94), Color(red: 0.45, green: 0.34, blue: 0.90)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
+                        .fill(NColors.Study.progressFill)
                         .frame(width: activeWidth, height: 4)
                         .overlay {
                             Capsule()
@@ -288,12 +282,12 @@ struct StudyView: View {
 
                 Text(cardSideLabel(for: showsBack))
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color(red: 0.30, green: 0.54, blue: 0.94))
+                    .foregroundStyle(NColors.Study.cardSideText)
                     .padding(.horizontal, 11)
                     .padding(.vertical, 5)
                     .background(
                         Capsule(style: .continuous)
-                            .fill(colorScheme == .light ? Color(red: 0.90, green: 0.93, blue: 0.98) : Color(red: 0.16, green: 0.18, blue: 0.27))
+                            .fill(NColors.Study.cardSideBackground)
                     )
             }
 
@@ -371,19 +365,19 @@ struct StudyView: View {
                         title: AppCopy.text(locale, en: "Hard", es: "Difícil"),
                         subtitle: AppCopy.text(locale, en: "<1 min", es: "<1 min"),
                         quality: .hard,
-                        titleColor: Color(red: 0.86, green: 0.35, blue: 0.35)
+                        titleColor: NColors.Study.reviewHard
                     )
                     reviewButton(
                         title: AppCopy.text(locale, en: "Good", es: "Bien"),
                         subtitle: AppCopy.text(locale, en: "~10 min", es: "~10 min"),
                         quality: .good,
-                        titleColor: Color(red: 0.26, green: 0.49, blue: 0.89)
+                        titleColor: NColors.Study.reviewGood
                     )
                     reviewButton(
                         title: AppCopy.text(locale, en: "Easy", es: "Fácil"),
                         subtitle: AppCopy.text(locale, en: "~4 days", es: "~4 días"),
                         quality: .easy,
-                        titleColor: Color(red: 0.30, green: 0.69, blue: 0.37)
+                        titleColor: NColors.Study.reviewEasy
                     )
                 }
             } else {
@@ -440,7 +434,7 @@ struct StudyView: View {
         .scaleEffect(buttonScale(for: quality))
         .opacity(buttonOpacity(for: quality))
         .shadow(
-            color: isSelected ? NColors.Brand.neuroBlue.opacity(colorScheme == .light ? 0.12 : 0.18) : .clear,
+            color: isSelected ? NColors.Study.selectedShadow : .clear,
             radius: isSelected ? NSpacing.xs : 0,
             x: 0,
             y: isSelected ? 1 : 0
@@ -466,13 +460,11 @@ struct StudyView: View {
     }
 
     private var secondaryTextColor: Color {
-        colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark
+        NColors.Text.textSecondary
     }
 
     private var studyCardShadowColor: Color {
-        colorScheme == .light
-            ? NColors.Home.cardShadowLight
-            : NColors.Home.cardInnerBorder
+        colorScheme == .light ? NColors.Home.cardShadowLight : NColors.Study.cardShadowDark
     }
 
     private var studyCardShadowRadius: CGFloat {

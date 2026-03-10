@@ -151,7 +151,6 @@ enum NColors {
         static let primaryText = Text.onAccent
         static let secondaryText = Brand.neuroBlue
         static let secondaryBackground = Surface.base
-        static let secondaryBackgroundPressed = Surface.raised
         static let secondaryBorder = Stroke.subtle
         static let chipBackground = Surface.subdued
         static let chipSelectedBackground = Surface.emphasized
@@ -162,6 +161,205 @@ enum NColors {
         static let background = Surface.base
         static let border = Stroke.subtle
         static let activeBorder = Stroke.inputActive
+    }
+
+    enum Study {
+        static let headerIconBackground = dynamicColor(
+            light: RGBA(0.89, 0.91, 0.97),
+            dark: RGBA(0.10, 0.16, 0.28)
+        )
+        static let counterBackground = dynamicColor(
+            light: RGBA(0.94, 0.94, 0.96),
+            dark: RGBA(0.12, 0.14, 0.22)
+        )
+        static let closeButtonBackground = dynamicColor(
+            light: RGBA(0.92, 0.92, 0.95),
+            dark: RGBA(0.12, 0.14, 0.22)
+        )
+        static let closeButtonForeground = dynamicColor(
+            light: RGBA(0.45, 0.49, 0.57),
+            dark: RGBA(0.58, 0.62, 0.72)
+        )
+        static let progressTrack = dynamicColor(
+            light: RGBA(0.82, 0.83, 0.86),
+            dark: RGBA(0.17, 0.19, 0.28)
+        )
+        static let progressFill = LinearGradient(
+            colors: [Brand.neuroBlue, Brand.neuroBlueDeep],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+        static let cardSideText = dynamicColor(
+            light: RGBA(0.30, 0.54, 0.94),
+            dark: RGBA(0.33, 0.62, 0.98)
+        )
+        static let cardSideBackground = dynamicColor(
+            light: RGBA(0.90, 0.93, 0.98),
+            dark: RGBA(0.16, 0.18, 0.27)
+        )
+        static let reviewHard = Color(red: 0.86, green: 0.35, blue: 0.35)
+        static let reviewGood = Color(red: 0.26, green: 0.49, blue: 0.89)
+        static let reviewEasy = Color(red: 0.30, green: 0.69, blue: 0.37)
+        static let selectedShadow = dynamicColor(
+            light: RGBA(0.30, 0.53, 0.94, 0.12),
+            dark: RGBA(0.30, 0.53, 0.94, 0.18)
+        )
+        static let cardShadowDark = Color.white.opacity(0.04)
+    }
+
+    enum Summary {
+        static let highlightedBackground = dynamicColor(
+            light: RGBA(0.87, 0.90, 0.97),
+            dark: RGBA(0.11, 0.14, 0.24)
+        )
+        static let defaultBackground = dynamicColor(
+            light: RGBA(0.89, 0.90, 0.93),
+            dark: RGBA(0.10, 0.12, 0.19)
+        )
+        static let highlightedBorder = dynamicColor(
+            light: RGBA(0.67, 0.76, 0.95),
+            dark: RGBA(0.18, 0.35, 0.70)
+        )
+        static let defaultBorder = dynamicColor(
+            light: RGBA(0.80, 0.84, 0.93),
+            dark: RGBA(1.00, 1.00, 1.00, 0.10)
+        )
+    }
+
+    enum Splash {
+        static let lightBackground = [
+            Color(red: 0.97, green: 0.98, blue: 1.00),
+            Color(red: 0.95, green: 0.96, blue: 0.99),
+            Color(red: 0.97, green: 0.98, blue: 1.00)
+        ]
+        static let lightGlow = [
+            Color.white.opacity(0.88),
+            Color(red: 0.90, green: 0.94, blue: 1.0).opacity(0.36),
+            Color.clear
+        ]
+        static let lightParticleGradient = [
+            Color(red: 0.29, green: 0.86, blue: 0.75),
+            Color(red: 0.22, green: 0.50, blue: 0.92)
+        ]
+        static let lightTrack = Color(red: 0.85, green: 0.87, blue: 0.91).opacity(0.78)
+        static let lightLabel = Color(red: 0.35, green: 0.39, blue: 0.48).opacity(0.88)
+        static let lightLogoShadow = Color(red: 0.17, green: 0.33, blue: 0.72).opacity(0.22)
+        static let lightProgressShadow = Color(red: 0.22, green: 0.50, blue: 0.92).opacity(0.24)
+
+        static let darkBase = Color(red: 0.02, green: 0.03, blue: 0.09)
+        static let darkOverlay = [
+            Color(red: 0.07, green: 0.10, blue: 0.22).opacity(0.26),
+            Color(red: 0.03, green: 0.04, blue: 0.10).opacity(0.0)
+        ]
+        static let darkPrimaryGlow = [
+            Color(red: 0.20, green: 0.39, blue: 0.96).opacity(0.17),
+            Color(red: 0.15, green: 0.30, blue: 0.74).opacity(0.09),
+            Color(red: 0.09, green: 0.18, blue: 0.44).opacity(0.03),
+            Color.clear
+        ]
+        static let darkSecondaryGlow = [
+            Color(red: 0.28, green: 0.44, blue: 0.98).opacity(0.07),
+            Color.clear
+        ]
+        static let darkParticleGradient = [
+            Color(red: 0.19, green: 0.86, blue: 0.96),
+            Color(red: 0.45, green: 0.30, blue: 0.95)
+        ]
+        static let darkTrack = Color.white.opacity(0.12)
+        static let darkLabel = Color.white.opacity(0.62)
+        static let darkLogoShadow = Color(red: 0.22, green: 0.40, blue: 0.95).opacity(0.20)
+        static let darkProgressShadow = Color(red: 0.29, green: 0.53, blue: 0.98).opacity(0.34)
+    }
+
+    enum Recovery {
+        static let backgroundLight = [
+            Color(red: 0.96, green: 0.96, blue: 0.98),
+            Color(red: 0.94, green: 0.95, blue: 0.98),
+            Color(red: 0.93, green: 0.94, blue: 0.97)
+        ]
+        static let backgroundDark = [
+            Color(red: 0.04, green: 0.07, blue: 0.15),
+            Color(red: 0.05, green: 0.08, blue: 0.18),
+            Color(red: 0.03, green: 0.05, blue: 0.12)
+        ]
+        static let iconTint = dynamicColor(
+            light: RGBA(0.38, 0.58, 0.96),
+            dark: RGBA(0.47, 0.70, 1.0)
+        )
+        static let iconBackground = dynamicColor(
+            light: RGBA(0.85, 0.90, 0.99),
+            dark: RGBA(1.00, 1.00, 1.00, 0.07)
+        )
+        static let title = dynamicColor(
+            light: RGBA(0.08, 0.10, 0.16),
+            dark: RGBA(1.00, 1.00, 1.00, 0.98)
+        )
+        static let body = dynamicColor(
+            light: RGBA(0.36, 0.40, 0.49),
+            dark: RGBA(0.66, 0.72, 0.84)
+        )
+        static let eyebrow = dynamicColor(
+            light: RGBA(0.41, 0.45, 0.54),
+            dark: RGBA(1.00, 1.00, 1.00, 0.56)
+        )
+        static let cardBackgroundTop = dynamicColor(
+            light: RGBA(0.90, 0.91, 0.95),
+            dark: RGBA(1.00, 1.00, 1.00, 0.08)
+        )
+        static let cardBackgroundBottom = dynamicColor(
+            light: RGBA(0.84, 0.86, 0.92),
+            dark: RGBA(0.15, 0.24, 0.43, 0.28)
+        )
+        static let cardBorder = dynamicColor(
+            light: RGBA(1.00, 1.00, 1.00, 0.42),
+            dark: RGBA(1.00, 1.00, 1.00, 0.07)
+        )
+        static let pillBackground = dynamicColor(
+            light: RGBA(1.00, 1.00, 1.00, 0.50),
+            dark: RGBA(0.00, 0.00, 0.00, 0.28)
+        )
+        static let pillBorder = dynamicColor(
+            light: RGBA(1.00, 1.00, 1.00, 0.56),
+            dark: RGBA(1.00, 1.00, 1.00, 0.06)
+        )
+        static let name = dynamicColor(
+            light: RGBA(0.12, 0.14, 0.20),
+            dark: RGBA(1.00, 1.00, 1.00, 0.96)
+        )
+        static let email = dynamicColor(
+            light: RGBA(0.46, 0.49, 0.58),
+            dark: RGBA(1.00, 1.00, 1.00, 0.52)
+        )
+        static let footnote = dynamicColor(
+            light: RGBA(0.56, 0.59, 0.67),
+            dark: RGBA(1.00, 1.00, 1.00, 0.28)
+        )
+        static let lightButton = [
+            Color(red: 0.17, green: 0.52, blue: 0.90),
+            Color(red: 0.43, green: 0.24, blue: 0.86)
+        ]
+        static let darkButton = [
+            Color(red: 0.19, green: 0.72, blue: 0.97),
+            Color(red: 0.50, green: 0.27, blue: 0.95)
+        ]
+        static let buttonText = dynamicColor(
+            light: RGBA(1.00, 1.00, 1.00),
+            dark: RGBA(0.08, 0.12, 0.22)
+        )
+        static let logoShadow = dynamicColor(
+            light: RGBA(0.36, 0.47, 0.76, 0.22),
+            dark: RGBA(0.22, 0.52, 0.96, 0.34)
+        )
+        static let avatarGradient = [
+            Color(red: 0.29, green: 0.57, blue: 0.97),
+            Color(red: 0.43, green: 0.33, blue: 0.95)
+        ]
+        static let avatarText = Color(red: 0.90, green: 0.93, blue: 1.0)
+        static let buttonShadow = Color(red: 0.31, green: 0.43, blue: 0.96).opacity(0.30)
+
+        static func buttonGradient(for colorScheme: ColorScheme) -> [Color] {
+            colorScheme == .dark ? darkButton : lightButton
+        }
     }
 
     enum Home {

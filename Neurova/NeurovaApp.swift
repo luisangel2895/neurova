@@ -454,11 +454,7 @@ private struct LightSplashView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [
-                    Color(red: 0.97, green: 0.98, blue: 1.00),
-                    Color(red: 0.95, green: 0.96, blue: 0.99),
-                    Color(red: 0.97, green: 0.98, blue: 1.00)
-                ],
+                colors: NColors.Splash.lightBackground,
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -466,11 +462,7 @@ private struct LightSplashView: View {
             Circle()
                 .fill(
                     RadialGradient(
-                        colors: [
-                            Color.white.opacity(0.88),
-                            Color(red: 0.90, green: 0.94, blue: 1.0).opacity(0.36),
-                            .clear
-                        ],
+                        colors: NColors.Splash.lightGlow,
                         center: .center,
                         startRadius: 20,
                         endRadius: 230
@@ -494,7 +486,7 @@ private struct LightSplashView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 124)
-                        .shadow(color: Color(red: 0.17, green: 0.33, blue: 0.72).opacity(0.22), radius: 16, x: 0, y: 8)
+                        .shadow(color: NColors.Splash.lightLogoShadow, radius: 16, x: 0, y: 8)
                         .scaleEffect(logoVisible ? (pulsing ? 1.045 : 1.0) : 0.82)
                         .opacity(logoVisible ? (exiting ? 0.0 : 1.0) : 0.0)
                 }
@@ -502,25 +494,25 @@ private struct LightSplashView: View {
                 VStack(spacing: 10) {
                     ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(Color(red: 0.85, green: 0.87, blue: 0.91).opacity(0.78))
+                            .fill(NColors.Splash.lightTrack)
                             .frame(width: barWidth, height: 4)
 
                         Capsule()
                             .fill(
                                 LinearGradient(
-                                    colors: [Color(red: 0.29, green: 0.86, blue: 0.75), Color(red: 0.22, green: 0.50, blue: 0.92)],
+                                    colors: NColors.Splash.lightParticleGradient,
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
                             )
                             .frame(width: max(8, barWidth * progress), height: 4)
-                            .shadow(color: Color(red: 0.22, green: 0.50, blue: 0.92).opacity(0.24), radius: 5, x: 0, y: 2)
+                            .shadow(color: NColors.Splash.lightProgressShadow, radius: 5, x: 0, y: 2)
                     }
 
                     Text("LOADING")
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .tracking(4.8)
-                        .foregroundStyle(Color(red: 0.35, green: 0.39, blue: 0.48).opacity(0.88))
+                        .foregroundStyle(NColors.Splash.lightLabel)
                 }
                 .offset(y: loadingVisible ? 0 : 16)
                 .opacity(loadingVisible ? (exiting ? 0.0 : 1.0) : 0.0)
@@ -552,7 +544,7 @@ private struct LightSplashParticle: View {
         Circle()
             .fill(
                 LinearGradient(
-                    colors: [Color(red: 0.29, green: 0.86, blue: 0.75), Color(red: 0.22, green: 0.50, blue: 0.92)],
+                    colors: NColors.Splash.lightParticleGradient,
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -597,13 +589,10 @@ private struct DarkSplashView: View {
 
     var body: some View {
         ZStack {
-            Color(red: 0.02, green: 0.03, blue: 0.09)
+            NColors.Splash.darkBase
 
             LinearGradient(
-                colors: [
-                    Color(red: 0.07, green: 0.10, blue: 0.22).opacity(0.26),
-                    Color(red: 0.03, green: 0.04, blue: 0.10).opacity(0.0)
-                ],
+                colors: NColors.Splash.darkOverlay,
                 startPoint: .top,
                 endPoint: .bottom
             )
@@ -611,12 +600,7 @@ private struct DarkSplashView: View {
             Ellipse()
                 .fill(
                     RadialGradient(
-                        colors: [
-                            Color(red: 0.20, green: 0.39, blue: 0.96).opacity(0.17),
-                            Color(red: 0.15, green: 0.30, blue: 0.74).opacity(0.09),
-                            Color(red: 0.09, green: 0.18, blue: 0.44).opacity(0.03),
-                            .clear
-                        ],
+                        colors: NColors.Splash.darkPrimaryGlow,
                         center: .center,
                         startRadius: 0,
                         endRadius: 250
@@ -629,10 +613,7 @@ private struct DarkSplashView: View {
             Ellipse()
                 .fill(
                     RadialGradient(
-                        colors: [
-                            Color(red: 0.28, green: 0.44, blue: 0.98).opacity(0.07),
-                            .clear
-                        ],
+                        colors: NColors.Splash.darkSecondaryGlow,
                         center: .center,
                         startRadius: 0,
                         endRadius: 210
@@ -658,7 +639,7 @@ private struct DarkSplashView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 124)
-                        .shadow(color: Color(red: 0.22, green: 0.40, blue: 0.95).opacity(0.20), radius: 12, x: 0, y: 6)
+                        .shadow(color: NColors.Splash.darkLogoShadow, radius: 12, x: 0, y: 6)
                         .scaleEffect(logoVisible ? (pulsing ? 1.045 : 1.0) : 0.82)
                         .opacity(logoVisible ? (exiting ? 0.0 : 1.0) : 0.0)
                 }
@@ -666,25 +647,25 @@ private struct DarkSplashView: View {
                 VStack(spacing: 10) {
                     ZStack(alignment: .leading) {
                         Capsule()
-                            .fill(Color.white.opacity(0.12))
+                            .fill(NColors.Splash.darkTrack)
                             .frame(width: barWidth, height: 4)
 
                         Capsule()
                             .fill(
                                 LinearGradient(
-                                    colors: [Color(red: 0.19, green: 0.86, blue: 0.96), Color(red: 0.45, green: 0.30, blue: 0.95)],
+                                    colors: NColors.Splash.darkParticleGradient,
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
                             )
                             .frame(width: max(8, barWidth * progress), height: 4)
-                            .shadow(color: Color(red: 0.29, green: 0.53, blue: 0.98).opacity(0.34), radius: 7, x: 0, y: 2)
+                            .shadow(color: NColors.Splash.darkProgressShadow, radius: 7, x: 0, y: 2)
                     }
 
                     Text("LOADING")
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .tracking(4.8)
-                        .foregroundStyle(Color.white.opacity(0.62))
+                        .foregroundStyle(NColors.Splash.darkLabel)
                 }
                 .offset(y: loadingVisible ? 0 : 16)
                 .opacity(loadingVisible ? (exiting ? 0.0 : 1.0) : 0.0)
@@ -716,7 +697,7 @@ private struct DarkSplashParticle: View {
         Circle()
             .fill(
                 LinearGradient(
-                    colors: [Color(red: 0.19, green: 0.86, blue: 0.96), Color(red: 0.45, green: 0.30, blue: 0.95)],
+                    colors: NColors.Splash.darkParticleGradient,
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -1019,17 +1000,7 @@ private struct RecoveredCloudSessionView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: isDark
-                    ? [
-                        Color(red: 0.04, green: 0.07, blue: 0.15),
-                        Color(red: 0.05, green: 0.08, blue: 0.18),
-                        Color(red: 0.03, green: 0.05, blue: 0.12)
-                    ]
-                    : [
-                        Color(red: 0.96, green: 0.96, blue: 0.98),
-                        Color(red: 0.94, green: 0.95, blue: 0.98),
-                        Color(red: 0.93, green: 0.94, blue: 0.97)
-                    ],
+                colors: isDark ? NColors.Recovery.backgroundDark : NColors.Recovery.backgroundLight,
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
@@ -1050,21 +1021,21 @@ private struct RecoveredCloudSessionView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "icloud")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(isDark ? Color(red: 0.47, green: 0.70, blue: 1.0) : Color(red: 0.38, green: 0.58, blue: 0.96))
+                            .foregroundStyle(NColors.Recovery.iconTint)
                             .frame(width: 30, height: 30)
-                            .background(isDark ? Color.white.opacity(0.07) : Color(red: 0.85, green: 0.90, blue: 0.99))
+                            .background(NColors.Recovery.iconBackground)
                             .clipShape(Circle())
 
                         Text(AppCopy.text(locale, en: "ICLOUD SYNCED", es: "ICLOUD SINCRONIZADO"))
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
                             .tracking(0.4)
-                            .foregroundStyle(isDark ? Color.white.opacity(0.56) : Color(red: 0.41, green: 0.45, blue: 0.54))
+                            .foregroundStyle(NColors.Recovery.eyebrow)
                     }
 
                     VStack(alignment: .leading, spacing: 7) {
                         Text(AppCopy.text(locale, en: "Account found", es: "Cuenta encontrada"))
                             .font(.system(size: 25, weight: .semibold, design: .rounded))
-                            .foregroundStyle(isDark ? Color.white.opacity(0.98) : Color(red: 0.08, green: 0.10, blue: 0.16))
+                            .foregroundStyle(NColors.Recovery.title)
 
                         Text(
                             AppCopy.text(
@@ -1074,7 +1045,7 @@ private struct RecoveredCloudSessionView: View {
                             )
                         )
                         .font(.system(size: 14, weight: .regular, design: .rounded))
-                        .foregroundStyle(isDark ? Color(red: 0.66, green: 0.72, blue: 0.84) : Color(red: 0.36, green: 0.40, blue: 0.49))
+                        .foregroundStyle(NColors.Recovery.body)
                     }
 
                     profilePill
@@ -1086,8 +1057,8 @@ private struct RecoveredCloudSessionView: View {
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    isDark ? Color.white.opacity(0.08) : Color(red: 0.90, green: 0.91, blue: 0.95),
-                                    isDark ? Color(red: 0.15, green: 0.24, blue: 0.43).opacity(0.28) : Color(red: 0.84, green: 0.86, blue: 0.92)
+                                    NColors.Recovery.cardBackgroundTop,
+                                    NColors.Recovery.cardBackgroundBottom
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -1096,28 +1067,24 @@ private struct RecoveredCloudSessionView: View {
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(isDark ? Color.white.opacity(0.07) : Color.white.opacity(0.42), lineWidth: 1)
+                        .stroke(NColors.Recovery.cardBorder, lineWidth: 1)
                 )
 
-                ShineSweepButton(
-                    title: AppCopy.text(locale, en: "Go to app", es: "Ir a la app"),
-                    textColor: isDark ? Color(red: 0.08, green: 0.12, blue: 0.22) : .white,
-                    gradientColors: isDark
-                        ? [
-                            Color(red: 0.19, green: 0.72, blue: 0.97), // #31B8F7
-                            Color(red: 0.50, green: 0.27, blue: 0.95)  // #7F45F2
-                        ]
-                        : [
-                            Color(red: 0.17, green: 0.52, blue: 0.90), // darker light-left
-                            Color(red: 0.43, green: 0.24, blue: 0.86)  // darker light-right
-                        ]
+                NGradientButton(
+                    AppCopy.text(locale, en: "Go to app", es: "Ir a la app"),
+                    showsChevron: true,
+                    animateEffects: true,
+                    foregroundColor: NColors.Recovery.buttonText,
+                    gradientColors: NColors.Recovery.buttonGradient(for: colorScheme)
                 ) {
                     onContinue()
                 }
+                .shadow(color: NColors.Recovery.buttonShadow, radius: 14, x: 0, y: 8)
+                .modifier(PressScaleEffect())
 
                 Text(AppCopy.text(locale, en: "Your data is protected with end-to-end encryption", es: "Tus datos están protegidos con cifrado de extremo a extremo"))
                     .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(isDark ? Color.white.opacity(0.28) : Color(red: 0.56, green: 0.59, blue: 0.67))
+                    .foregroundStyle(NColors.Recovery.footnote)
                     .lineLimit(1)
                     .minimumScaleFactor(0.9)
                     .multilineTextAlignment(.center)
@@ -1135,12 +1102,12 @@ private struct RecoveredCloudSessionView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(recoveredCloudSession.displayName)
                     .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundStyle(isDark ? Color.white.opacity(0.96) : Color(red: 0.12, green: 0.14, blue: 0.20))
+                    .foregroundStyle(NColors.Recovery.name)
 
                 if let email = recoveredCloudSession.email, email.isEmpty == false {
                     Text(email)
                         .font(.system(size: 12, weight: .medium, design: .rounded))
-                        .foregroundStyle(isDark ? Color.white.opacity(0.52) : Color(red: 0.46, green: 0.49, blue: 0.58))
+                        .foregroundStyle(NColors.Recovery.email)
                         .lineLimit(1)
                 }
             }
@@ -1149,127 +1116,23 @@ private struct RecoveredCloudSessionView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(isDark ? Color.black.opacity(0.28) : Color.white.opacity(0.50))
+        .background(NColors.Recovery.pillBackground)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(isDark ? Color.white.opacity(0.06) : Color.white.opacity(0.56), lineWidth: 1)
+                .stroke(NColors.Recovery.pillBorder, lineWidth: 1)
         )
     }
 
     private var isDark: Bool { colorScheme == .dark }
     private var logoShadowColor: Color {
-        isDark
-            ? Color(red: 0.22, green: 0.52, blue: 0.96).opacity(0.34)
-            : Color(red: 0.36, green: 0.47, blue: 0.76).opacity(0.22)
+        NColors.Recovery.logoShadow
     }
 
     private var avatarInitial: String {
         let trimmed = recoveredCloudSession.displayName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let first = trimmed.first else { return "N" }
         return String(first).uppercased()
-    }
-}
-
-private struct ShineSweepButton: View {
-    let title: String
-    let textColor: Color
-    let gradientColors: [Color]
-    let action: () -> Void
-
-    @State private var isHovered = false
-    @State private var tickTime: TimeInterval = Date().timeIntervalSinceReferenceDate
-    private let tick = Timer.publish(every: 1.0 / 60.0, on: .main, in: .common).autoconnect()
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Text(title)
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-            }
-            .foregroundStyle(textColor)
-            .frame(maxWidth: .infinity)
-            .frame(height: 58)
-            .background(
-                LinearGradient(
-                    colors: gradientColors,
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                GeometryReader { proxy in
-                    let width = proxy.size.width
-                    let phase = (tickTime / 2.15).truncatingRemainder(dividingBy: 1.0)
-                    let shinePhase = -1.45 + (2.9 * phase)
-                    let xOffset = width * shinePhase
-
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(.clear)
-                        .overlay(
-                            Ellipse()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            .clear,
-                                            Color.white.opacity(0.10),
-                                            Color.white.opacity(0.24),
-                                            Color.white.opacity(0.10),
-                                            .clear
-                                        ],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .frame(width: 188, height: 126)
-                                .rotationEffect(.degrees(20))
-                                .blur(radius: 9)
-                                .offset(x: xOffset)
-                        )
-                        .blendMode(.screen)
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(Color.white.opacity(0.20), lineWidth: 0.9)
-            }
-            .overlay(alignment: .top) {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.20),
-                                Color.white.opacity(0.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .frame(height: 20)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    .allowsHitTesting(false)
-            }
-            .shadow(color: Color(red: 0.31, green: 0.43, blue: 0.96).opacity(0.30), radius: 14, x: 0, y: 8)
-        }
-        .buttonStyle(.plain)
-        .scaleEffect(isHovered ? 1.02 : 1.0)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    isHovered = false
-                }
-        )
-        .onHover { hovering in
-            isHovered = hovering
-        }
-        .modifier(PressScaleEffect())
-        .onReceive(tick) { date in
-            tickTime = date.timeIntervalSinceReferenceDate
-        }
     }
 }
 
@@ -1281,14 +1144,11 @@ private struct AnimatedGradientAvatar: View {
     var body: some View {
         Text(initial)
             .font(.system(size: 20, weight: .bold, design: .rounded))
-            .foregroundStyle(Color(red: 0.90, green: 0.93, blue: 1.0))
+            .foregroundStyle(NColors.Recovery.avatarText)
             .frame(width: 46, height: 46)
             .background(
                 LinearGradient(
-                    colors: [
-                        Color(red: 0.29, green: 0.57, blue: 0.97),
-                        Color(red: 0.43, green: 0.33, blue: 0.95)
-                    ],
+                    colors: NColors.Recovery.avatarGradient,
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )

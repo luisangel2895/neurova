@@ -24,7 +24,7 @@ struct SummaryView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.9)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .frame(width: UIScreen.main.bounds.width * 0.8)
+                    .frame(maxWidth: 320)
 
                 Text(
                     AppCopy.text(
@@ -74,15 +74,15 @@ struct SummaryView: View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
             .fill(
                 isHighlighted
-                    ? (colorScheme == .light ? Color(red: 0.87, green: 0.90, blue: 0.97) : Color(red: 0.11, green: 0.14, blue: 0.24))
-                    : (colorScheme == .light ? Color(red: 0.89, green: 0.90, blue: 0.93) : Color(red: 0.10, green: 0.12, blue: 0.19))
+                    ? NColors.Summary.highlightedBackground
+                    : NColors.Summary.defaultBackground
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(
                         isHighlighted
-                            ? (colorScheme == .light ? Color(red: 0.67, green: 0.76, blue: 0.95) : Color(red: 0.18, green: 0.35, blue: 0.70))
-                            : (colorScheme == .light ? Color(red: 0.80, green: 0.84, blue: 0.93) : Color.white.opacity(0.10)),
+                            ? NColors.Summary.highlightedBorder
+                            : NColors.Summary.defaultBorder,
                         lineWidth: 1
                     )
             )

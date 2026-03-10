@@ -10,6 +10,8 @@ struct NGradientButton: View {
     private let font: Font
     private let height: CGFloat
     private let cornerRadius: CGFloat
+    private let foregroundColor: Color
+    private let gradientColors: [Color]?
     private let action: () -> Void
 
     init(
@@ -20,6 +22,8 @@ struct NGradientButton: View {
         font: Font = .system(size: 18, weight: .semibold, design: .rounded),
         height: CGFloat = 58,
         cornerRadius: CGFloat = 16,
+        foregroundColor: Color = NColors.Button.primaryText,
+        gradientColors: [Color]? = nil,
         action: @escaping () -> Void
     ) {
         self.title = title
@@ -29,6 +33,8 @@ struct NGradientButton: View {
         self.font = font
         self.height = height
         self.cornerRadius = cornerRadius
+        self.foregroundColor = foregroundColor
+        self.gradientColors = gradientColors
         self.action = action
     }
 
@@ -48,12 +54,12 @@ struct NGradientButton: View {
                         .font(.system(size: 14, weight: .regular))
                 }
             }
-            .foregroundStyle(NColors.Button.primaryText)
+            .foregroundStyle(foregroundColor)
             .frame(maxWidth: .infinity)
             .frame(height: height)
             .background(
                 LinearGradient(
-                    colors: NColors.Brand.primaryButtonColors(for: colorScheme),
+                    colors: gradientColors ?? NColors.Brand.primaryButtonColors(for: colorScheme),
                     startPoint: .leading,
                     endPoint: .trailing
                 )
