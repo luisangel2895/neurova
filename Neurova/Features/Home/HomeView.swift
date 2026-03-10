@@ -29,6 +29,7 @@ struct HomeView: View {
     @State private var hasAnimatedIn = false
     @State private var showHeroPercent = false
     @State private var animatedHeroProgress: Double = 0
+    @State private var heroProgressTask: Task<Void, Never>?
     @State private var visibleStatCardCount = 0
     @State private var visibleDeckCardCount = 0
     @State private var statsAnimationTask: Task<Void, Never>?
@@ -79,16 +80,6 @@ struct HomeView: View {
         .onChange(of: scenePhase) { _, newValue in
             guard newValue == .active else { return }
             viewModel.load(using: modelContext, forceRefresh: true)
-        }
-        .onChange(of: state.progress) { _, newValue in
-            if hasStartedEntryAnimation {
-                if animatedHeroProgress == 0, newValue > 0 {
-                    animatedHeroProgress = min(0.08, newValue)
-                }
-                withAnimation(.homeExpo(duration: 1.0)) {
-                    animatedHeroProgress = newValue
-                }
-            }
         }
         .sheet(isPresented: $isPresentingStudyCoach) {
             StudyCoachView(
@@ -431,6 +422,7 @@ struct HomeView: View {
     }
 
     private func restartEntryAnimation() {
+        heroProgressTask?.cancel()
         statsAnimationTask?.cancel()
         deckAnimationTask?.cancel()
         hasStartedEntryAnimation = true
@@ -450,8 +442,16 @@ struct HomeView: View {
             hasAnimatedIn = true
         }
 
-        withAnimation(.homeExpo(duration: 1.4, delay: 0.6)) {
-            animatedHeroProgress = state.progress
+        heroProgressTask?.cancel()
+        animatedHeroProgress = 0
+        heroProgressTask = Task {
+            try? await Task.sleep(nanoseconds: 600_000_000)
+            if Task.isCancelled { return }
+            await MainActor.run {
+                withAnimation(.homeExpo(duration: 1.4)) {
+                    animatedHeroProgress = state.progress
+                }
+            }
         }
 
         withAnimation(.homeSpring(delay: 1.0, stiffness: 300, damping: 22)) {
