@@ -44,7 +44,7 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: 26) {
+            VStack(alignment: .leading, spacing: 22) {
                 headerSection
                 heroSection
                 statsSection
@@ -52,7 +52,7 @@ struct HomeView: View {
                 tipSection
             }
             .padding(.horizontal, NSpacing.md + NSpacing.xs)
-            .padding(.top, NSpacing.md)
+            .padding(.top, 10)
             .padding(.bottom, 140)
         }
         .background(homeBackground.ignoresSafeArea())
@@ -219,16 +219,16 @@ struct HomeView: View {
     }
 
     private var headerSection: some View {
-        HStack(alignment: .top, spacing: 14) {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(AppCopy.text(locale, en: "WELCOME BACK", es: "BIENVENIDO DE NUEVO"))
-                    .font(.system(size: 12, weight: .bold, design: .rounded))
-                    .tracking(2.2)
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .tracking(2.4)
                     .foregroundStyle(NColors.Text.textTertiary)
-                    .opacity(0.92)
+                    .opacity(0.88)
 
                 Text(displayName)
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.system(size: 31, weight: .bold, design: .rounded))
                     .foregroundStyle(NColors.Text.textPrimary)
             }
             .offset(x: hasAnimatedIn ? 0 : -10)
@@ -244,29 +244,33 @@ struct HomeView: View {
                             LinearGradient(
                                 colors: colorScheme == .dark
                                     ? [NColors.Brand.neuroBlue.opacity(0.92), NColors.Brand.neuralMint.opacity(0.95)]
-                                    : [NColors.Brand.accentBlueStrong, NColors.Brand.neuroBlueDeep.opacity(0.96)],
+                                    : [
+                                        Color(red: 0.24, green: 0.50, blue: 0.90),
+                                        Color(red: 0.30, green: 0.46, blue: 0.87),
+                                        Color(red: 0.39, green: 0.27, blue: 0.82)
+                                    ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 52, height: 52)
+                        .frame(width: 54, height: 54)
                         .overlay(
                             RoundedRectangle(cornerRadius: 18, style: .continuous)
                                 .stroke(Color.white.opacity(colorScheme == .dark ? 0.12 : 0.38), lineWidth: 1)
                         )
                         .shadow(
                             color: colorScheme == .dark
-                                ? NColors.Brand.neuroBlue.opacity(0.42)
-                                : NColors.Brand.neuroBlue.opacity(0.18),
-                            radius: colorScheme == .dark ? 14 : 9,
+                                ? NColors.Brand.neuroBlue.opacity(0.52)
+                                : NColors.Brand.neuroBlue.opacity(0.16),
+                            radius: colorScheme == .dark ? 18 : 8,
                             x: 0,
-                            y: 4
+                            y: colorScheme == .dark ? 6 : 4
                         )
 
                     Text(avatarLetter)
                         .font(.system(size: 22, weight: .bold, design: .rounded))
                         .foregroundStyle(.white.opacity(0.96))
-                        .frame(width: 52, height: 52)
+                        .frame(width: 54, height: 54)
                         .multilineTextAlignment(.center)
 
                     Circle()
@@ -277,7 +281,7 @@ struct HomeView: View {
                                 .font(.system(size: 9, weight: .bold))
                                 .foregroundStyle(NColors.Text.textSecondary)
                         )
-                        .offset(x: 20, y: 20)
+                        .offset(x: 21, y: 21)
                 }
             }
             .buttonStyle(.plain)
@@ -306,7 +310,7 @@ struct HomeView: View {
     }
 
     private var statsSection: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 11) {
             ForEach(Array(state.quickStats.enumerated()), id: \.element.id) { index, stat in
                 HomeCompactStatCard(
                     stat: stat,
@@ -320,7 +324,7 @@ struct HomeView: View {
     }
 
     private var recentDecksSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 15) {
             HStack {
                 Text(AppCopy.text(locale, en: "Recent decks", es: "Mazos recientes"))
                     .font(.system(size: 18, weight: .bold, design: .rounded))
@@ -350,7 +354,7 @@ struct HomeView: View {
                     onOpenLibrary()
                 }
             } else {
-                VStack(spacing: 14) {
+                VStack(spacing: 12) {
                     ForEach(Array(visibleRecentDecks.enumerated()), id: \.element.id) { index, deck in
                         Button {
                             selectedDeckForDetail = deck.deck
@@ -377,7 +381,7 @@ struct HomeView: View {
     }
 
     private var tipSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 14) {
             Text(AppCopy.text(locale, en: "Neurova Tips", es: "Neurova Tips"))
                 .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundStyle(NColors.Text.textPrimary)
@@ -488,7 +492,7 @@ private struct HomeHeroCard: View {
         HStack(spacing: 18) {
             ZStack {
                 Circle()
-                    .stroke(heroTrackColor, lineWidth: 7)
+                    .stroke(heroTrackColor, lineWidth: 6)
 
                 Circle()
                     .trim(from: 0, to: min(max(progress, 0), 1))
@@ -501,7 +505,7 @@ private struct HomeHeroCard: View {
                             ],
                             center: .center
                         ),
-                        style: StrokeStyle(lineWidth: 7, lineCap: .round)
+                        style: StrokeStyle(lineWidth: 6, lineCap: .round)
                     )
                     .rotationEffect(.degrees(-90))
 
@@ -516,15 +520,15 @@ private struct HomeHeroCard: View {
                         .foregroundStyle(NColors.Text.textTertiary)
                 }
             }
-            .frame(width: 92, height: 92)
+            .frame(width: 82, height: 82)
 
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 11) {
                 HStack(spacing: 6) {
                     Image(systemName: "clock")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                     Text(AppCopy.text(locale, en: "TODAY'S SESSION", es: "SESIÓN DE HOY"))
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
-                        .tracking(1.6)
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .tracking(2.0)
                 }
                 .foregroundStyle(NColors.Text.textTertiary)
 
@@ -549,27 +553,36 @@ private struct HomeHeroCard: View {
                     leadingSymbolName: "sparkles",
                     showsChevron: false,
                     animateEffects: false,
-                    font: .system(size: 17, weight: .semibold, design: .rounded),
-                    height: 43
+                    font: .system(size: 16, weight: .bold, design: .rounded),
+                    height: 44,
+                    cornerRadius: 14,
+                    gradientColors: colorScheme == .dark
+                        ? [NColors.Brand.accentBlueStrong, NColors.Brand.neuroBlueDeep]
+                        : [
+                            Color(red: 0.24, green: 0.50, blue: 0.90),
+                            Color(red: 0.30, green: 0.46, blue: 0.87),
+                            Color(red: 0.39, green: 0.27, blue: 0.82)
+                        ]
                 ) {
                     onAction()
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(width: 176, alignment: .leading)
             }
         }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 18)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 17)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(minHeight: 128)
         .background(cardBackground)
         .overlay(cardBorder)
-        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(
             color: colorScheme == .dark
-                ? NColors.Brand.neuroBlue.opacity(0.10)
-                : NColors.Brand.neuroBlue.opacity(0.08),
-            radius: 16,
+                ? NColors.Brand.neuroBlue.opacity(0.14)
+                : NColors.Brand.neuroBlue.opacity(0.10),
+            radius: 18,
             x: 0,
-            y: 8
+            y: 10
         )
     }
 
@@ -577,14 +590,14 @@ private struct HomeHeroCard: View {
         LinearGradient(
             colors: colorScheme == .dark
                 ? [
-                    NColors.Surface.raised.opacity(0.92),
-                    NColors.Brand.neuroBlue.opacity(0.10),
-                    NColors.Brand.neuralMint.opacity(0.08)
+                    NColors.Surface.raised.opacity(0.96),
+                    NColors.Brand.neuroBlue.opacity(0.13),
+                    NColors.Brand.neuroBlueDeep.opacity(0.11)
                 ]
                 : [
-                    NColors.Surface.raised.opacity(0.96),
-                    NColors.Brand.neuroBlue.opacity(0.08),
-                    Color.white.opacity(0.78)
+                    Color.white.opacity(0.82),
+                    NColors.Surface.raised.opacity(0.98),
+                    NColors.Brand.neuroBlue.opacity(0.05)
                 ],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
@@ -592,19 +605,19 @@ private struct HomeHeroCard: View {
     }
 
     private var cardBorder: some View {
-        RoundedRectangle(cornerRadius: 26, style: .continuous)
+        RoundedRectangle(cornerRadius: 24, style: .continuous)
             .stroke(
                 colorScheme == .dark
                     ? Color.white.opacity(0.08)
-                    : NColors.Stroke.standard.opacity(0.72),
+                    : NColors.Stroke.standard.opacity(0.48),
                 lineWidth: 1
             )
     }
 
     private var heroTrackColor: Color {
         colorScheme == .dark
-            ? NColors.Surface.subdued.opacity(0.80)
-            : NColors.Surface.subdued.opacity(0.88)
+            ? Color.white.opacity(0.09)
+            : NColors.Surface.subdued.opacity(0.82)
     }
 
     private var percentageText: some View {
@@ -614,7 +627,7 @@ private struct HomeHeroCard: View {
 
         return HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text(number)
-                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .font(.system(size: 29, weight: .bold, design: .rounded))
                 .foregroundStyle(NColors.Text.textPrimary)
 
             Text(suffix)
@@ -637,12 +650,12 @@ private struct HomeCompactStatCard: View {
                 .foregroundStyle(stat.iconColor)
 
             Text(stat.value)
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.system(size: 17, weight: .bold, design: .rounded))
                 .foregroundStyle(NColors.Text.textPrimary)
 
             Text(label)
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .tracking(1.2)
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .tracking(1.3)
                 .foregroundStyle(NColors.Text.textTertiary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -651,11 +664,11 @@ private struct HomeCompactStatCard: View {
         .frame(height: 90)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(colorScheme == .dark ? NColors.Surface.base.opacity(0.88) : NColors.Surface.base.opacity(0.98))
+                .fill(colorScheme == .dark ? NColors.Surface.base.opacity(0.86) : Color.white.opacity(0.74))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(colorScheme == .dark ? Color.white.opacity(0.06) : NColors.Stroke.standard.opacity(0.72), lineWidth: 1)
+                .stroke(colorScheme == .dark ? Color.white.opacity(0.05) : NColors.Stroke.standard.opacity(0.46), lineWidth: 1)
         )
     }
 }
@@ -669,22 +682,19 @@ private struct HomeRecentDeckCard: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(cardBackground)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .stroke(cardBorderColor, lineWidth: isFeatured ? 1.4 : 1)
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(cardBorderColor, lineWidth: isFeatured ? 1.2 : 1)
                 )
                 .overlay(alignment: .leading) {
                     HStack(alignment: .top, spacing: 14) {
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(deck.accentColor.opacity(colorScheme == .dark ? 0.14 : 0.12))
-                            .frame(width: 42, height: 42)
-                            .overlay(
-                                Image(systemName: deck.subjectIconName)
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(deck.accentColor)
-                            )
+                        Image(systemName: deck.subjectIconName)
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(deck.accentColor)
+                            .frame(width: 26, height: 26)
+                            .padding(.top, 10)
 
                         VStack(alignment: .leading, spacing: 10) {
                             VStack(alignment: .leading, spacing: 2) {
@@ -693,17 +703,17 @@ private struct HomeRecentDeckCard: View {
                                     .foregroundStyle(NColors.Text.textPrimary)
 
                                 Text(deck.subjectPathText)
-                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
                                     .foregroundStyle(NColors.Text.textSecondary)
                                     .lineLimit(1)
                             }
 
-                            HStack(alignment: .center, spacing: 10) {
+                            HStack(alignment: .center, spacing: 12) {
                                 GeometryReader { proxy in
                                     ZStack(alignment: .leading) {
                                         Capsule(style: .continuous)
                                             .fill(progressTrackColor)
-                                            .frame(height: 4)
+                                            .frame(height: 3)
 
                                         Capsule(style: .continuous)
                                             .fill(deck.accentColor)
@@ -711,43 +721,44 @@ private struct HomeRecentDeckCard: View {
                                                 width: showFeaturedBadge
                                                     ? max(proxy.size.width * deck.completionProgress, deck.completionProgress > 0 ? 18 : 0)
                                                     : 0,
-                                                height: 4
+                                                height: 3
                                             )
                                             .animation(.homeExpo(duration: 1.0, delay: 0.6), value: showFeaturedBadge)
                                     }
                                 }
-                                .frame(height: 4)
+                                .frame(height: 3)
 
                                 Text(deck.completionPercentText)
                                     .font(.system(size: 14, weight: .bold, design: .rounded))
-                                    .foregroundStyle(NColors.Text.textSecondary)
+                                    .foregroundStyle(NColors.Text.textSecondary.opacity(0.95))
                             }
                         }
 
-                        VStack(spacing: 4) {
+                        VStack(spacing: 3) {
                             Text("\(deck.readyCount)")
-                                .font(.system(size: 17, weight: .bold, design: .rounded))
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
                                 .foregroundStyle(.white.opacity(0.96))
-                                .frame(width: 36, height: 36)
+                                .frame(width: 33, height: 33)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                    RoundedRectangle(cornerRadius: 9, style: .continuous)
                                         .fill(deck.accentColor)
                                 )
 
                             Text(AppCopy.text(locale, en: "PEND.", es: "PEND."))
-                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .font(.system(size: 9, weight: .bold, design: .rounded))
                                 .tracking(0.8)
                                 .foregroundStyle(NColors.Text.textTertiary)
                         }
                     }
                     .padding(.horizontal, 18)
-                    .padding(.vertical, 18)
+                    .padding(.vertical, 17)
                 }
+                .frame(minHeight: 106)
 
             if isFeatured {
                 HomeFeaturedBadge(locale: locale)
-                    .padding(.top, -10)
-                    .padding(.trailing, 18)
+                    .padding(.top, -8)
+                    .padding(.trailing, 20)
                     .offset(y: showFeaturedBadge ? 0 : -5)
                     .scaleEffect(showFeaturedBadge ? 1 : 0.8)
                     .opacity(showFeaturedBadge ? 1 : 0)
@@ -760,7 +771,7 @@ private struct HomeRecentDeckCard: View {
         if colorScheme == .dark {
             return AnyShapeStyle(
                 LinearGradient(
-                    colors: [NColors.Surface.base.opacity(0.92), NColors.Surface.raised.opacity(0.86)],
+                    colors: [NColors.Surface.base.opacity(0.89), NColors.Surface.raised.opacity(0.80)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -770,27 +781,27 @@ private struct HomeRecentDeckCard: View {
         if isFeatured {
             return AnyShapeStyle(
                 LinearGradient(
-                    colors: [Color.white.opacity(0.92), NColors.Surface.accentSoft.opacity(0.88)],
+                    colors: [Color.white.opacity(0.90), NColors.Surface.accentSoft.opacity(0.60)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
             )
         }
 
-        return AnyShapeStyle(NColors.Surface.base.opacity(0.98))
+        return AnyShapeStyle(Color.white.opacity(0.72))
     }
 
     private var cardBorderColor: Color {
         if isFeatured {
-            return deck.accentColor.opacity(colorScheme == .dark ? 0.55 : 0.32)
+            return deck.accentColor.opacity(colorScheme == .dark ? 0.46 : 0.58)
         }
-        return colorScheme == .dark ? Color.white.opacity(0.06) : NColors.Stroke.standard.opacity(0.72)
+        return colorScheme == .dark ? Color.white.opacity(0.045) : NColors.Stroke.standard.opacity(0.42)
     }
 
     private var progressTrackColor: Color {
         colorScheme == .dark
-            ? Color.white.opacity(0.08)
-            : NColors.Surface.raised
+            ? Color.white.opacity(0.07)
+            : Color.black.opacity(0.06)
     }
 }
 
@@ -800,14 +811,14 @@ private struct HomeFeaturedBadge: View {
     var body: some View {
         HStack(spacing: 5) {
             Image(systemName: "star.fill")
-                .font(.system(size: 9, weight: .bold))
+                .font(.system(size: 8, weight: .bold))
             Text(AppCopy.text(locale, en: "FOR YOU", es: "PARA TI"))
-                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .font(.system(size: 9, weight: .bold, design: .rounded))
                 .tracking(0.8)
         }
         .foregroundStyle(.white.opacity(0.96))
-        .padding(.horizontal, 10)
-        .frame(height: 22)
+        .padding(.horizontal, 11)
+        .frame(height: 20)
         .background(
             Capsule(style: .continuous)
                 .fill(
@@ -818,7 +829,11 @@ private struct HomeFeaturedBadge: View {
                     )
                 )
         )
-        .shadow(color: NColors.Brand.neuroBlue.opacity(0.18), radius: 10, x: 0, y: 4)
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(Color.white.opacity(0.22), lineWidth: 0.8)
+        )
+        .shadow(color: NColors.Brand.neuroBlue.opacity(0.24), radius: 10, x: 0, y: 4)
     }
 }
 
@@ -830,36 +845,36 @@ private struct HomeTipCard: View {
     let message: String
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 22, style: .continuous)
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
             .fill(cardBackground)
             .overlay(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(colorScheme == .dark ? Color.white.opacity(0.06) : NColors.Stroke.standard.opacity(0.68), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(colorScheme == .dark ? Color.white.opacity(0.05) : NColors.Stroke.standard.opacity(0.50), lineWidth: 1)
             )
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 138)
+            .frame(minHeight: 136)
             .overlay(alignment: .leading) {
                 HStack(alignment: .top, spacing: 14) {
-                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    RoundedRectangle(cornerRadius: 13, style: .continuous)
                         .fill(iconBackground)
-                        .frame(width: 44, height: 44)
+                        .frame(width: 40, height: 40)
                         .overlay(
                             Image(systemName: "lightbulb")
-                                .font(.system(size: 18, weight: .semibold))
+                                .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(NColors.Brand.accentBlue)
                         )
 
                     VStack(alignment: .leading, spacing: 10) {
                         Text(title)
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .font(.system(size: 15, weight: .bold, design: .rounded))
                             .foregroundStyle(NColors.Text.textPrimary)
 
                         Text(message)
-                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .font(.system(size: 14, weight: .regular, design: .rounded))
                             .foregroundStyle(NColors.Text.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        HStack(spacing: 8) {
+                        HStack(spacing: 6) {
                             tipChip(AppCopy.text(locale, en: "PRODUCTIVITY", es: "PRODUCTIVIDAD"))
                             tipChip("POMODORO")
                         }
@@ -867,7 +882,7 @@ private struct HomeTipCard: View {
                     }
                 }
                 .padding(.horizontal, 18)
-                .padding(.vertical, 18)
+                .padding(.vertical, 17)
             }
     }
 
@@ -876,14 +891,14 @@ private struct HomeTipCard: View {
             LinearGradient(
                 colors: colorScheme == .dark
                     ? [
-                        NColors.Surface.base.opacity(0.90),
-                        NColors.Brand.neuroBlue.opacity(0.08),
-                        NColors.Brand.neuralMint.opacity(0.04)
+                        NColors.Surface.base.opacity(0.88),
+                        NColors.Brand.neuroBlue.opacity(0.06),
+                        NColors.Brand.neuroBlueDeep.opacity(0.08)
                     ]
                     : [
-                        NColors.Surface.base.opacity(0.98),
-                        NColors.Brand.neuroBlue.opacity(0.05),
-                        NColors.Brand.neuralMint.opacity(0.04)
+                        Color.white.opacity(0.82),
+                        NColors.Surface.base.opacity(0.94),
+                        NColors.Brand.neuroBlueDeep.opacity(0.05)
                     ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -892,16 +907,16 @@ private struct HomeTipCard: View {
     }
 
     private var iconBackground: Color {
-        colorScheme == .dark ? NColors.Surface.accentSoft.opacity(0.42) : NColors.Surface.accentSoft.opacity(0.82)
+        colorScheme == .dark ? NColors.Surface.accentSoft.opacity(0.34) : NColors.Surface.accentSoft.opacity(0.78)
     }
 
     private func tipChip(_ text: String) -> some View {
         Text(text)
-            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .font(.system(size: 9, weight: .bold, design: .rounded))
             .tracking(0.8)
             .foregroundStyle(NColors.Brand.accentBlue)
             .padding(.horizontal, 10)
-            .frame(height: 22)
+            .frame(height: 20)
             .background(
                 Capsule(style: .continuous)
                     .fill(iconBackground)
