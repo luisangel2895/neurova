@@ -783,12 +783,19 @@ private struct HomeLaunchGateView: View {
     @State private var recoveredCloudSession: RecoveredCloudSession?
     @State private var isOnboardingActive = false
 
+    @AppStorage("cloudkit_sync_enabled") private var cloudKitSyncEnabled: Bool = true
+    @AppStorage("cloudkit_sync_runtime_active") private var cloudKitSyncRuntimeActive: Bool = true
     @AppStorage("apple_user_id") private var appleUserID: String = ""
     @AppStorage("apple_given_name") private var appleGivenName: String = ""
     @AppStorage("apple_email") private var appleEmail: String = ""
     @AppStorage("profile_display_name") private var profileDisplayName: String = ""
     @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
     @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
+
+    private enum InitialCloudRecovery {
+        static let maxAttempts = 6
+        static let pollIntervalNanoseconds: UInt64 = 1_000_000_000
+    }
 
     var body: some View {
         Group {
@@ -820,18 +827,57 @@ private struct HomeLaunchGateView: View {
             }
         }
         .task {
-            loadOnboardingState()
-            await pollForRecoveredCloudSession()
+            await resolveInitialLaunchState()
         }
         .onChange(of: scenePhase) { _, newValue in
             guard newValue == .active else { return }
             Task {
-                await pollForRecoveredCloudSession()
+                await refreshLaunchStateAfterForeground()
             }
         }
     }
 
-    private func loadOnboardingState() {
+    @MainActor
+    private func resolveInitialLaunchState() async {
+        if applyCurrentLaunchState() {
+            return
+        }
+
+        guard shouldAwaitInitialCloudRecovery else {
+            hasCompletedOnboarding = false
+            recoveredCloudSession = nil
+            isLoading = false
+            return
+        }
+
+        for _ in 0..<InitialCloudRecovery.maxAttempts {
+            try? await Task.sleep(nanoseconds: InitialCloudRecovery.pollIntervalNanoseconds)
+            if applyCurrentLaunchState() {
+                return
+            }
+        }
+
+        hasCompletedOnboarding = false
+        recoveredCloudSession = nil
+        isLoading = false
+    }
+
+    @MainActor
+    private func refreshLaunchStateAfterForeground() async {
+        if applyCurrentLaunchState() {
+            return
+        }
+
+        await pollForRecoveredCloudSession()
+
+        if recoveredCloudSession == nil, hasCompletedOnboarding == false, isLoading {
+            isLoading = false
+        }
+    }
+
+    @MainActor
+    @discardableResult
+    private func applyCurrentLaunchState() -> Bool {
         let descriptor = FetchDescriptor<UserPreferences>(
             predicate: #Predicate<UserPreferences> { preferences in
                 preferences.key == "global"
@@ -848,7 +894,7 @@ private struct HomeLaunchGateView: View {
             recoveredCloudSession = cloudSession
             hasCompletedOnboarding = false
             isLoading = false
-            return
+            return true
         }
 
         if preferences?.hasCompletedOnboarding == true {
@@ -861,18 +907,26 @@ private struct HomeLaunchGateView: View {
             hasCompletedOnboarding = true
             recoveredCloudSession = nil
             isLoading = false
-            return
+            return true
         }
 
         if let cloudSession {
             recoveredCloudSession = cloudSession
             hasCompletedOnboarding = false
             isLoading = false
-            return
+            return true
         }
 
         hasCompletedOnboarding = false
-        isLoading = false
+        return false
+    }
+
+    private var shouldAwaitInitialCloudRecovery: Bool {
+        guard cloudKitSyncEnabled, cloudKitSyncRuntimeActive else { return false }
+
+        let trimmedDisplayName = profileDisplayName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedAppleUserID = appleUserID.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedDisplayName.isEmpty && trimmedAppleUserID.isEmpty
     }
 
     private func fetchRecoveredCloudSession() -> RecoveredCloudSession? {
