@@ -234,7 +234,10 @@ struct CreateSubjectView: View {
 
         do {
             try onSave(trimmedName, selectedSymbolName, selectedColorToken)
-            dismiss()
+            isSaving = false
+            DispatchQueue.main.async {
+                dismiss()
+            }
         } catch {
             isSaving = false
             errorMessage = AppCopy.text(
