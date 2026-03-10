@@ -29,6 +29,7 @@ struct HomeView: View {
     @State private var hasAnimatedIn = false
     @State private var showHeroPercent = false
     @State private var animatedHeroProgress: Double = 0
+    @State private var visibleDeckCardCount = 0
 
     init(
         viewModel: HomeViewModel = HomeViewModel(),
@@ -298,7 +299,6 @@ struct HomeView: View {
             completedCards: state.todayCompletedCards,
             goalCards: state.todayGoalCards,
             progress: animatedHeroProgress,
-            displayProgressText: state.progressPercentText,
             showProgressNumber: showHeroPercent,
             actionTitle: state.primaryActionTitle,
             onAction: handlePrimaryAction
@@ -368,9 +368,9 @@ struct HomeView: View {
                             )
                         }
                         .buttonStyle(.plain)
-                        .offset(x: hasAnimatedIn ? 0 : -15)
-                        .opacity(hasAnimatedIn ? 1 : 0)
-                        .animation(.homeExpo(duration: 0.5, delay: 0.28 + (Double(index) * 0.07)), value: hasAnimatedIn)
+                        .offset(x: visibleDeckCardCount > index ? 0 : -150)
+                        .opacity(visibleDeckCardCount > index ? 1 : 0)
+                        .animation(.homeExpo(duration: 0.5), value: visibleDeckCardCount)
                     }
                 }
             }
@@ -426,6 +426,18 @@ struct HomeView: View {
 
         withAnimation(.homeSpring(delay: 1.0, stiffness: 300, damping: 22)) {
             showHeroPercent = true
+        }
+
+        Task {
+            for index in visibleRecentDecks.indices {
+                let delay = index == 0 ? 280_000_000 : 250_000_000
+                try? await Task.sleep(nanoseconds: UInt64(delay))
+                await MainActor.run {
+                    withAnimation(.homeExpo(duration: 0.52)) {
+                        visibleDeckCardCount = index + 1
+                    }
+                }
+            }
         }
     }
 
@@ -483,7 +495,6 @@ private struct HomeHeroCard: View {
     let completedCards: Int
     let goalCards: Int
     let progress: Double
-    let displayProgressText: String
     let showProgressNumber: Bool
     let actionTitle: String
     let onAction: () -> Void
@@ -497,17 +508,16 @@ private struct HomeHeroCard: View {
                 Circle()
                     .trim(from: 0, to: min(max(progress, 0), 1))
                     .stroke(
-                        AngularGradient(
-                            colors: [
-                                NColors.Brand.neuroBlue,
-                                NColors.Brand.neuroBlueDeep,
-                                NColors.Brand.accentBlueStrong
-                            ],
-                            center: .center
-                        ),
+                        progressGradient,
                         style: StrokeStyle(lineWidth: 6, lineCap: .round)
                     )
                     .rotationEffect(.degrees(-90))
+                    .shadow(
+                        color: progressGlowColor,
+                        radius: colorScheme == .dark ? 8 : 4,
+                        x: 0,
+                        y: 0
+                    )
 
                 VStack(spacing: 1) {
                     percentageText
@@ -520,7 +530,7 @@ private struct HomeHeroCard: View {
                         .foregroundStyle(NColors.Text.textTertiary)
                 }
             }
-            .frame(width: 82, height: 82)
+            .frame(width: 92, height: 92)
 
             VStack(alignment: .leading, spacing: 11) {
                 HStack(spacing: 6) {
@@ -552,7 +562,7 @@ private struct HomeHeroCard: View {
                     actionTitle,
                     leadingSymbolName: "sparkles",
                     showsChevron: false,
-                    animateEffects: false,
+                    animateEffects: true,
                     font: .system(size: 16, weight: .bold, design: .rounded),
                     height: 44,
                     cornerRadius: 14,
@@ -566,7 +576,7 @@ private struct HomeHeroCard: View {
                 ) {
                     onAction()
                 }
-                .frame(width: 176, alignment: .leading)
+                .frame(width: 196, alignment: .leading)
             }
         }
         .padding(.horizontal, 20)
@@ -590,18 +600,19 @@ private struct HomeHeroCard: View {
         LinearGradient(
             colors: colorScheme == .dark
                 ? [
-                    NColors.Surface.raised.opacity(0.96),
-                    NColors.Brand.neuroBlue.opacity(0.13),
-                    NColors.Brand.neuroBlueDeep.opacity(0.11)
+                    NColors.Surface.raised.opacity(0.94),
+                    NColors.Brand.neuroBlue.opacity(0.16),
+                    NColors.Brand.neuroBlueDeep.opacity(0.18)
                 ]
                 : [
-                    Color.white.opacity(0.82),
-                    NColors.Surface.raised.opacity(0.98),
-                    NColors.Brand.neuroBlue.opacity(0.05)
+                    Color(red: 0.90, green: 0.93, blue: 0.99).opacity(0.92),
+                    Color(red: 0.82, green: 0.88, blue: 0.99).opacity(0.86),
+                    Color(red: 0.79, green: 0.82, blue: 0.98).opacity(0.88),
+                    Color(red: 0.82, green: 0.76, blue: 0.98).opacity(0.84)
                 ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
     }
 
     private var cardBorder: some View {
@@ -621,9 +632,9 @@ private struct HomeHeroCard: View {
     }
 
     private var percentageText: some View {
-        let components = displayProgressText.split(separator: "%", maxSplits: 1, omittingEmptySubsequences: false)
-        let number = components.first.map(String.init) ?? displayProgressText
-        let suffix = displayProgressText.contains("%") ? "%" : ""
+        let percentage = Int((min(max(progress, 0), 1) * 100).rounded())
+        let number = "\(percentage)"
+        let suffix = "%"
 
         return HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text(number)
@@ -634,6 +645,31 @@ private struct HomeHeroCard: View {
                 .font(.system(size: 16, weight: .bold, design: .rounded))
                 .foregroundStyle(NColors.Text.textPrimary)
         }
+    }
+
+    private var progressGradient: AngularGradient {
+        AngularGradient(
+            colors: colorScheme == .dark
+                ? [
+                    Color(red: 0.30, green: 0.63, blue: 0.95),
+                    Color(red: 0.40, green: 0.49, blue: 0.96),
+                    Color(red: 0.50, green: 0.34, blue: 0.95),
+                    Color(red: 0.30, green: 0.63, blue: 0.95)
+                ]
+                : [
+                    Color(red: 0.24, green: 0.50, blue: 0.90),
+                    Color(red: 0.30, green: 0.46, blue: 0.87),
+                    Color(red: 0.39, green: 0.27, blue: 0.82),
+                    Color(red: 0.24, green: 0.50, blue: 0.90)
+                ],
+            center: .center
+        )
+    }
+
+    private var progressGlowColor: Color {
+        colorScheme == .dark
+            ? NColors.Brand.neuroBlue.opacity(0.30)
+            : NColors.Brand.neuroBlue.opacity(0.16)
     }
 }
 
