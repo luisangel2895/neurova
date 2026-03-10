@@ -25,8 +25,6 @@ struct LibraryView: View {
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 20) {
-                headerSection
-
                 if viewModel.subjects.isEmpty {
                     emptySection
                 } else {
@@ -34,11 +32,17 @@ struct LibraryView: View {
                 }
             }
             .padding(.horizontal, 22)
-            .padding(.top, 18)
+            .padding(.top, 10)
             .padding(.bottom, 140)
         }
         .background(backgroundView.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        .navigationTitle(AppCopy.text(locale, en: "Library", es: "Biblioteca"))
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                addButton
+            }
+        }
         .task {
             viewModel.load(using: modelContext)
         }
@@ -76,39 +80,28 @@ struct LibraryView: View {
         }
     }
 
-    private var headerSection: some View {
-        HStack(alignment: .top) {
-            Text(AppCopy.text(locale, en: "Library", es: "Biblioteca"))
-                .font(.system(size: 31, weight: .bold, design: .rounded))
-                .foregroundStyle(NColors.Text.textPrimary)
-                .offset(x: showHeader ? 0 : -10)
-                .opacity(showHeader ? 1 : 0)
-                .animation(.libraryExpo(duration: 0.5), value: showHeader)
+    private var addButton: some View {
+        Button {
+            isPresentingCreateSubject = true
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(addButtonBackground)
+                    .frame(width: 40, height: 40)
+                    .overlay(
+                        Circle()
+                            .stroke(addButtonBorder, lineWidth: 1)
+                    )
 
-            Spacer(minLength: 0)
-
-            Button {
-                isPresentingCreateSubject = true
-            } label: {
-                ZStack {
-                    Circle()
-                        .fill(addButtonBackground)
-                        .frame(width: 48, height: 48)
-                        .overlay(
-                            Circle()
-                                .stroke(addButtonBorder, lineWidth: 1)
-                        )
-
-                    Image(systemName: "plus")
-                        .font(.system(size: 21, weight: .medium))
-                        .foregroundStyle(addButtonForeground)
-                }
+                Image(systemName: "plus")
+                    .font(.system(size: 20, weight: .medium))
+                    .foregroundStyle(addButtonForeground)
             }
-            .buttonStyle(LibraryCircleButtonStyle())
-            .scaleEffect(showAddButton ? 1 : 0.01)
-            .opacity(showAddButton ? 1 : 0)
-            .animation(.librarySpring(delay: 0.15, stiffness: 300, damping: 24), value: showAddButton)
         }
+        .buttonStyle(LibraryCircleButtonStyle())
+        .scaleEffect(showAddButton ? 1 : 0.01)
+        .opacity(showAddButton ? 1 : 0)
+        .animation(.librarySpring(delay: 0.15, stiffness: 300, damping: 24), value: showAddButton)
     }
 
     private var subjectsSection: some View {
