@@ -12,17 +12,17 @@ struct NSecondaryButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(NTypography.caption.weight(.medium))
-                .foregroundStyle(NColors.Brand.neuroBlue)
+                .font(NTypography.caption.weight(.semibold))
+                .foregroundStyle(NColors.Button.secondaryText)
                 .frame(maxWidth: .infinity)
                 .frame(height: 38)
                 .background(
                     RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                        .fill(NColors.Home.surfaceL2)
+                        .fill(NColors.Button.secondaryBackground)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                        .stroke(NColors.Home.layeredStroke, lineWidth: 1)
+                        .stroke(NColors.Button.secondaryBorder, lineWidth: 1)
                 )
         }
         .buttonStyle(.plain)

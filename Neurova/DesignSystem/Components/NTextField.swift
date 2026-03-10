@@ -24,10 +24,10 @@ struct NTextField: View {
         .foregroundStyle(NColors.Text.textPrimary)
         .padding(.horizontal, NSpacing.md)
         .frame(height: 48)
-        .background(NColors.Neutrals.surfaceAlt)
+        .background(NColors.Field.background)
         .overlay(
             RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                .stroke(isFocused ? NColors.Brand.neuroBlue : NColors.Neutrals.border, lineWidth: 1)
+                .stroke(isFocused ? NColors.Field.activeBorder : NColors.Field.border, lineWidth: 1)
         )
         .clipShape(
             RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)

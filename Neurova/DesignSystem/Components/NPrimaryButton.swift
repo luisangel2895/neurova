@@ -10,17 +10,13 @@ struct NPrimaryButton: View {
     }
 
     var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(NTypography.bodyEmphasis.weight(.bold))
-                .foregroundStyle(NColors.Neutrals.background)
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-                .background(
-                    RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                        .fill(NColors.neuroGradient)
-                )
-        }
-        .buttonStyle(.plain)
+        NGradientButton(
+            title,
+            animateEffects: true,
+            font: NTypography.bodyEmphasis.weight(.bold),
+            height: 44,
+            cornerRadius: NRadius.button,
+            action: action
+        )
     }
 }

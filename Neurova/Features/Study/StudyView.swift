@@ -399,9 +399,10 @@ struct StudyView: View {
                 }
                 .padding(.bottom, 8)
 
-                StudyGradientButton(
-                    title: AppCopy.text(locale, en: "Show answer", es: "Mostrar respuesta"),
-                    iconSystemName: "arrow.uturn.backward"
+                NGradientButton(
+                    AppCopy.text(locale, en: "Show answer", es: "Mostrar respuesta"),
+                    leadingSymbolName: "arrow.uturn.backward",
+                    animateEffects: true
                 ) {
                     flipCard()
                 }
@@ -712,93 +713,6 @@ struct StudyView: View {
 
     private func buttonOpacity(for quality: ReviewQuality) -> Double {
         selectedQuality == quality ? 1 : 0.72
-    }
-}
-
-private struct StudyGradientButton: View {
-    @Environment(\.colorScheme) private var colorScheme
-    let title: String
-    let iconSystemName: String?
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                if let iconSystemName {
-                    Image(systemName: iconSystemName)
-                        .font(.system(size: 16, weight: .regular))
-                }
-                Text(title)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-            }
-            .foregroundStyle(colorScheme == .dark ? Color(red: 0.05, green: 0.08, blue: 0.16) : .white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 58)
-            .background(
-                LinearGradient(
-                    colors: colorScheme == .dark
-                        ? [Color(red: 0.30, green: 0.63, blue: 0.95), Color(red: 0.50, green: 0.34, blue: 0.95)]
-                        : [Color(red: 0.24, green: 0.50, blue: 0.90), Color(red: 0.30, green: 0.46, blue: 0.87), Color(red: 0.39, green: 0.27, blue: 0.82)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay {
-                TimelineView(.animation) { timeline in
-                    GeometryReader { proxy in
-                        let width = proxy.size.width
-                        let tickTime = timeline.date.timeIntervalSinceReferenceDate
-                        let phase = (tickTime / 2.15).truncatingRemainder(dividingBy: 1.0)
-                        let shinePhase = -1.45 + (2.9 * phase)
-                        let xOffset = width * shinePhase
-
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(.clear)
-                            .overlay(
-                                Ellipse()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [
-                                                .clear,
-                                                Color.white.opacity(0.10),
-                                                Color.white.opacity(0.30),
-                                                Color.white.opacity(0.10),
-                                                .clear
-                                            ],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .frame(width: 188, height: 126)
-                                    .rotationEffect(.degrees(20))
-                                    .blur(radius: 9)
-                                    .offset(x: xOffset)
-                            )
-                            .blendMode(.screen)
-                    }
-                }
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.white.opacity(0.20), lineWidth: 0.9)
-            }
-            .overlay(alignment: .top) {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color.white.opacity(0.20), Color.white.opacity(0.0)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .frame(height: 20)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .allowsHitTesting(false)
-            }
-        }
-        .buttonStyle(.plain)
     }
 }
 

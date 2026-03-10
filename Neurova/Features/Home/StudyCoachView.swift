@@ -3,6 +3,7 @@ import SwiftUI
 struct StudyCoachView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
+    @Environment(\.colorScheme) private var colorScheme
 
     let recommendations: [StudyDeckRecommendation]
     let onSelectDeck: (Deck) -> Void
@@ -201,9 +202,11 @@ struct StudyCoachView: View {
 
     private var backgroundView: some View {
         LinearGradient(
-            colors: [NColors.Home.backgroundLightTop, NColors.Home.backgroundLightBottom],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            colors: colorScheme == .light
+                ? [NColors.Home.backgroundLightTop, NColors.Home.backgroundLightBottom]
+                : [NColors.Home.backgroundDarkTop, NColors.Home.backgroundDarkBottom],
+            startPoint: .top,
+            endPoint: .bottom
         )
     }
 

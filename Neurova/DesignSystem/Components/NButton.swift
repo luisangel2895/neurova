@@ -25,19 +25,32 @@ struct NButton: View {
     }
 
     var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(NTypography.bodyEmphasis)
-                .foregroundStyle(foregroundColor)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(backgroundView)
-                .overlay(borderView)
-                .clipShape(
-                    RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+        Group {
+            if style == .primary {
+                NGradientButton(
+                    title,
+                    animateEffects: true,
+                    font: NTypography.bodyEmphasis.weight(.semibold),
+                    height: 52,
+                    cornerRadius: NRadius.button,
+                    action: action
                 )
+            } else {
+                Button(action: action) {
+                    Text(title)
+                        .font(NTypography.bodyEmphasis)
+                        .foregroundStyle(foregroundColor)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                        .background(backgroundView)
+                        .overlay(borderView)
+                        .clipShape(
+                            RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                        )
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .buttonStyle(.plain)
         .disabled(isDisabled)
         .allowsHitTesting(!isDisabled)
         .opacity(isDisabled ? 0.45 : 1.0)
@@ -48,13 +61,13 @@ struct NButton: View {
         switch style {
         case .primary:
             RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                .fill(NColors.neuroGradient)
+                .fill(Color.clear)
         case .secondary:
             RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                .fill(NColors.Neutrals.surface)
+                .fill(NColors.Button.secondaryBackground)
         case .ghost:
             RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                .fill(NColors.Neutrals.background)
+                .fill(Color.clear)
         }
     }
 
@@ -63,20 +76,20 @@ struct NButton: View {
         switch style {
         case .primary:
             RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                .strokeBorder(NColors.Brand.neuroBlue, lineWidth: 0)
+                .strokeBorder(Color.clear, lineWidth: 0)
         case .secondary:
             RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                .strokeBorder(NColors.Neutrals.border, lineWidth: 1)
+                .strokeBorder(NColors.Button.secondaryBorder, lineWidth: 1)
         case .ghost:
             RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
-                .strokeBorder(NColors.Neutrals.border, lineWidth: 0)
+                .strokeBorder(Color.clear, lineWidth: 0)
         }
     }
 
     private var foregroundColor: Color {
         switch style {
         case .primary:
-            return NColors.Neutrals.background
+            return NColors.Button.primaryText
         case .secondary:
             return NColors.Text.textPrimary
         case .ghost:

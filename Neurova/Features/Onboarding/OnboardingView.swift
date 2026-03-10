@@ -154,15 +154,12 @@ struct OnboardingView: View {
             }
 
             if step == .done {
-                OnboardingAnimatedPrimaryButton(
-                    title: AppCopy.text(locale, en: "Start studying", es: "Comenzar a estudiar"),
-                    isDark: colorScheme == .dark,
-                    animateEffects: true,
-                    gradientColors: colorScheme == .dark
-                        ? [Color(red: 0.30, green: 0.63, blue: 0.95), Color(red: 0.50, green: 0.34, blue: 0.95)]
-                        : [Color(red: 0.24, green: 0.50, blue: 0.90), Color(red: 0.30, green: 0.46, blue: 0.87), Color(red: 0.39, green: 0.27, blue: 0.82)],
+                NGradientButton(
+                    AppCopy.text(locale, en: "Start studying", es: "Comenzar a estudiar"),
                     leadingSymbolName: "sparkles",
-                    showsChevron: false
+                    showsChevron: false,
+                    animateEffects: true,
+                    font: .system(size: 18, weight: .regular, design: .rounded)
                 ) {
                     guard createdCards.isEmpty == false else {
                         finishOnboarding()
@@ -184,13 +181,11 @@ struct OnboardingView: View {
                 .disabled(isSaving || isAuthenticating)
             } else {
                 if usesAnimatedPrimaryButton {
-                    OnboardingAnimatedPrimaryButton(
-                        title: primaryButtonTitle,
-                        isDark: colorScheme == .dark,
+                    NGradientButton(
+                        primaryButtonTitle,
+                        showsChevron: true,
                         animateEffects: true,
-                        gradientColors: colorScheme == .dark
-                            ? [Color(red: 0.30, green: 0.63, blue: 0.95), Color(red: 0.50, green: 0.34, blue: 0.95)]
-                            : [Color(red: 0.24, green: 0.50, blue: 0.90), Color(red: 0.30, green: 0.46, blue: 0.87), Color(red: 0.39, green: 0.27, blue: 0.82)]
+                        font: .system(size: 18, weight: .regular, design: .rounded)
                     ) {
                         handlePrimaryAction()
                     }
@@ -1956,103 +1951,6 @@ private enum KeyboardWarmup {
 
         _ = UITextInputMode.activeInputModes
         _ = UITextChecker()
-    }
-}
-
-private struct OnboardingAnimatedPrimaryButton: View {
-    let title: String
-    let isDark: Bool
-    let animateEffects: Bool
-    let gradientColors: [Color]
-    var leadingSymbolName: String? = nil
-    var showsChevron: Bool = true
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 8) {
-                if let leadingSymbolName {
-                    Image(systemName: leadingSymbolName)
-                        .font(.system(size: 14, weight: .regular))
-                }
-                Text(title)
-                    .font(.system(size: 18, weight: .regular, design: .rounded))
-                if showsChevron {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .regular))
-                }
-            }
-            .foregroundStyle(isDark ? Color(red: 0.05, green: 0.08, blue: 0.16) : .white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 58)
-            .background(
-                LinearGradient(
-                    colors: gradientColors,
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay {
-                if animateEffects {
-                    TimelineView(.animation) { timeline in
-                        GeometryReader { proxy in
-                            let width = proxy.size.width
-                            let tickTime = timeline.date.timeIntervalSinceReferenceDate
-                            let phase = (tickTime / 2.15).truncatingRemainder(dividingBy: 1.0)
-                            let shinePhase = -1.45 + (2.9 * phase)
-                            let xOffset = width * shinePhase
-
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(.clear)
-                                .overlay(
-                                    Ellipse()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [
-                                                    .clear,
-                                                    Color.white.opacity(0.10),
-                                                    Color.white.opacity(0.30),
-                                                    Color.white.opacity(0.10),
-                                                    .clear
-                                                ],
-                                                startPoint: .leading,
-                                                endPoint: .trailing
-                                            )
-                                        )
-                                        .frame(width: 188, height: 126)
-                                        .rotationEffect(.degrees(20))
-                                        .blur(radius: 9)
-                                        .offset(x: xOffset)
-                                )
-                                .blendMode(.screen)
-                        }
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color.white.opacity(0.20), lineWidth: 0.9)
-            }
-            .overlay(alignment: .top) {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.20),
-                                Color.white.opacity(0.0)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .frame(height: 20)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .allowsHitTesting(false)
-            }
-        }
-        .buttonStyle(.plain)
     }
 }
 
