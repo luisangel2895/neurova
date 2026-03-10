@@ -29,7 +29,9 @@ struct HomeView: View {
     @State private var hasAnimatedIn = false
     @State private var showHeroPercent = false
     @State private var animatedHeroProgress: Double = 0
+    @State private var visibleStatCardCount = 0
     @State private var visibleDeckCardCount = 0
+    @State private var statsAnimationTask: Task<Void, Never>?
     @State private var deckAnimationTask: Task<Void, Never>?
 
     init(
@@ -323,9 +325,11 @@ struct HomeView: View {
                     stat: stat,
                     label: compactLabel(for: stat)
                 )
-                .offset(y: hasAnimatedIn ? 0 : 8)
-                .opacity(hasAnimatedIn ? 1 : 0)
-                .animation(.homeExpo(duration: 0.4, delay: 0.2 + (Double(index) * 0.05)), value: hasAnimatedIn)
+                .offset(y: visibleStatCardCount > index ? 0 : 42)
+                .scaleEffect(visibleStatCardCount > index ? 1 : 0.82)
+                .rotationEffect(.degrees(visibleStatCardCount > index ? 0 : -6))
+                .opacity(visibleStatCardCount > index ? 1 : 0)
+                .animation(.homeExpo(duration: 0.7), value: visibleStatCardCount)
             }
         }
     }
@@ -427,10 +431,12 @@ struct HomeView: View {
     }
 
     private func restartEntryAnimation() {
+        statsAnimationTask?.cancel()
         deckAnimationTask?.cancel()
         hasStartedEntryAnimation = true
         hasAnimatedIn = false
         showHeroPercent = false
+        visibleStatCardCount = 0
         visibleDeckCardCount = 0
         animatedHeroProgress = initialHeroProgress
 
@@ -450,6 +456,20 @@ struct HomeView: View {
 
         withAnimation(.homeSpring(delay: 1.0, stiffness: 300, damping: 22)) {
             showHeroPercent = true
+        }
+
+        statsAnimationTask?.cancel()
+        statsAnimationTask = Task {
+            for index in state.quickStats.indices {
+                let delay = index == 0 ? 200_000_000 : 100_000_000
+                try? await Task.sleep(nanoseconds: UInt64(delay))
+                if Task.isCancelled { return }
+                await MainActor.run {
+                    withAnimation(.homeExpo(duration: 0.7)) {
+                        visibleStatCardCount = index + 1
+                    }
+                }
+            }
         }
 
         deckAnimationTask?.cancel()
