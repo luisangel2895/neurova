@@ -6,6 +6,8 @@ struct HomeState {
     let subtitle: String
     let studySectionTitle: String
     let studyTitle: String
+    let todayCompletedCards: Int
+    let todayGoalCards: Int
     let recommendedDeckText: String?
     let progress: Double
     let progressPercentText: String
@@ -34,6 +36,8 @@ struct HomeState {
         subtitle: "",
         studySectionTitle: "STUDY",
         studyTitle: "Daily goal",
+        todayCompletedCards: 0,
+        todayGoalCards: 0,
         recommendedDeckText: nil,
         progress: 0,
         progressPercentText: "0%",
@@ -93,7 +97,19 @@ struct RecentDeck: Identifiable {
     let subjectPathText: String
     let subjectIconName: String
     let title: String
+    let totalCards: Int
+    let readyCount: Int
     let cardCountText: String
     let readyCountText: String
     let accentColor: Color
+
+    var completionProgress: Double {
+        guard totalCards > 0 else { return 0 }
+        let remaining = max(0, totalCards - readyCount)
+        return min(max(Double(remaining) / Double(totalCards), 0), 1)
+    }
+
+    var completionPercentText: String {
+        "\(Int((completionProgress * 100).rounded()))%"
+    }
 }

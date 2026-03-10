@@ -25,6 +25,11 @@ struct HomeView: View {
     @State private var selectedDeckForDetail: Deck?
     @State private var noCardsAlertMessage: String?
 
+    @State private var hasStartedEntryAnimation = false
+    @State private var hasAnimatedIn = false
+    @State private var showHeroPercent = false
+    @State private var animatedHeroProgress: Double = 0
+
     init(
         viewModel: HomeViewModel = HomeViewModel(),
         onSettingsTap: @escaping () -> Void = {},
@@ -39,22 +44,24 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: NSpacing.md) {
+            VStack(alignment: .leading, spacing: 26) {
                 headerSection
-                studyCardSection
-                statsGridSection
-                recommendationSection
+                heroSection
+                statsSection
                 recentDecksSection
-                dailyGoalSummarySection
                 tipSection
             }
             .padding(.horizontal, NSpacing.md + NSpacing.xs)
             .padding(.top, NSpacing.md)
-            .padding(.bottom, NSpacing.xxl)
+            .padding(.bottom, 140)
         }
         .background(homeBackground.ignoresSafeArea())
         .task {
             viewModel.load(using: modelContext)
+            startEntryAnimationIfNeeded()
+        }
+        .onAppear {
+            startEntryAnimationIfNeeded()
         }
         .onChange(of: locale.identifier) { _, _ in
             viewModel.load(using: modelContext, forceRefresh: true)
@@ -65,6 +72,13 @@ struct HomeView: View {
         .onChange(of: scenePhase) { _, newValue in
             guard newValue == .active else { return }
             viewModel.load(using: modelContext, forceRefresh: true)
+        }
+        .onChange(of: state.progress) { _, newValue in
+            if hasStartedEntryAnimation {
+                withAnimation(.homeExpo(duration: 1.0)) {
+                    animatedHeroProgress = newValue
+                }
+            }
         }
         .sheet(isPresented: $isPresentingStudyCoach) {
             StudyCoachView(
@@ -158,48 +172,22 @@ struct HomeView: View {
     }
 
     private var homeBackground: some View {
-        LinearGradient(
-            colors: colorScheme == .light
-                ? [NColors.Home.backgroundLightTop, NColors.Home.backgroundLightBottom]
-                : [NColors.Home.backgroundDarkTop, NColors.Home.backgroundDarkBottom],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
+        ZStack {
+            LinearGradient(
+                colors: colorScheme == .light
+                    ? [NColors.Home.backgroundLightTop, NColors.Home.backgroundLightBottom]
+                    : [NColors.Home.backgroundDarkTop, NColors.Home.backgroundDarkBottom],
+                startPoint: .top,
+                endPoint: .bottom
+            )
 
-    private var secondaryTextColor: Color {
-        colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark
-    }
-
-    private var headerSection: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: NSpacing.xs) {
-                Text(greetingText)
-                    .font(NTypography.title.weight(.bold))
-                    .foregroundStyle(NColors.Text.textPrimary)
-
-                Text(state.subtitle)
-                    .font(NTypography.caption)
-                    .foregroundStyle(secondaryTextColor)
-            }
-            .padding(.bottom, NSpacing.sm + 2)
-
-            Spacer()
-
-            Button(action: onSettingsTap) {
-                Image(systemName: state.settingsSymbolName)
-                    .font(NTypography.bodyEmphasis)
-                    .foregroundStyle(secondaryTextColor)
-                    .frame(width: 36, height: 36)
-                    .background(NColors.Neutrals.surface)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(NColors.Neutrals.border, lineWidth: 1)
-                    )
-            }
-            .buttonStyle(.plain)
-            .onLongPressGesture(minimumDuration: 0.7, perform: onOpenBootstrap)
+            LinearGradient(
+                colors: colorScheme == .light
+                    ? [Color.white.opacity(0.28), .clear, NColors.Brand.neuroBlue.opacity(0.04)]
+                    : [NColors.Brand.neuroBlue.opacity(0.08), .clear, NColors.Brand.neuralMint.opacity(0.04)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
         }
     }
 
@@ -213,152 +201,146 @@ struct HomeView: View {
         return state.greetingName
     }
 
-    private var greetingText: String {
-        let hello = AppCopy.text(locale, en: "Hi", es: "Hola")
-        let name = resolvedGreetingName.trimmingCharacters(in: .whitespacesAndNewlines)
-        if name.isEmpty {
-            return "\(hello) \(state.greetingEmoji)"
-        }
-        return "\(hello), \(name)\(state.greetingEmoji)"
+    private var displayName: String {
+        let trimmed = resolvedGreetingName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "Neurova" : trimmed
     }
 
-    private var studyCardSection: some View {
-        NHighlightCard(
-            sectionLabel: state.studySectionTitle,
-            title: state.studyTitle,
-            recommendationText: nil,
-            subtitle: state.progressDetailText,
-            primaryActionTitle: state.primaryActionTitle,
-            secondaryActionTitle: state.secondaryActionTitle,
-            onPrimaryAction: handlePrimaryAction,
-            onSecondaryAction: onOpenLibrary
-        ) {
-            ZStack {
-                NProgressRing(
-                    progress: state.progress,
-                    lineWidth: NSpacing.xs + 3,
-                    centerText: nil,
-                    animationDuration: 1.1
-                )
-                .frame(width: 68, height: 68)
+    private var avatarLetter: String {
+        String(displayName.prefix(1)).uppercased()
+    }
 
-                Text(state.progressPercentText)
-                    .font(NTypography.headline.weight(.bold))
+    private var featuredDeckID: UUID? {
+        state.highlightedDeck?.id
+    }
+
+    private var visibleRecentDecks: [RecentDeck] {
+        Array(state.recentDecks.prefix(3))
+    }
+
+    private var headerSection: some View {
+        HStack(alignment: .top, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(AppCopy.text(locale, en: "WELCOME BACK", es: "BIENVENIDO DE NUEVO"))
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .tracking(2.2)
+                    .foregroundStyle(NColors.Text.textTertiary)
+                    .opacity(0.92)
+
+                Text(displayName)
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundStyle(NColors.Text.textPrimary)
             }
-            .padding(.top, NSpacing.md - 1)
-            .padding(.leading, NSpacing.md - 1)
-            .padding(.trailing, NSpacing.md - 1)
-            .padding(.bottom, 0)
-        }
-    }
+            .offset(x: hasAnimatedIn ? 0 : -10)
+            .opacity(hasAnimatedIn ? 1 : 0)
+            .animation(.homeExpo(duration: 0.5, delay: 0), value: hasAnimatedIn)
 
-    private var statsGridSection: some View {
-        LazyVGrid(
-            columns: [GridItem(.flexible(), spacing: NSpacing.sm + NSpacing.xs), GridItem(.flexible(), spacing: NSpacing.sm + NSpacing.xs)],
-            spacing: NSpacing.sm + NSpacing.xs
-        ) {
-            ForEach(state.quickStats) { stat in
-                NStatCard(
-                    systemImage: stat.systemImage,
-                    iconColor: stat.iconColor,
-                    value: stat.value,
-                    label: stat.label
-                )
+            Spacer(minLength: 0)
+
+            Button(action: onSettingsTap) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: colorScheme == .dark
+                                    ? [NColors.Brand.neuroBlue.opacity(0.92), NColors.Brand.neuralMint.opacity(0.95)]
+                                    : [NColors.Brand.accentBlueStrong, NColors.Brand.neuroBlueDeep.opacity(0.96)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 52, height: 52)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                .stroke(Color.white.opacity(colorScheme == .dark ? 0.12 : 0.38), lineWidth: 1)
+                        )
+                        .shadow(
+                            color: colorScheme == .dark
+                                ? NColors.Brand.neuroBlue.opacity(0.42)
+                                : NColors.Brand.neuroBlue.opacity(0.18),
+                            radius: colorScheme == .dark ? 14 : 9,
+                            x: 0,
+                            y: 4
+                        )
+
+                    Text(avatarLetter)
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.96))
+                        .frame(width: 52, height: 52)
+                        .multilineTextAlignment(.center)
+
+                    Circle()
+                        .fill(NColors.Surface.raised)
+                        .frame(width: 18, height: 18)
+                        .overlay(
+                            Image(systemName: state.settingsSymbolName)
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(NColors.Text.textSecondary)
+                        )
+                        .offset(x: 20, y: 20)
+                }
             }
+            .buttonStyle(.plain)
+            .onLongPressGesture(minimumDuration: 0.7, perform: onOpenBootstrap)
+            .scaleEffect(hasAnimatedIn ? 1 : 0.01, anchor: .center)
+            .animation(.homeSpring(delay: 0.2, stiffness: 300, damping: 22), value: hasAnimatedIn)
         }
     }
 
-    private var recommendationSection: some View {
-        NInfoCard(
-            sectionLabel: state.recommendationSectionTitle,
-            chips: state.recommendation.tags,
-            title: state.recommendation.title,
-            description: state.recommendation.message,
-            actionTitle: state.recommendation.actionTitle,
-            onAction: handleRecommendationAction
+    private var heroSection: some View {
+        HomeHeroCard(
+            locale: locale,
+            colorScheme: colorScheme,
+            completedCards: state.todayCompletedCards,
+            goalCards: state.todayGoalCards,
+            progress: animatedHeroProgress,
+            displayProgressText: state.progressPercentText,
+            showProgressNumber: showHeroPercent,
+            actionTitle: state.primaryActionTitle,
+            onAction: handlePrimaryAction
         )
-        .overlay(recommendationImportanceBorder)
+        .offset(y: hasAnimatedIn ? 0 : 25)
+        .scaleEffect(hasAnimatedIn ? 1 : 0.97)
+        .opacity(hasAnimatedIn ? 1 : 0)
+        .animation(.homeExpo(duration: 0.6, delay: 0.1), value: hasAnimatedIn)
     }
 
-    @ViewBuilder
-    private var recommendationImportanceBorder: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 60.0)) { context in
-            let phase = (context.date.timeIntervalSinceReferenceDate / 3.6)
-                .truncatingRemainder(dividingBy: 1.0)
-            let segment: CGFloat = 0.15
-
-            ZStack {
-                RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                NColors.Brand.neuroBlue.opacity(0.98),
-                                NColors.Brand.neuralMint.opacity(1.0),
-                                NColors.Brand.neuroBlueDeep.opacity(0.96),
-                                NColors.Brand.neuralMint.opacity(0.96)
-                            ],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ),
-                        lineWidth: 2.5
-                    )
-
-                recommendationPerimeterGlow(
-                    start: CGFloat(phase),
-                    length: segment,
-                    lineWidth: 2.6,
-                    color: .white.opacity(0.32)
+    private var statsSection: some View {
+        HStack(spacing: 12) {
+            ForEach(Array(state.quickStats.enumerated()), id: \.element.id) { index, stat in
+                HomeCompactStatCard(
+                    stat: stat,
+                    label: compactLabel(for: stat)
                 )
-
-                recommendationPerimeterGlow(
-                    start: CGFloat((phase + 0.5).truncatingRemainder(dividingBy: 1.0)),
-                    length: segment,
-                    lineWidth: 2.2,
-                    color: .white.opacity(0.22)
-                )
+                .offset(y: hasAnimatedIn ? 0 : 8)
+                .opacity(hasAnimatedIn ? 1 : 0)
+                .animation(.homeExpo(duration: 0.4, delay: 0.2 + (Double(index) * 0.05)), value: hasAnimatedIn)
             }
-            .drawingGroup()
-        }
-    }
-
-    @ViewBuilder
-    private func recommendationPerimeterGlow(start: CGFloat, length: CGFloat, lineWidth: CGFloat, color: Color) -> some View {
-        let end = start + length
-        if end <= 1 {
-            RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                .trim(from: start, to: end)
-                .stroke(style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
-                .foregroundStyle(color)
-                .shadow(color: .white.opacity(0.18), radius: 6, x: 0, y: 0)
-                .shadow(color: NColors.Brand.neuralMint.opacity(0.14), radius: 5, x: 0, y: 0)
-                .blendMode(.plusLighter)
-        } else {
-            ZStack {
-                RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                    .trim(from: start, to: 1)
-                    .stroke(style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
-                    .foregroundStyle(color)
-
-                RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                    .trim(from: 0, to: end - 1)
-                    .stroke(style: StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
-                    .foregroundStyle(color)
-            }
-            .shadow(color: .white.opacity(0.18), radius: 6, x: 0, y: 0)
-            .shadow(color: NColors.Brand.neuralMint.opacity(0.14), radius: 5, x: 0, y: 0)
-            .blendMode(.plusLighter)
         }
     }
 
     private var recentDecksSection: some View {
-        VStack(alignment: .leading, spacing: NSpacing.sm) {
-            Text(state.recentsSectionTitle)
-                .font(NTypography.micro.weight(.bold))
-                .tracking(0.6)
-                .foregroundStyle(NColors.Text.textTertiary)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text(AppCopy.text(locale, en: "Recent decks", es: "Mazos recientes"))
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(NColors.Text.textPrimary)
 
-            if state.recentDecks.isEmpty {
+                Spacer(minLength: 0)
+
+                Button(action: onOpenLibrary) {
+                    HStack(spacing: 4) {
+                        Text(AppCopy.text(locale, en: "See all", es: "VER TODOS"))
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 10, weight: .bold))
+                    }
+                    .foregroundStyle(NColors.Brand.accentBlue)
+                }
+                .buttonStyle(.plain)
+            }
+
+            if visibleRecentDecks.isEmpty {
                 NEmptyState(
                     systemImage: "rectangle.stack",
                     title: AppCopy.text(locale, en: "No decks yet", es: "Aún no hay decks"),
@@ -368,76 +350,82 @@ struct HomeView: View {
                     onOpenLibrary()
                 }
             } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: NSpacing.sm) {
-                        ForEach(state.recentDecks) { deck in
-                            Button {
-                                selectedDeckForDetail = deck.deck
-                            } label: {
-                                NDeckCard(
-                                    accentColor: deck.accentColor,
-                                    iconName: deck.subjectIconName,
-                                    contextText: deck.subjectPathText,
-                                    title: deck.title,
-                                    cardCountText: "\(deck.cardCountText) • \(deck.readyCountText)"
-                                )
-                            }
-                            .buttonStyle(.plain)
+                VStack(spacing: 14) {
+                    ForEach(Array(visibleRecentDecks.enumerated()), id: \.element.id) { index, deck in
+                        Button {
+                            selectedDeckForDetail = deck.deck
+                        } label: {
+                            HomeRecentDeckCard(
+                                locale: locale,
+                                deck: deck,
+                                isFeatured: featuredDeckID == deck.id,
+                                colorScheme: colorScheme,
+                                showFeaturedBadge: hasAnimatedIn
+                            )
                         }
+                        .buttonStyle(.plain)
+                        .offset(x: hasAnimatedIn ? 0 : -15)
+                        .opacity(hasAnimatedIn ? 1 : 0)
+                        .animation(.homeExpo(duration: 0.5, delay: 0.28 + (Double(index) * 0.07)), value: hasAnimatedIn)
                     }
-                    .padding(.trailing, NSpacing.xs)
                 }
             }
         }
-    }
-
-    private var dailyGoalSummarySection: some View {
-        NCard {
-            HStack(spacing: NSpacing.sm + NSpacing.xs) {
-                Image(systemName: state.dailyGoalSummarySymbolName)
-                    .font(NTypography.bodyEmphasis)
-                    .foregroundStyle(NColors.Brand.neuroBlue)
-                    .frame(width: 32, height: 32)
-                    .background(NColors.Neutrals.surfaceAlt)
-                    .clipShape(RoundedRectangle(cornerRadius: NRadius.button, style: .continuous))
-
-                VStack(alignment: .leading, spacing: NSpacing.sm) {
-                    HStack {
-                        Text(state.dailyGoalSummaryTitle)
-                            .font(NTypography.caption.weight(.bold))
-                            .foregroundStyle(NColors.Text.textPrimary)
-
-                        Spacer()
-
-                        Text(state.dailyGoalSummaryTrailingText)
-                            .font(NTypography.caption.weight(.bold))
-                            .foregroundStyle(secondaryTextColor)
-                    }
-
-                    NProgressBar(
-                        progress: state.dailyGoalSummaryProgress,
-                        animationDuration: 1.9,
-                        showsShimmer: true,
-                        shimmerDuration: 2.5
-                    )
-                }
-            }
-        }
-        .frame(maxWidth: .infinity)
+        .offset(y: hasAnimatedIn ? 0 : 15)
+        .opacity(hasAnimatedIn ? 1 : 0)
+        .animation(.homeExpo(duration: 0.5, delay: 0.22), value: hasAnimatedIn)
     }
 
     private var tipSection: some View {
-        NTipCard(title: state.tipTitle, bodyText: state.tipMessage, showsTypewriter: true) {
-            NImages.Mascot.neruHappy
-                .resizable()
-                .scaledToFit()
-                .frame(width: 68, height: 68)
+        VStack(alignment: .leading, spacing: 16) {
+            Text(AppCopy.text(locale, en: "Neurova Tips", es: "Neurova Tips"))
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(NColors.Text.textPrimary)
+
+            HomeTipCard(
+                locale: locale,
+                title: AppCopy.text(locale, en: "Study tip", es: "Consejo de estudio"),
+                message: state.tipMessage
+            )
         }
-        .frame(maxWidth: .infinity)
+        .offset(y: hasAnimatedIn ? 0 : 15)
+        .opacity(hasAnimatedIn ? 1 : 0)
+        .animation(.homeExpo(duration: 0.5, delay: 0.35), value: hasAnimatedIn)
+    }
+
+    private func compactLabel(for stat: QuickStat) -> String {
+        switch stat.systemImage {
+        case "flame":
+            return AppCopy.text(locale, en: "STREAK", es: "RACHA")
+        case "bolt":
+            return "XP"
+        case "square.stack.3d.up":
+            return AppCopy.text(locale, en: "READY", es: "LISTAS")
+        case "rectangle.stack":
+            return AppCopy.text(locale, en: "DECKS", es: "MAZOS")
+        default:
+            return stat.label.uppercased()
+        }
+    }
+
+    private func startEntryAnimationIfNeeded() {
+        guard hasStartedEntryAnimation == false else { return }
+        hasStartedEntryAnimation = true
+
+        withAnimation(.homeExpo(duration: 0.6)) {
+            hasAnimatedIn = true
+        }
+
+        withAnimation(.homeExpo(duration: 1.4, delay: 0.6)) {
+            animatedHeroProgress = state.progress
+        }
+
+        withAnimation(.homeSpring(delay: 1.0, stiffness: 300, damping: 22)) {
+            showHeroPercent = true
+        }
     }
 
     private func handlePrimaryAction() {
-        // Always open coach first. It handles both recommendation mode and "all caught up" mode.
         isPresentingStudyCoach = true
     }
 
@@ -482,6 +470,452 @@ struct HomeView: View {
             return
         }
         beginStudyFlow(with: highlightedDeck)
+    }
+}
+
+private struct HomeHeroCard: View {
+    let locale: Locale
+    let colorScheme: ColorScheme
+    let completedCards: Int
+    let goalCards: Int
+    let progress: Double
+    let displayProgressText: String
+    let showProgressNumber: Bool
+    let actionTitle: String
+    let onAction: () -> Void
+
+    var body: some View {
+        HStack(spacing: 18) {
+            ZStack {
+                Circle()
+                    .stroke(heroTrackColor, lineWidth: 7)
+
+                Circle()
+                    .trim(from: 0, to: min(max(progress, 0), 1))
+                    .stroke(
+                        AngularGradient(
+                            colors: [
+                                NColors.Brand.neuroBlue,
+                                NColors.Brand.neuroBlueDeep,
+                                NColors.Brand.accentBlueStrong
+                            ],
+                            center: .center
+                        ),
+                        style: StrokeStyle(lineWidth: 7, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+
+                VStack(spacing: 1) {
+                    percentageText
+                        .scaleEffect(showProgressNumber ? 1 : 0.5)
+                        .opacity(showProgressNumber ? 1 : 0)
+
+                    Text(AppCopy.text(locale, en: "GOAL", es: "META"))
+                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .tracking(1.1)
+                        .foregroundStyle(NColors.Text.textTertiary)
+                }
+            }
+            .frame(width: 92, height: 92)
+
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 6) {
+                    Image(systemName: "clock")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text(AppCopy.text(locale, en: "TODAY'S SESSION", es: "SESIÓN DE HOY"))
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .tracking(1.6)
+                }
+                .foregroundStyle(NColors.Text.textTertiary)
+
+                VStack(alignment: .leading, spacing: 3) {
+                    HStack(alignment: .firstTextBaseline, spacing: 0) {
+                        Text("\(completedCards)")
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .foregroundStyle(NColors.Text.textPrimary)
+
+                        Text("/\(goalCards)")
+                            .font(.system(size: 20, weight: .regular, design: .rounded))
+                            .foregroundStyle(NColors.Text.textPrimary)
+                    }
+
+                    Text(AppCopy.text(locale, en: "cards completed", es: "tarjetas completadas"))
+                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .foregroundStyle(NColors.Text.textSecondary)
+                }
+
+                NGradientButton(
+                    actionTitle,
+                    leadingSymbolName: "sparkles",
+                    showsChevron: false,
+                    animateEffects: false,
+                    font: .system(size: 17, weight: .semibold, design: .rounded),
+                    height: 43
+                ) {
+                    onAction()
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(cardBackground)
+        .overlay(cardBorder)
+        .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+        .shadow(
+            color: colorScheme == .dark
+                ? NColors.Brand.neuroBlue.opacity(0.10)
+                : NColors.Brand.neuroBlue.opacity(0.08),
+            radius: 16,
+            x: 0,
+            y: 8
+        )
+    }
+
+    private var cardBackground: some View {
+        LinearGradient(
+            colors: colorScheme == .dark
+                ? [
+                    NColors.Surface.raised.opacity(0.92),
+                    NColors.Brand.neuroBlue.opacity(0.10),
+                    NColors.Brand.neuralMint.opacity(0.08)
+                ]
+                : [
+                    NColors.Surface.raised.opacity(0.96),
+                    NColors.Brand.neuroBlue.opacity(0.08),
+                    Color.white.opacity(0.78)
+                ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+    }
+
+    private var cardBorder: some View {
+        RoundedRectangle(cornerRadius: 26, style: .continuous)
+            .stroke(
+                colorScheme == .dark
+                    ? Color.white.opacity(0.08)
+                    : NColors.Stroke.standard.opacity(0.72),
+                lineWidth: 1
+            )
+    }
+
+    private var heroTrackColor: Color {
+        colorScheme == .dark
+            ? NColors.Surface.subdued.opacity(0.80)
+            : NColors.Surface.subdued.opacity(0.88)
+    }
+
+    private var percentageText: some View {
+        let components = displayProgressText.split(separator: "%", maxSplits: 1, omittingEmptySubsequences: false)
+        let number = components.first.map(String.init) ?? displayProgressText
+        let suffix = displayProgressText.contains("%") ? "%" : ""
+
+        return HStack(alignment: .firstTextBaseline, spacing: 0) {
+            Text(number)
+                .font(.system(size: 30, weight: .bold, design: .rounded))
+                .foregroundStyle(NColors.Text.textPrimary)
+
+            Text(suffix)
+                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .foregroundStyle(NColors.Text.textPrimary)
+        }
+    }
+}
+
+private struct HomeCompactStatCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let stat: QuickStat
+    let label: String
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Image(systemName: stat.systemImage)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(stat.iconColor)
+
+            Text(stat.value)
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(NColors.Text.textPrimary)
+
+            Text(label)
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .tracking(1.2)
+                .foregroundStyle(NColors.Text.textTertiary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 90)
+        .background(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(colorScheme == .dark ? NColors.Surface.base.opacity(0.88) : NColors.Surface.base.opacity(0.98))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(colorScheme == .dark ? Color.white.opacity(0.06) : NColors.Stroke.standard.opacity(0.72), lineWidth: 1)
+        )
+    }
+}
+
+private struct HomeRecentDeckCard: View {
+    let locale: Locale
+    let deck: RecentDeck
+    let isFeatured: Bool
+    let colorScheme: ColorScheme
+    let showFeaturedBadge: Bool
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(cardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .stroke(cardBorderColor, lineWidth: isFeatured ? 1.4 : 1)
+                )
+                .overlay(alignment: .leading) {
+                    HStack(alignment: .top, spacing: 14) {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(deck.accentColor.opacity(colorScheme == .dark ? 0.14 : 0.12))
+                            .frame(width: 42, height: 42)
+                            .overlay(
+                                Image(systemName: deck.subjectIconName)
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(deck.accentColor)
+                            )
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(deck.title)
+                                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                                    .foregroundStyle(NColors.Text.textPrimary)
+
+                                Text(deck.subjectPathText)
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(NColors.Text.textSecondary)
+                                    .lineLimit(1)
+                            }
+
+                            HStack(alignment: .center, spacing: 10) {
+                                GeometryReader { proxy in
+                                    ZStack(alignment: .leading) {
+                                        Capsule(style: .continuous)
+                                            .fill(progressTrackColor)
+                                            .frame(height: 4)
+
+                                        Capsule(style: .continuous)
+                                            .fill(deck.accentColor)
+                                            .frame(
+                                                width: showFeaturedBadge
+                                                    ? max(proxy.size.width * deck.completionProgress, deck.completionProgress > 0 ? 18 : 0)
+                                                    : 0,
+                                                height: 4
+                                            )
+                                            .animation(.homeExpo(duration: 1.0, delay: 0.6), value: showFeaturedBadge)
+                                    }
+                                }
+                                .frame(height: 4)
+
+                                Text(deck.completionPercentText)
+                                    .font(.system(size: 14, weight: .bold, design: .rounded))
+                                    .foregroundStyle(NColors.Text.textSecondary)
+                            }
+                        }
+
+                        VStack(spacing: 4) {
+                            Text("\(deck.readyCount)")
+                                .font(.system(size: 17, weight: .bold, design: .rounded))
+                                .foregroundStyle(.white.opacity(0.96))
+                                .frame(width: 36, height: 36)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                        .fill(deck.accentColor)
+                                )
+
+                            Text(AppCopy.text(locale, en: "PEND.", es: "PEND."))
+                                .font(.system(size: 10, weight: .bold, design: .rounded))
+                                .tracking(0.8)
+                                .foregroundStyle(NColors.Text.textTertiary)
+                        }
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 18)
+                }
+
+            if isFeatured {
+                HomeFeaturedBadge(locale: locale)
+                    .padding(.top, -10)
+                    .padding(.trailing, 18)
+                    .offset(y: showFeaturedBadge ? 0 : -5)
+                    .scaleEffect(showFeaturedBadge ? 1 : 0.8)
+                    .opacity(showFeaturedBadge ? 1 : 0)
+                    .animation(.homeSpring(delay: 0.6, stiffness: 300, damping: 24), value: showFeaturedBadge)
+            }
+        }
+    }
+
+    private var cardBackground: some ShapeStyle {
+        if colorScheme == .dark {
+            return AnyShapeStyle(
+                LinearGradient(
+                    colors: [NColors.Surface.base.opacity(0.92), NColors.Surface.raised.opacity(0.86)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+        }
+
+        if isFeatured {
+            return AnyShapeStyle(
+                LinearGradient(
+                    colors: [Color.white.opacity(0.92), NColors.Surface.accentSoft.opacity(0.88)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+        }
+
+        return AnyShapeStyle(NColors.Surface.base.opacity(0.98))
+    }
+
+    private var cardBorderColor: Color {
+        if isFeatured {
+            return deck.accentColor.opacity(colorScheme == .dark ? 0.55 : 0.32)
+        }
+        return colorScheme == .dark ? Color.white.opacity(0.06) : NColors.Stroke.standard.opacity(0.72)
+    }
+
+    private var progressTrackColor: Color {
+        colorScheme == .dark
+            ? Color.white.opacity(0.08)
+            : NColors.Surface.raised
+    }
+}
+
+private struct HomeFeaturedBadge: View {
+    let locale: Locale
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: "star.fill")
+                .font(.system(size: 9, weight: .bold))
+            Text(AppCopy.text(locale, en: "FOR YOU", es: "PARA TI"))
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .tracking(0.8)
+        }
+        .foregroundStyle(.white.opacity(0.96))
+        .padding(.horizontal, 10)
+        .frame(height: 22)
+        .background(
+            Capsule(style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [NColors.Brand.accentBlueStrong, NColors.Brand.neuroBlueDeep],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+        )
+        .shadow(color: NColors.Brand.neuroBlue.opacity(0.18), radius: 10, x: 0, y: 4)
+    }
+}
+
+private struct HomeTipCard: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let locale: Locale
+    let title: String
+    let message: String
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 22, style: .continuous)
+            .fill(cardBackground)
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(colorScheme == .dark ? Color.white.opacity(0.06) : NColors.Stroke.standard.opacity(0.68), lineWidth: 1)
+            )
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 138)
+            .overlay(alignment: .leading) {
+                HStack(alignment: .top, spacing: 14) {
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .fill(iconBackground)
+                        .frame(width: 44, height: 44)
+                        .overlay(
+                            Image(systemName: "lightbulb")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(NColors.Brand.accentBlue)
+                        )
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text(title)
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundStyle(NColors.Text.textPrimary)
+
+                        Text(message)
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(NColors.Text.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        HStack(spacing: 8) {
+                            tipChip(AppCopy.text(locale, en: "PRODUCTIVITY", es: "PRODUCTIVIDAD"))
+                            tipChip("POMODORO")
+                        }
+                        .padding(.top, 2)
+                    }
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 18)
+            }
+    }
+
+    private var cardBackground: some ShapeStyle {
+        AnyShapeStyle(
+            LinearGradient(
+                colors: colorScheme == .dark
+                    ? [
+                        NColors.Surface.base.opacity(0.90),
+                        NColors.Brand.neuroBlue.opacity(0.08),
+                        NColors.Brand.neuralMint.opacity(0.04)
+                    ]
+                    : [
+                        NColors.Surface.base.opacity(0.98),
+                        NColors.Brand.neuroBlue.opacity(0.05),
+                        NColors.Brand.neuralMint.opacity(0.04)
+                    ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+    }
+
+    private var iconBackground: Color {
+        colorScheme == .dark ? NColors.Surface.accentSoft.opacity(0.42) : NColors.Surface.accentSoft.opacity(0.82)
+    }
+
+    private func tipChip(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .tracking(0.8)
+            .foregroundStyle(NColors.Brand.accentBlue)
+            .padding(.horizontal, 10)
+            .frame(height: 22)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(iconBackground)
+            )
+    }
+}
+
+private extension Animation {
+    static func homeExpo(duration: Double, delay: Double = 0) -> Animation {
+        .timingCurve(0.16, 1, 0.3, 1, duration: duration).delay(delay)
+    }
+
+    static func homeSpring(delay: Double = 0, stiffness: Double = 300, damping: Double = 22) -> Animation {
+        .interpolatingSpring(stiffness: stiffness, damping: damping).delay(delay)
     }
 }
 

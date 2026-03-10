@@ -78,6 +78,8 @@ struct HomeUseCases {
             subtitle: isEnglish ? "Ready to study?" : "¿Listo para estudiar?",
             studySectionTitle: isEnglish ? "STUDY TODAY" : "ESTUDIA HOY",
             studyTitle: isEnglish ? "Daily goal" : "Meta diaria",
+            todayCompletedCards: streak.todayProgress,
+            todayGoalCards: streak.dailyGoal,
             recommendedDeckText: recommendedDeckText,
             progress: dailyProgress,
             progressPercentText: progressText,
@@ -124,6 +126,8 @@ struct HomeUseCases {
                     subjectPathText: subjectNameText(for: summary.deck),
                     subjectIconName: summary.deck.subject?.systemImageName ?? "book.closed",
                     title: summary.deck.title,
+                    totalCards: summary.totalCards,
+                    readyCount: summary.readyCount,
                     cardCountText: isEnglish
                         ? "\(summary.totalCards) cards"
                         : "\(summary.totalCards) tarjetas",
