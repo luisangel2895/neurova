@@ -161,11 +161,9 @@ struct OnboardingView: View {
                     animateEffects: true,
                     font: .system(size: 18, weight: .regular, design: .rounded)
                 ) {
-                    guard createdCards.isEmpty == false else {
-                        finishOnboarding()
+                    guard completeOnboarding() else {
                         return
                     }
-                    isPresentingFirstStudy = true
                 }
             } else if step == .account {
                 SignInWithAppleButton(.continue) { request in
@@ -1235,8 +1233,9 @@ struct OnboardingView: View {
         }
     }
 
-    private func persistOnboarding() {
-        guard isSaving == false else { return }
+    @discardableResult
+    private func persistOnboarding(transitionToDone: Bool = true) -> Bool {
+        guard isSaving == false else { return false }
         isSaving = true
         isAuthenticating = false
         errorMessage = nil
@@ -1278,7 +1277,11 @@ struct OnboardingView: View {
 
             createdDeck = firstDeck
             createdCards = [firstCard]
-            step = .done
+            if transitionToDone {
+                step = .done
+            }
+            isSaving = false
+            return true
         } catch {
             errorMessage = AppCopy.text(
                 locale,
@@ -1288,6 +1291,23 @@ struct OnboardingView: View {
         }
 
         isSaving = false
+        return false
+    }
+
+    private func completeOnboarding() -> Bool {
+        if createdDeck == nil || createdCards.isEmpty {
+            guard persistOnboarding(transitionToDone: false) else {
+                return false
+            }
+        }
+
+        guard createdCards.isEmpty == false else {
+            finishOnboarding()
+            return true
+        }
+
+        isPresentingFirstStudy = true
+        return true
     }
 
     private func handleAppleSignIn(result: Result<ASAuthorization, Error>) {
@@ -1329,7 +1349,9 @@ struct OnboardingView: View {
                     es: "El login de Apple funcionó, pero falló la sincronización del perfil. Puedes continuar y reintentar luego."
                 )
             }
-            persistOnboarding()
+            withAnimation(.easeInOut(duration: 0.2)) {
+                step = .done
+            }
 
         case .failure(let error):
             let nsError = error as NSError

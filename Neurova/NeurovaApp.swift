@@ -787,7 +787,7 @@ private struct HomeLaunchGateView: View {
                 }
             } else if hasCompletedOnboarding {
                 AppTabShellView(onOpenBootstrap: onOpenBootstrap)
-            } else if let recoveredCloudSession {
+            } else if let recoveredCloudSession, isOnboardingActive == false {
                 RecoveredCloudSessionView(
                     locale: locale,
                     recoveredCloudSession: recoveredCloudSession,
@@ -859,6 +859,12 @@ private struct HomeLaunchGateView: View {
     @MainActor
     @discardableResult
     private func applyCurrentLaunchState() -> Bool {
+        if isOnboardingActive, hasCompletedOnboarding == false {
+            recoveredCloudSession = nil
+            isLoading = false
+            return false
+        }
+
         let descriptor = FetchDescriptor<UserPreferences>(
             predicate: #Predicate<UserPreferences> { preferences in
                 preferences.key == "global"
