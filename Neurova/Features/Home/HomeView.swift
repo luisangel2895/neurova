@@ -30,8 +30,12 @@ struct HomeView: View {
     @State private var showHeroPercent = false
     @State private var animatedHeroProgress: Double = 0
     @State private var heroProgressTask: Task<Void, Never>?
+    @State private var visibleFeaturedDeckTitle = false
+    @State private var visibleFeaturedDeck = false
     @State private var visibleStatCardCount = 0
     @State private var visibleDeckCardCount = 0
+    @State private var featuredDeckTitleAnimationTask: Task<Void, Never>?
+    @State private var featuredDeckAnimationTask: Task<Void, Never>?
     @State private var statsAnimationTask: Task<Void, Never>?
     @State private var deckAnimationTask: Task<Void, Never>?
 
@@ -53,6 +57,7 @@ struct HomeView: View {
                 headerSection
                 heroSection
                 statsSection
+                featuredDeckSection
                 recentDecksSection
                 tipSection
             }
@@ -215,8 +220,13 @@ struct HomeView: View {
         state.highlightedDeck?.id
     }
 
+    private var featuredRecentDeck: RecentDeck? {
+        guard let featuredDeckID else { return nil }
+        return state.recentDecks.first(where: { $0.id == featuredDeckID })
+    }
+
     private var visibleRecentDecks: [RecentDeck] {
-        Array(state.recentDecks.prefix(3))
+        Array(state.recentDecks.filter { $0.id != featuredDeckID }.prefix(3))
     }
 
     private var headerSection: some View {
@@ -382,6 +392,39 @@ struct HomeView: View {
         .animation(.homeExpo(duration: 0.5, delay: 0.22), value: hasAnimatedIn)
     }
 
+    @ViewBuilder
+    private var featuredDeckSection: some View {
+        if let featuredRecentDeck {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(AppCopy.text(locale, en: "For you", es: "Para ti"))
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .foregroundStyle(NColors.Text.textPrimary)
+                    .offset(y: visibleFeaturedDeckTitle ? 0 : 15)
+                    .opacity(visibleFeaturedDeckTitle ? 1 : 0)
+                    .animation(.homeExpo(duration: 0.5), value: visibleFeaturedDeckTitle)
+
+                Button {
+                    selectedDeckForDetail = featuredRecentDeck.deck
+                } label: {
+                    HomeRecentDeckCard(
+                        locale: locale,
+                        deck: featuredRecentDeck,
+                        isFeatured: true,
+                        colorScheme: colorScheme,
+                        showFeaturedBadge: hasAnimatedIn
+                    )
+                }
+                .buttonStyle(.plain)
+                .offset(x: visibleFeaturedDeck ? 0 : -150)
+                .opacity(visibleFeaturedDeck ? 1 : 0)
+                .animation(.homeExpo(duration: 0.5), value: visibleFeaturedDeck)
+            }
+            .offset(y: hasAnimatedIn ? 0 : 15)
+            .opacity(hasAnimatedIn ? 1 : 0)
+            .animation(.homeExpo(duration: 0.5, delay: 0.2), value: hasAnimatedIn)
+        }
+    }
+
     private var tipSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(AppCopy.text(locale, en: "Neurova Tips", es: "Neurova Tips"))
@@ -423,11 +466,15 @@ struct HomeView: View {
 
     private func restartEntryAnimation() {
         heroProgressTask?.cancel()
+        featuredDeckTitleAnimationTask?.cancel()
+        featuredDeckAnimationTask?.cancel()
         statsAnimationTask?.cancel()
         deckAnimationTask?.cancel()
         hasStartedEntryAnimation = true
         hasAnimatedIn = false
         showHeroPercent = false
+        visibleFeaturedDeckTitle = false
+        visibleFeaturedDeck = false
         visibleStatCardCount = 0
         visibleDeckCardCount = 0
         animatedHeroProgress = initialHeroProgress
@@ -468,6 +515,28 @@ struct HomeView: View {
                     withAnimation(.homeExpo(duration: 0.7)) {
                         visibleStatCardCount = index + 1
                     }
+                }
+            }
+        }
+
+        featuredDeckTitleAnimationTask?.cancel()
+        featuredDeckTitleAnimationTask = Task {
+            try? await Task.sleep(nanoseconds: 220_000_000)
+            if Task.isCancelled { return }
+            await MainActor.run {
+                withAnimation(.homeExpo(duration: 0.5)) {
+                    visibleFeaturedDeckTitle = featuredRecentDeck != nil
+                }
+            }
+        }
+
+        featuredDeckAnimationTask?.cancel()
+        featuredDeckAnimationTask = Task {
+            try? await Task.sleep(nanoseconds: 280_000_000)
+            if Task.isCancelled { return }
+            await MainActor.run {
+                withAnimation(.homeExpo(duration: 0.52)) {
+                    visibleFeaturedDeck = featuredRecentDeck != nil
                 }
             }
         }
@@ -822,7 +891,7 @@ private struct HomeRecentDeckCard: View {
 
                         VStack(spacing: 3) {
                             Text("\(deck.readyCount)")
-                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .font(.system(size: 14, weight: .bold, design: .rounded))
                                 .foregroundStyle(.white.opacity(0.96))
                                 .frame(width: 33, height: 33)
                                 .background(
@@ -940,14 +1009,15 @@ private struct HomeTipCard: View {
             .frame(maxWidth: .infinity)
             .frame(minHeight: 136)
             .overlay(alignment: .leading) {
-                HStack(alignment: .top, spacing: 14) {
+                HStack(alignment: .center, spacing: 14) {
                     RoundedRectangle(cornerRadius: 13, style: .continuous)
                         .fill(iconBackground)
                         .frame(width: 40, height: 40)
                         .overlay(
-                            Image(systemName: "lightbulb")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(NColors.Brand.accentBlue)
+                            NImages.Mascot.neruHappy
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 24, height: 24)
                         )
 
                     VStack(alignment: .leading, spacing: 10) {
