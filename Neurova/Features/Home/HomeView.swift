@@ -30,6 +30,7 @@ struct HomeView: View {
     @State private var showHeroPercent = false
     @State private var animatedHeroProgress: Double = 0
     @State private var visibleDeckCardCount = 0
+    @State private var deckAnimationTask: Task<Void, Never>?
 
     init(
         viewModel: HomeViewModel = HomeViewModel(),
@@ -64,6 +65,9 @@ struct HomeView: View {
         .onAppear {
             startEntryAnimationIfNeeded()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .appSplashWillExit)) { _ in
+            restartEntryAnimation()
+        }
         .onChange(of: locale.identifier) { _, _ in
             viewModel.load(using: modelContext, forceRefresh: true)
         }
@@ -76,6 +80,9 @@ struct HomeView: View {
         }
         .onChange(of: state.progress) { _, newValue in
             if hasStartedEntryAnimation {
+                if animatedHeroProgress == 0, newValue > 0 {
+                    animatedHeroProgress = min(0.08, newValue)
+                }
                 withAnimation(.homeExpo(duration: 1.0)) {
                     animatedHeroProgress = newValue
                 }
@@ -415,7 +422,24 @@ struct HomeView: View {
     private func startEntryAnimationIfNeeded() {
         guard hasStartedEntryAnimation == false else { return }
         hasStartedEntryAnimation = true
+        animatedHeroProgress = initialHeroProgress
+        runEntryAnimation()
+    }
 
+    private func restartEntryAnimation() {
+        deckAnimationTask?.cancel()
+        hasStartedEntryAnimation = true
+        hasAnimatedIn = false
+        showHeroPercent = false
+        visibleDeckCardCount = 0
+        animatedHeroProgress = initialHeroProgress
+
+        DispatchQueue.main.async {
+            runEntryAnimation()
+        }
+    }
+
+    private func runEntryAnimation() {
         withAnimation(.homeExpo(duration: 0.6)) {
             hasAnimatedIn = true
         }
@@ -428,10 +452,12 @@ struct HomeView: View {
             showHeroPercent = true
         }
 
-        Task {
+        deckAnimationTask?.cancel()
+        deckAnimationTask = Task {
             for index in visibleRecentDecks.indices {
                 let delay = index == 0 ? 280_000_000 : 250_000_000
                 try? await Task.sleep(nanoseconds: UInt64(delay))
+                if Task.isCancelled { return }
                 await MainActor.run {
                     withAnimation(.homeExpo(duration: 0.52)) {
                         visibleDeckCardCount = index + 1
@@ -439,6 +465,10 @@ struct HomeView: View {
                 }
             }
         }
+    }
+
+    private var initialHeroProgress: Double {
+        0
     }
 
     private func handlePrimaryAction() {

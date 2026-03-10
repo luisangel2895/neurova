@@ -394,6 +394,7 @@ private struct AppSceneContainer: View {
         }
 
         try? await Task.sleep(nanoseconds: 1_950_000_000)
+        NotificationCenter.default.post(name: .appSplashWillExit, object: nil)
         withAnimation(.easeInOut(duration: 0.45)) {
             splashExit = true
         }
@@ -403,6 +404,10 @@ private struct AppSceneContainer: View {
             showSplash = false
         }
     }
+}
+
+extension Notification.Name {
+    static let appSplashWillExit = Notification.Name("appSplashWillExit")
 }
 
 private struct AppSplashView: View {
