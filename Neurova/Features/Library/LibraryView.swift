@@ -201,10 +201,16 @@ struct LibraryView: View {
             }
             .frame(height: 146)
             .shadow(
-                color: colorScheme == .light ? Color.black.opacity(0.03) : .clear,
-                radius: colorScheme == .light ? 10 : 0,
+                color: colorScheme == .light ? Color.black.opacity(0.045) : Color.black.opacity(0.20),
+                radius: colorScheme == .light ? 14 : 10,
                 x: 0,
-                y: colorScheme == .light ? 4 : 0
+                y: colorScheme == .light ? 6 : 4
+            )
+            .shadow(
+                color: colorScheme == .light ? Color.white.opacity(0.16) : Color.white.opacity(0.025),
+                radius: 1,
+                x: 0,
+                y: -1
             )
     }
 
@@ -236,8 +242,8 @@ struct LibraryView: View {
 
     private var subjectCardBorder: Color {
         colorScheme == .light
-            ? Color.white.opacity(0.42)
-            : Color.white.opacity(0.06)
+            ? Color.black.opacity(0.06)
+            : Color.white.opacity(0.07)
     }
 
     private var subjectSecondaryText: Color {
