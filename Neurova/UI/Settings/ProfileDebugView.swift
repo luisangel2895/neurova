@@ -32,12 +32,8 @@ struct ProfileView: View {
 
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
-                    titleView
-                        .padding(.top, 18)
-                        .padding(.horizontal, 22)
-
                     avatarCard
-                        .padding(.top, 22)
+                        .padding(.top, 18)
                         .padding(.horizontal, 22)
 
                     statsGrid
@@ -59,6 +55,8 @@ struct ProfileView: View {
                 }
             }
         }
+        .navigationTitle("Perfil")
+        .navigationBarTitleDisplayMode(.large)
         .task {
             await runEntryAnimationsIfNeeded()
         }
@@ -72,15 +70,6 @@ struct ProfileView: View {
             cards: cards,
             xpEvents: xpEvents
         )
-    }
-
-    private var titleView: some View {
-        Text("Perfil")
-            .font(.system(size: 28, weight: .bold, design: .rounded))
-            .foregroundStyle(titleColor)
-            .opacity(showTitle ? 1 : 0)
-            .offset(x: showTitle ? 0 : -10)
-            .animation(Self.easeOutExpo(duration: 0.5), value: showTitle)
     }
 
     private var avatarCard: some View {
