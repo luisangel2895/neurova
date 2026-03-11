@@ -167,7 +167,10 @@ struct ProfileView: View {
     private var statsGrid: some View {
         let stats = profileSnapshot.stats
 
-        return HStack(spacing: 10) {
+        return LazyVGrid(
+            columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 2),
+            spacing: 10
+        ) {
             ForEach(Array(stats.enumerated()), id: \.offset) { index, stat in
                 statCard(stat, index: index)
             }
@@ -187,6 +190,7 @@ struct ProfileView: View {
                 .padding(.top, 16)
 
             Spacer(minLength: 0)
+                .frame(minHeight: 0, maxHeight: 13)
 
             Text(stat.value)
                 .font(.system(size: 18, weight: .bold, design: .rounded))
@@ -200,7 +204,7 @@ struct ProfileView: View {
                 .padding(.bottom, 14)
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 126)
+        .frame(height: 106)
         .background(smallCardBackground)
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
@@ -420,7 +424,7 @@ struct ProfileView: View {
     private var smallCardStroke: Color {
         colorScheme == .dark
             ? Color.white.opacity(0.08)
-            : Color(red: 0.88, green: 0.88, blue: 0.90)
+            : Color(red: 0.80, green: 0.81, blue: 0.84)
     }
 
     private var smallCardShadow: Color {
