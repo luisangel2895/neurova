@@ -456,6 +456,9 @@ struct SettingsView: View {
         guard !hasAnimatedIn else { return }
         hasAnimatedIn = true
 
+        // Let the sheet/push transition settle so the first visible frame still contains the entrance motion.
+        try? await Task.sleep(for: .milliseconds(180))
+
         withAnimation(Self.easeOutExpo(duration: 0.55)) {
             showHeader = true
         }
