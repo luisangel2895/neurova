@@ -1348,7 +1348,7 @@ private struct AppTabShellView: View {
             .safeAreaPadding(.bottom, Layout.contentBottomInset)
         case .profile:
             NavigationStack {
-                ProfileDebugView()
+                ProfileView()
             }
             .safeAreaPadding(.bottom, Layout.contentBottomInset)
         }
