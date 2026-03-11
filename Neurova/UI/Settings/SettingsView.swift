@@ -57,13 +57,14 @@ struct SettingsView: View {
                         ZStack {
                             Circle()
                                 .fill(closeButtonFill)
+                            Circle()
+                                .stroke(closeButtonStroke, lineWidth: colorScheme == .dark ? 0 : 1)
 
                             Image(systemName: "xmark")
                                 .font(.system(size: 18, weight: .medium))
                                 .foregroundStyle(closeButtonForeground)
                         }
                         .frame(width: 40, height: 40)
-                        .offset(y: 3)
                     }
                     .buttonStyle(PressScaleStyle(pressedScale: 0.92))
                 }
@@ -647,7 +648,13 @@ struct SettingsView: View {
     private var closeButtonFill: Color {
         colorScheme == .dark
             ? Color(red: 0.10, green: 0.11, blue: 0.17)
-            : Color(red: 0.94, green: 0.94, blue: 0.97)
+            : .white
+    }
+
+    private var closeButtonStroke: Color {
+        colorScheme == .dark
+            ? .clear
+            : Color.black.opacity(0.05)
     }
 
     private var closeButtonForeground: Color {
