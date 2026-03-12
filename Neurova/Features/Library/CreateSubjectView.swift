@@ -15,6 +15,7 @@ struct CreateSubjectView: View {
     @State private var selectedColorToken: String
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var pendingSaveRequest = false
 
     private let symbolColumns = Array(repeating: GridItem(.flexible(), spacing: NSpacing.xs), count: 5)
 
@@ -88,6 +89,11 @@ struct CreateSubjectView: View {
             }
             .onAppear {
                 isNameFocused = true
+            }
+            .onChange(of: isNameFocused) { _, isFocused in
+                guard isFocused == false, pendingSaveRequest else { return }
+                pendingSaveRequest = false
+                performSaveAfterKeyboardDismiss()
             }
         }
     }
@@ -239,23 +245,44 @@ struct CreateSubjectView: View {
 
     private func handleSave() {
         guard canSave else { return }
-        isSaving = true
-        errorMessage = nil
-        isNameFocused = false
 
-        do {
-            try onSave(trimmedName, selectedSymbolName, selectedColorToken)
-            isSaving = false
-            DispatchQueue.main.async {
+        pendingSaveRequest = true
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+
+        if isNameFocused {
+            isNameFocused = false
+            return
+        }
+
+        pendingSaveRequest = false
+        performSaveAfterKeyboardDismiss()
+    }
+
+    @MainActor
+    private func performSaveAfterKeyboardDismiss() {
+        let subjectName = trimmedName
+        let symbolName = selectedSymbolName
+        let colorToken = selectedColorToken
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(220))
+
+            isSaving = true
+            errorMessage = nil
+
+            do {
+                try onSave(subjectName, symbolName, colorToken)
+                isSaving = false
+                try? await Task.sleep(for: .milliseconds(80))
                 dismiss()
+            } catch {
+                isSaving = false
+                errorMessage = AppCopy.text(
+                    locale,
+                    en: "Unable to save subject: \(error.localizedDescription)",
+                    es: "No se pudo guardar la materia: \(error.localizedDescription)"
+                )
             }
-        } catch {
-            isSaving = false
-            errorMessage = AppCopy.text(
-                locale,
-                en: "Unable to save subject: \(error.localizedDescription)",
-                es: "No se pudo guardar la materia: \(error.localizedDescription)"
-            )
         }
     }
 
