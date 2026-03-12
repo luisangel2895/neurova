@@ -76,6 +76,9 @@ struct HomeView: View {
         .onReceive(NotificationCenter.default.publisher(for: .appSplashWillExit)) { _ in
             restartEntryAnimation()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .homeShouldForceRefresh)) { _ in
+            viewModel.load(using: modelContext, forceRefresh: true)
+        }
         .onChange(of: locale.identifier) { _, _ in
             viewModel.load(using: modelContext, forceRefresh: true)
         }

@@ -408,6 +408,7 @@ private struct AppSceneContainer: View {
 
 extension Notification.Name {
     static let appSplashWillExit = Notification.Name("appSplashWillExit")
+    static let homeShouldForceRefresh = Notification.Name("homeShouldForceRefresh")
 }
 
 private struct AppSplashView: View {
@@ -971,6 +972,12 @@ private struct HomeLaunchGateView: View {
 
         recoveredCloudSession = nil
         hasCompletedOnboarding = true
+
+        Task { @MainActor in
+            NotificationCenter.default.post(name: .homeShouldForceRefresh, object: nil)
+            try? await Task.sleep(for: .milliseconds(650))
+            NotificationCenter.default.post(name: .homeShouldForceRefresh, object: nil)
+        }
     }
 
     @MainActor
