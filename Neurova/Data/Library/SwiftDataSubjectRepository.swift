@@ -10,7 +10,7 @@ struct SwiftDataSubjectRepository: SubjectRepository {
 
     func listSubjects() throws -> [Subject] {
         var descriptor = FetchDescriptor<Subject>(
-            sortBy: [SortDescriptor(\.createdAt, order: .forward)]
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         descriptor.includePendingChanges = true
         return try context.fetch(descriptor)
