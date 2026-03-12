@@ -11,6 +11,7 @@ struct SubjectDetailView: View {
     @State private var viewModel = SubjectDetailViewModel()
     @State private var isPresentingCreateDeck = false
     @State private var editingDeck: Deck?
+    @State private var isDeckListVisible = false
     @State private var hasAnimatedDecksIn = false
 
     var body: some View {
@@ -25,7 +26,7 @@ struct SubjectDetailView: View {
                     ) {
                         isPresentingCreateDeck = true
                     }
-                } else {
+                } else if isDeckListVisible {
                     LazyVStack(spacing: NSpacing.md) {
                         ForEach(Array(viewModel.decks.enumerated()), id: \.element.id) { index, deck in
                             NavigationLink {
@@ -68,11 +69,16 @@ struct SubjectDetailView: View {
                             }
                         }
                     }
+                } else {
+                    Color.clear
+                        .frame(maxWidth: .infinity)
+                        .frame(height: max(CGFloat(viewModel.decks.count) * 132, 160))
                 }
             }
             .padding(.horizontal, NSpacing.md)
             .padding(.vertical, NSpacing.md)
         }
+        .scrollIndicators(.hidden)
         .background(backgroundView.ignoresSafeArea())
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -93,15 +99,15 @@ struct SubjectDetailView: View {
                 }
             }
         }
-        .task {
-            viewModel.load(subject: subject, using: modelContext)
-            triggerDeckEntranceAnimation()
+        .onAppear {
+            reloadDecks(animated: true)
         }
-        .onChange(of: viewModel.decks.count) { _, _ in
-            triggerDeckEntranceAnimation()
+        .onDisappear {
+            isDeckListVisible = false
+            hasAnimatedDecksIn = false
         }
         .sheet(isPresented: $isPresentingCreateDeck, onDismiss: {
-            viewModel.load(subject: subject, using: modelContext)
+            reloadDecks(animated: true)
         }) {
             CreateDeckView { title, description in
                 viewModel.createDeck(
@@ -115,7 +121,7 @@ struct SubjectDetailView: View {
             .presentationDragIndicator(.visible)
         }
         .sheet(item: $editingDeck, onDismiss: {
-            viewModel.load(subject: subject, using: modelContext)
+            reloadDecks(animated: true)
         }) { deck in
             CreateDeckView(deck: deck) { title, description in
                 viewModel.updateDeck(
@@ -234,11 +240,26 @@ struct SubjectDetailView: View {
     }
 
     private func triggerDeckEntranceAnimation() {
+        isDeckListVisible = false
         hasAnimatedDecksIn = false
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(70))
+            try? await Task.sleep(for: .milliseconds(110))
+            isDeckListVisible = true
+            try? await Task.sleep(for: .milliseconds(40))
             hasAnimatedDecksIn = true
         }
+    }
+
+    private func reloadDecks(animated: Bool) {
+        viewModel.load(subject: subject, using: modelContext)
+
+        guard animated else {
+            isDeckListVisible = true
+            hasAnimatedDecksIn = true
+            return
+        }
+
+        triggerDeckEntranceAnimation()
     }
 
     private var backgroundView: some View {
