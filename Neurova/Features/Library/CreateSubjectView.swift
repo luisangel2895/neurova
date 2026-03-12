@@ -53,23 +53,34 @@ struct CreateSubjectView: View {
                 .padding(.bottom, NSpacing.md)
             }
             .background(backgroundView.ignoresSafeArea())
-            .navigationTitle(
-                subject == nil
-                    ? AppCopy.text(locale, en: "Create Subject", es: "Crear Materia")
-                    : AppCopy.text(locale, en: "Edit Subject", es: "Editar Materia")
-            )
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(
+                        subject == nil
+                            ? AppCopy.text(locale, en: "Create Subject", es: "Crear Materia")
+                            : AppCopy.text(locale, en: "Edit Subject", es: "Editar Materia")
+                    )
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundStyle(NColors.Text.textPrimary)
+                }
+
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(AppCopy.text(locale, en: "Cancel", es: "Cancelar")) {
+                    Button {
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 17, weight: .semibold))
                     }
                     .foregroundStyle(NColors.Text.textSecondary)
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(AppCopy.text(locale, en: "Save", es: "Guardar")) {
+                    Button {
                         handleSave()
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 17, weight: .bold))
                     }
                     .disabled(canSave == false)
                     .foregroundStyle(canSave ? NColors.Brand.neuroBlue : NColors.Text.textSecondary)
