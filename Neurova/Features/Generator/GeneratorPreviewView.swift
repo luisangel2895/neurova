@@ -38,17 +38,15 @@ struct GeneratorPreviewView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 18) {
-                    heroSection
-                    pickerTabs
-                    contentArea
-                    actionButton
-                }
-                .padding(.horizontal, NSpacing.md + 2)
-                .padding(.top, 10)
-                .padding(.bottom, 24)
+            VStack(spacing: 14) {
+                heroSection
+                pickerTabs
+                actionButton
+                contentArea
             }
+            .padding(.horizontal, NSpacing.md + 2)
+            .padding(.top, 10)
+            .padding(.bottom, 16)
             .background(backgroundView.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -86,7 +84,7 @@ struct GeneratorPreviewView: View {
     }
 
     private var heroSection: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack {
             RoundedRectangle(cornerRadius: 30, style: .continuous)
                 .fill(heroGradient)
                 .overlay {
@@ -94,60 +92,49 @@ struct GeneratorPreviewView: View {
                         .stroke(heroBorder, lineWidth: 1)
                 }
 
-            VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .top, spacing: 14) {
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .fill(NColors.Brand.neuroBlue.opacity(colorScheme == .light ? 0.14 : 0.18))
-                        .frame(width: 58, height: 58)
-                        .overlay {
-                            Image(systemName: selectedTab == .location ? "sparkles.rectangle.stack.fill" : "rectangle.stack.badge.person.crop.fill")
-                                .font(.system(size: 24, weight: .semibold))
-                                .foregroundStyle(NColors.Brand.neuroBlue)
-                        }
+            HStack(alignment: .top, spacing: 14) {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .fill(NColors.Brand.neuroBlue.opacity(colorScheme == .light ? 0.14 : 0.18))
+                    .frame(width: 58, height: 58)
+                    .overlay {
+                        Image(systemName: selectedTab == .location ? "sparkles.rectangle.stack.fill" : "rectangle.stack.badge.person.crop.fill")
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(NColors.Brand.neuroBlue)
+                    }
 
-                    VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 8) {
                         Text(AppCopy.text(locale, en: "DRAFT READY", es: "BORRADOR LISTO"))
                             .font(.system(size: 11, weight: .bold, design: .rounded))
                             .tracking(1.8)
                             .foregroundStyle(NColors.Text.textTertiary)
 
-                        Text(
-                            selectedTab == .location
-                                ? AppCopy.text(locale, en: "Choose where these flashcards should live", es: "Elige dónde vivirán estas flashcards")
-                                : AppCopy.text(locale, en: "Review every card before saving", es: "Revisa cada tarjeta antes de guardar")
+                        selectionBadge(
+                            AppCopy.text(
+                                locale,
+                                en: "\(drafts.count) cards",
+                                es: "\(drafts.count) tarjetas"
+                            )
                         )
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
-                        .foregroundStyle(NColors.Text.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
                     }
-                }
 
-                Text(
-                    selectedTab == .location
-                        ? AppCopy.text(locale, en: "Pick a subject and deck, or create them here without leaving the flow.", es: "Elige una materia y un deck, o créalos aquí sin salir del flujo.")
-                        : AppCopy.text(locale, en: "Polish the generated cards, trim the wording, and send only the good ones to your deck.", es: "Pulsa las tarjetas generadas, ajusta el texto y guarda solo las buenas en tu deck.")
-                )
-                .font(.system(size: 15, weight: .medium, design: .rounded))
-                .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
-
-                HStack(spacing: 10) {
-                    heroPill(
-                        icon: "square.stack.3d.up.fill",
-                        value: "\(drafts.count)",
-                        label: AppCopy.text(locale, en: "cards", es: "tarjetas"),
-                        tint: NColors.Brand.neuroBlue
+                    Text(
+                        selectedTab == .location
+                            ? AppCopy.text(locale, en: "Choose where these flashcards should live", es: "Elige dónde vivirán estas flashcards")
+                            : AppCopy.text(locale, en: "Review every card before saving", es: "Revisa cada tarjeta antes de guardar")
                     )
-
-                    heroPill(
-                        icon: "folder.fill",
-                        value: selectedDeck?.title ?? AppCopy.text(locale, en: "No deck", es: "Sin deck"),
-                        label: AppCopy.text(locale, en: "destination", es: "destino"),
-                        tint: NColors.Brand.neuralMint
-                    )
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(NColors.Text.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(22)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
         }
+        .frame(height: 100)
         .shadow(color: colorScheme == .light ? Color.black.opacity(0.06) : Color.black.opacity(0.28), radius: 24, x: 0, y: 14)
         .opacity(showHero ? 1 : 0)
         .offset(y: showHero ? 0 : 24)
@@ -190,45 +177,48 @@ struct GeneratorPreviewView: View {
     }
 
     private var locationTabView: some View {
-        VStack(spacing: 12) {
-            premiumCard {
-                VStack(alignment: .leading, spacing: 16) {
-                    sectionHeader(
-                        icon: "shippingbox.fill",
-                        title: AppCopy.text(locale, en: "Save destination", es: "Destino de guardado"),
-                        subtitle: AppCopy.text(locale, en: "Place these flashcards in the right subject and deck.", es: "Coloca estas flashcards en la materia y deck correctos.")
-                    )
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 12) {
+                premiumCard {
+                    VStack(alignment: .leading, spacing: 16) {
+                        sectionHeader(
+                            icon: "shippingbox.fill",
+                            title: AppCopy.text(locale, en: "Save destination", es: "Destino de guardado"),
+                            subtitle: AppCopy.text(locale, en: "Place these flashcards in the right subject and deck.", es: "Coloca estas flashcards en la materia y deck correctos.")
+                        )
 
-                    if subjects.isEmpty {
-                        createSubjectInlineView
-                    } else {
-                        subjectPickerView
-                    }
-
-                    if selectedSubject != nil {
-                        if decks.isEmpty {
-                            createDeckInlineView(
-                                title: AppCopy.text(locale, en: "No decks here yet. Create the first one.", es: "Aún no hay decks aquí. Crea el primero.")
-                            )
+                        if subjects.isEmpty {
+                            createSubjectInlineView
                         } else {
-                            deckPickerView
-                            createDeckInlineView(
-                                title: AppCopy.text(locale, en: "Want a fresh deck for this import?", es: "¿Quieres un deck nuevo para esta importación?")
+                            subjectPickerView
+                        }
+
+                        if selectedSubject != nil {
+                            if decks.isEmpty {
+                                createDeckInlineView(
+                                    title: AppCopy.text(locale, en: "No decks here yet. Create the first one.", es: "Aún no hay decks aquí. Crea el primero.")
+                                )
+                            } else {
+                                deckPickerView
+                                createDeckInlineView(
+                                    title: AppCopy.text(locale, en: "Want a fresh deck for this import?", es: "¿Quieres un deck nuevo para esta importación?")
+                                )
+                            }
+                        }
+
+                        if let selectedDeck {
+                            selectionBadge(
+                                AppCopy.text(locale, en: "Saving into \(selectedDeck.title)", es: "Se guardará en \(selectedDeck.title)")
                             )
                         }
-                    }
 
-                    if let selectedDeck {
-                        selectionBadge(
-                            AppCopy.text(locale, en: "Saving into \(selectedDeck.title)", es: "Se guardará en \(selectedDeck.title)")
-                        )
-                    }
-
-                    if let bannerMessage {
-                        helperMessage(bannerMessage)
+                        if let bannerMessage {
+                            helperMessage(bannerMessage)
+                        }
                     }
                 }
             }
+            .padding(.bottom, 8)
         }
         .opacity(showContent ? 1 : 0)
         .offset(y: showContent ? 0 : 16)
@@ -345,47 +335,50 @@ struct GeneratorPreviewView: View {
     }
 
     private var flashcardsView: some View {
-        VStack(spacing: 12) {
-            if drafts.isEmpty {
-                emptyMessage(AppCopy.text(locale, en: "No card drafts generated.", es: "No se generaron tarjetas."))
-            } else {
-                ForEach(Array(drafts.enumerated()), id: \.element.id) { index, draft in
-                    if index < visibleDraftCount {
-                        premiumCard {
-                            VStack(alignment: .leading, spacing: 14) {
-                                HStack {
-                                    Text("\(AppCopy.text(locale, en: "Card", es: "Tarjeta")) \(index + 1)")
-                                        .font(.system(size: 12, weight: .bold, design: .rounded))
-                                        .foregroundStyle(NColors.Text.textTertiary)
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 12) {
+                if drafts.isEmpty {
+                    emptyMessage(AppCopy.text(locale, en: "No card drafts generated.", es: "No se generaron tarjetas."))
+                } else {
+                    ForEach(Array(drafts.enumerated()), id: \.element.id) { index, draft in
+                        if index < visibleDraftCount {
+                            premiumCard {
+                                VStack(alignment: .leading, spacing: 14) {
+                                    HStack {
+                                        Text("\(AppCopy.text(locale, en: "Card", es: "Tarjeta")) \(index + 1)")
+                                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                                            .foregroundStyle(NColors.Text.textTertiary)
 
-                                    Spacer()
+                                        Spacer()
 
-                                    Image(systemName: "sparkles")
-                                        .font(.system(size: 12, weight: .bold))
-                                        .foregroundStyle(NColors.Brand.neuroBlue)
+                                        Image(systemName: "sparkles")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundStyle(NColors.Brand.neuroBlue)
+                                    }
+
+                                    labeledInput(
+                                        title: AppCopy.text(locale, en: "Front", es: "Frente"),
+                                        text: Binding(
+                                            get: { draft.front },
+                                            set: { drafts[index].front = $0 }
+                                        )
+                                    )
+
+                                    labeledInput(
+                                        title: AppCopy.text(locale, en: "Back", es: "Reverso"),
+                                        text: Binding(
+                                            get: { draft.back },
+                                            set: { drafts[index].back = $0 }
+                                        )
+                                    )
                                 }
-
-                                labeledInput(
-                                    title: AppCopy.text(locale, en: "Front", es: "Frente"),
-                                    text: Binding(
-                                        get: { draft.front },
-                                        set: { drafts[index].front = $0 }
-                                    )
-                                )
-
-                                labeledInput(
-                                    title: AppCopy.text(locale, en: "Back", es: "Reverso"),
-                                    text: Binding(
-                                        get: { draft.back },
-                                        set: { drafts[index].back = $0 }
-                                    )
-                                )
                             }
+                            .transition(.asymmetric(insertion: .move(edge: .leading).combined(with: .opacity), removal: .opacity))
                         }
-                        .transition(.asymmetric(insertion: .move(edge: .leading).combined(with: .opacity), removal: .opacity))
                     }
                 }
             }
+            .padding(.bottom, 8)
         }
         .opacity(showContent ? 1 : 0)
         .offset(y: showContent ? 0 : 16)
@@ -679,34 +672,6 @@ struct GeneratorPreviewView: View {
             .font(.system(size: 13, weight: .medium, design: .rounded))
             .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
             .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func heroPill(icon: String, value: String, label: String, tint: Color) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(tint)
-
-            Text(value)
-                .font(.system(size: 13, weight: .bold, design: .rounded))
-                .foregroundStyle(NColors.Text.textPrimary)
-                .lineLimit(1)
-
-            Text(label)
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .foregroundStyle(NColors.Text.textTertiary)
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .background(
-            Capsule()
-                .fill(colorScheme == .light ? Color.white.opacity(0.65) : Color.white.opacity(0.05))
-        )
-        .overlay(
-            Capsule()
-                .stroke(colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.08), lineWidth: 1)
-        )
     }
 
     private func labeledInput(title: String, text: Binding<String>) -> some View {
