@@ -7,9 +7,11 @@ import UIKit
 struct ScanCaptureView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.locale) private var locale
+    @Environment(\.colorScheme) private var colorScheme
     @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
 
     let onFlashcardsSaved: (String) -> Void
+    let onRequestFullHeight: () -> Void
 
     @State private var photosPickerItem: PhotosPickerItem?
     @State private var selectedImage: UIImage?
@@ -23,16 +25,21 @@ struct ScanCaptureView: View {
     @State private var csvTextInput = ""
     @State private var isShowingCSVImporter = false
     @State private var importedCSVFileName: String?
+    @FocusState private var isCSVInputFocused: Bool
 
     private let ocrService = VisionOCRService()
 
-    init(onFlashcardsSaved: @escaping (String) -> Void) {
+    init(
+        onFlashcardsSaved: @escaping (String) -> Void,
+        onRequestFullHeight: @escaping () -> Void = {}
+    ) {
         self.onFlashcardsSaved = onFlashcardsSaved
+        self.onRequestFullHeight = onRequestFullHeight
     }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: NSpacing.md) {
                     modePicker
                     if selectedMode == .capture {
@@ -46,13 +53,43 @@ struct ScanCaptureView: View {
                 .padding(.vertical, NSpacing.md)
             }
             .background(NColors.Neutrals.background.ignoresSafeArea())
-            .navigationTitle(AppCopy.text(locale, en: "Scan", es: "Escanear"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(AppCopy.text(locale, en: "Scan", es: "Escanear"))
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundStyle(NColors.Text.textPrimary)
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(AppCopy.text(locale, en: "Close", es: "Cerrar")) {
+                    Button {
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(NColors.Text.textSecondary)
+                            .frame(width: 36, height: 36)
+                            .background(
+                                Circle()
+                                    .fill(colorScheme == .light ? Color.white.opacity(0.92) : NColors.Neutrals.surfaceAlt)
+                            )
+                            .overlay(
+                                Circle()
+                                    .stroke(colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.08), lineWidth: 1)
+                            )
                     }
+                }
+            }
+            .onChange(of: selectedMode) { _, newMode in
+                if newMode == .csv {
+                    scheduleCSVAutofocus()
+                } else {
+                    isCSVInputFocused = false
+                }
+            }
+            .onAppear {
+                if selectedMode == .csv {
+                    scheduleCSVAutofocus()
                 }
             }
             .sheet(isPresented: $isShowingCamera) {
@@ -61,6 +98,7 @@ struct ScanCaptureView: View {
                     cleanedText = ""
                     infoMessage = nil
                     errorMessage = nil
+                    onRequestFullHeight()
                 }
             }
             .onChange(of: photosPickerItem) { _, newItem in
@@ -91,6 +129,15 @@ struct ScanCaptureView: View {
                 .tag(ScanInputMode.csv)
         }
         .pickerStyle(.segmented)
+        .padding(6)
+        .background(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(colorScheme == .light ? Color.white.opacity(0.82) : NColors.Neutrals.surfaceAlt)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(colorScheme == .light ? Color.black.opacity(0.06) : Color.white.opacity(0.08), lineWidth: 1)
+        )
     }
 
     private var sourceCard: some View {
@@ -220,20 +267,7 @@ struct ScanCaptureView: View {
                         .font(NTypography.caption)
                         .foregroundStyle(NColors.Text.textSecondary)
 
-                    TextEditor(text: $csvTextInput)
-                        .font(NTypography.body)
-                        .foregroundStyle(NColors.Text.textPrimary)
-                        .autocorrectionDisabled(true)
-                        .textInputAutocapitalization(.never)
-                        .scrollContentBackground(.hidden)
-                        .frame(height: 320)
-                        .padding(NSpacing.sm)
-                        .background(NColors.Home.surfaceL1)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                                .stroke(NColors.Home.cardBorder, lineWidth: 1)
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: NRadius.card, style: .continuous))
+                    csvTextEditor
                 }
 
                 NPrimaryButton(AppCopy.text(locale, en: "Convert CSV", es: "Convertir CSV")) {
@@ -385,6 +419,48 @@ struct ScanCaptureView: View {
     private var selectedLanguage: AppLanguage {
         AppLanguage(rawValue: appLanguageRawValue) ?? .spanish
     }
+
+    private var csvTextEditor: some View {
+        ZStack(alignment: .topLeading) {
+            if csvTextInput.isEmpty {
+                Text(AppCopy.text(locale, en: "front,back", es: "frente,reverso"))
+                    .font(NTypography.body)
+                    .foregroundStyle(NColors.Text.textTertiary)
+                    .padding(.horizontal, NSpacing.md + 1)
+                    .padding(.top, 12)
+                    .allowsHitTesting(false)
+            }
+
+            TextEditor(text: $csvTextInput)
+                .font(NTypography.body)
+                .foregroundStyle(NColors.Text.textPrimary)
+                .autocorrectionDisabled(true)
+                .textInputAutocapitalization(.never)
+                .scrollContentBackground(.hidden)
+                .focused($isCSVInputFocused)
+                .padding(.horizontal, NSpacing.sm)
+                .padding(.vertical, 6)
+                .frame(height: 72)
+                .background(Color.clear)
+        }
+        .background(NColors.Neutrals.surfaceAlt)
+        .overlay(
+            RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
+                .stroke(isCSVInputFocused ? NColors.Brand.neuroBlue : NColors.Neutrals.border, lineWidth: 1)
+        )
+        .clipShape(
+            RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
+        )
+    }
+
+    private func scheduleCSVAutofocus() {
+        isCSVInputFocused = false
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(180))
+            guard selectedMode == .csv else { return }
+            isCSVInputFocused = true
+        }
+    }
 }
 
 private enum ScanInputMode {
@@ -398,7 +474,7 @@ private struct CSVFlashcardParser {
         let back: String
     }
 
-    static func extractPairs(from csvText: String) -> [Pair] {
+    nonisolated static func extractPairs(from csvText: String) -> [Pair] {
         let normalized = csvText
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
@@ -436,7 +512,7 @@ private struct CSVFlashcardParser {
         return pairs
     }
 
-    private static func detectDelimiter(in text: String) -> Character {
+    nonisolated private static func detectDelimiter(in text: String) -> Character {
         let firstLine = text.split(separator: "\n").first.map(String.init) ?? text
         let commaCount = firstLine.filter { $0 == "," }.count
         let semicolonCount = firstLine.filter { $0 == ";" }.count
@@ -448,7 +524,7 @@ private struct CSVFlashcardParser {
         return semicolonCount > commaCount ? ";" : ","
     }
 
-    private static func parseRows(from text: String, delimiter: Character) -> [[String]] {
+    nonisolated private static func parseRows(from text: String, delimiter: Character) -> [[String]] {
         var rows: [[String]] = []
         var row: [String] = []
         var cell = ""
@@ -489,7 +565,7 @@ private struct CSVFlashcardParser {
         return rows
     }
 
-    private static func shouldSkipHeader(_ row: [String]) -> Bool {
+    nonisolated private static func shouldSkipHeader(_ row: [String]) -> Bool {
         let headerKeywords: Set<String> = [
             "front", "back", "question", "answer", "term", "definition",
             "anverso", "reverso", "pregunta", "respuesta", "termino", "término", "definicion", "definición"
@@ -502,7 +578,7 @@ private struct CSVFlashcardParser {
         return normalized.prefix(2).allSatisfy { headerKeywords.contains($0) }
     }
 
-    private static func cleanCell(_ value: String) -> String {
+    nonisolated private static func cleanCell(_ value: String) -> String {
         value
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)

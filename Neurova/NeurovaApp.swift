@@ -1270,6 +1270,7 @@ private struct AppTabShellView: View {
     @State private var selectedTab: NBottomNavItem = .home
     @State private var isShowingScanPlaceholder = false
     @State private var isShowingSettings = false
+    @State private var scanSheetDetent: PresentationDetent = .medium
     @State private var scanResultMessage: String?
     @AppStorage("app_theme") private var appThemeRawValue: String = AppTheme.system.rawValue
     @AppStorage("app_language") private var appLanguageRawValue: String = AppLanguage.spanish.rawValue
@@ -1291,6 +1292,7 @@ private struct AppTabShellView: View {
                     selectedTab: $selectedTab,
                     onSelect: { _ in },
                     onScanTap: {
+                        scanSheetDetent = .medium
                         isShowingScanPlaceholder = true
                     }
                 )
@@ -1301,9 +1303,11 @@ private struct AppTabShellView: View {
                 NavigationStack {
                     ScanCaptureView { message in
                         scanResultMessage = message
+                    } onRequestFullHeight: {
+                        scanSheetDetent = .large
                     }
                 }
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.medium, .large], selection: $scanSheetDetent)
             }
             .fullScreenCover(isPresented: $isShowingSettings) {
                 SettingsView()
