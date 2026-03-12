@@ -1,3 +1,4 @@
+import AVFoundation
 import PhotosUI
 import SwiftData
 import SwiftUI
@@ -92,8 +93,8 @@ struct ScanCaptureView: View {
                     scheduleCSVAutofocus()
                 }
             }
-            .sheet(isPresented: $isShowingCamera) {
-                CameraImagePicker { image in
+            .fullScreenCover(isPresented: $isShowingCamera) {
+                CameraCaptureView { image in
                     selectedImage = image
                     cleanedText = ""
                     infoMessage = nil
@@ -585,45 +586,213 @@ private struct CSVFlashcardParser {
     }
 }
 
-private struct CameraImagePicker: UIViewControllerRepresentable {
-    let onImagePicked: (UIImage) -> Void
+private struct CameraCaptureView: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var camera = CameraSessionModel()
+    @State private var capturedImage: UIImage?
 
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = UIImagePickerController.isSourceTypeAvailable(.camera) ? .camera : .photoLibrary
-        picker.delegate = context.coordinator
-        picker.allowsEditing = false
-        return picker
-    }
+    let onImagePicked: (UIImage) -> Void
 
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
+    var body: some View {
+        ZStack {
+            Color.black.ignoresSafeArea()
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator(onImagePicked: onImagePicked, dismiss: dismiss)
-    }
-
-    final class Coordinator: NSObject, UINavigationControllerDelegate, UIImagePickerControllerDelegate {
-        let onImagePicked: (UIImage) -> Void
-        let dismiss: DismissAction
-
-        init(onImagePicked: @escaping (UIImage) -> Void, dismiss: DismissAction) {
-            self.onImagePicked = onImagePicked
-            self.dismiss = dismiss
-        }
-
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            dismiss()
-        }
-
-        func imagePickerController(
-            _ picker: UIImagePickerController,
-            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
-        ) {
-            if let image = info[.originalImage] as? UIImage {
-                onImagePicked(image)
+            if let capturedImage {
+                Image(uiImage: capturedImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.black)
+            } else {
+                CameraPreviewView(session: camera.session)
+                    .ignoresSafeArea()
             }
-            dismiss()
+
+            VStack {
+                HStack {
+                    Button {
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 40, height: 40)
+                            .background(Color.black.opacity(0.45))
+                            .clipShape(Circle())
+                    }
+
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 14)
+
+                Spacer()
+
+                if let capturedImage {
+                    HStack(spacing: 16) {
+                        Button {
+                            self.capturedImage = nil
+                            camera.startSession()
+                        } label: {
+                            Text("Retake")
+                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 52)
+                                .background(Color.white.opacity(0.12))
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        }
+
+                        Button {
+                            onImagePicked(capturedImage)
+                            dismiss()
+                        } label: {
+                            Text("Use Photo")
+                                .font(.system(size: 17, weight: .bold, design: .rounded))
+                                .foregroundStyle(.black)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 52)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 30)
+                } else {
+                    Button {
+                        camera.capturePhoto()
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Color.white.opacity(0.22))
+                                .frame(width: 84, height: 84)
+
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 66, height: 66)
+                        }
+                    }
+                    .padding(.bottom, 32)
+                }
+            }
+        }
+        .statusBarHidden(true)
+        .onAppear {
+            camera.onImageCaptured = { image in
+                capturedImage = image
+            }
+            camera.startSession()
+            OrientationLock.forcePortrait()
+        }
+        .onDisappear {
+            camera.stopSession()
+        }
+    }
+}
+
+private struct CameraPreviewView: UIViewRepresentable {
+    let session: AVCaptureSession
+
+    func makeUIView(context: Context) -> PreviewView {
+        let view = PreviewView()
+        view.previewLayer.session = session
+        view.previewLayer.videoGravity = .resizeAspectFill
+        return view
+    }
+
+    func updateUIView(_ uiView: PreviewView, context: Context) {
+        uiView.previewLayer.session = session
+    }
+}
+
+private final class PreviewView: UIView {
+    override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+    var previewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
+}
+
+private final class CameraSessionModel: NSObject, AVCapturePhotoCaptureDelegate {
+    let session = AVCaptureSession()
+
+    private let output = AVCapturePhotoOutput()
+    private let queue = DispatchQueue(label: "camera.session.queue")
+    private var isConfigured = false
+
+    var onImageCaptured: ((UIImage) -> Void)?
+
+    func startSession() {
+        queue.async {
+            self.configureIfNeeded()
+            guard self.session.isRunning == false else { return }
+            self.session.startRunning()
+        }
+    }
+
+    func stopSession() {
+        queue.async {
+            guard self.session.isRunning else { return }
+            self.session.stopRunning()
+        }
+    }
+
+    func capturePhoto() {
+        queue.async {
+            let settings = AVCapturePhotoSettings()
+            settings.flashMode = .off
+            self.output.capturePhoto(with: settings, delegate: self)
+        }
+    }
+
+    nonisolated func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+        guard
+            error == nil,
+            let data = photo.fileDataRepresentation(),
+            let image = UIImage(data: data)
+        else { return }
+
+        DispatchQueue.main.async {
+            self.onImageCaptured?(image)
+        }
+        queue.async {
+            if self.session.isRunning {
+                self.session.stopRunning()
+            }
+        }
+    }
+
+    private func configureIfNeeded() {
+        guard isConfigured == false else { return }
+
+        session.beginConfiguration()
+        session.sessionPreset = .photo
+
+        defer {
+            session.commitConfiguration()
+            isConfigured = true
+        }
+
+        guard
+            let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+            let input = try? AVCaptureDeviceInput(device: device),
+            session.canAddInput(input),
+            session.canAddOutput(output)
+        else { return }
+
+        session.addInput(input)
+        session.addOutput(output)
+    }
+}
+
+private enum OrientationLock {
+    static func forcePortrait() {
+        UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+        if #available(iOS 16.0, *) {
+            let preferences = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: .portrait)
+            UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .first?
+                .requestGeometryUpdate(preferences)
+        } else {
+            UINavigationController.attemptRotationToDeviceOrientation()
         }
     }
 }
