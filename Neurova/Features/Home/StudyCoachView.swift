@@ -13,7 +13,6 @@ struct StudyCoachView: View {
     @State private var typewriterTask: Task<Void, Never>?
     @State private var mascotFloatY: CGFloat = 0
     @State private var showHero = false
-    @State private var showSummary = false
     @State private var visibleRecommendationCount = 0
     @State private var recommendationAnimationTask: Task<Void, Never>?
 
@@ -22,7 +21,6 @@ struct StudyCoachView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 20) {
                     heroSection
-                    summarySection
                     contentSection
                 }
                 .padding(.horizontal, NSpacing.md + 2)
@@ -92,17 +90,18 @@ struct StudyCoachView: View {
                             .foregroundStyle(NColors.Text.textTertiary)
 
                         Text(recommendations.isEmpty ? AppCopy.text(locale, en: "You're all caught up", es: "Estás al día") : AppCopy.text(locale, en: "Your best study move right now", es: "Tu mejor siguiente jugada"))
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
                             .foregroundStyle(NColors.Text.textPrimary)
                             .multilineTextAlignment(.leading)
-
-                        Text(displayedMessage)
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .frame(minHeight: 52, alignment: .topLeading)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+
+                Text(displayedMessage)
+                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(minHeight: 52, alignment: .topLeading)
 
                 HStack(spacing: 10) {
                     coachPill(
@@ -132,27 +131,6 @@ struct StudyCoachView: View {
         .offset(y: showHero ? 0 : 24)
         .scaleEffect(showHero ? 1 : 0.98)
         .animation(.timingCurve(0.16, 1, 0.3, 1, duration: 0.62), value: showHero)
-    }
-
-    private var summarySection: some View {
-        HStack(spacing: 12) {
-            coachStatTile(
-                title: AppCopy.text(locale, en: "Top pick", es: "Mejor opción"),
-                value: recommendations.first?.deck.title ?? AppCopy.text(locale, en: "None", es: "Ninguno"),
-                icon: "star.fill",
-                tint: NColors.Feedback.warning
-            )
-
-            coachStatTile(
-                title: AppCopy.text(locale, en: "Plan", es: "Plan"),
-                value: recommendations.isEmpty ? AppCopy.text(locale, en: "Rest", es: "Descanso") : AppCopy.text(locale, en: "Review", es: "Repaso"),
-                icon: "brain.head.profile",
-                tint: NColors.Brand.neuralMint
-            )
-        }
-        .opacity(showSummary ? 1 : 0)
-        .offset(y: showSummary ? 0 : 18)
-        .animation(.timingCurve(0.16, 1, 0.3, 1, duration: 0.62).delay(0.08), value: showSummary)
     }
 
     private var contentSection: some View {
@@ -340,36 +318,6 @@ struct StudyCoachView: View {
         )
     }
 
-    private func coachStatTile(title: String, value: String, icon: String, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(tint)
-
-                Text(title)
-                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                    .foregroundStyle(NColors.Text.textTertiary)
-                    .lineLimit(1)
-            }
-
-            Text(value)
-                .font(.system(size: 17, weight: .bold, design: .rounded))
-                .foregroundStyle(NColors.Text.textPrimary)
-                .lineLimit(1)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(colorScheme == .light ? NColors.Neutrals.surface : NColors.Neutrals.surfaceAlt)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(colorScheme == .light ? Color.black.opacity(0.07) : Color.white.opacity(0.08), lineWidth: 1)
-        )
-    }
-
     private var totalReadyCount: Int {
         recommendations.reduce(0) { $0 + $1.readyCount }
     }
@@ -420,7 +368,6 @@ struct StudyCoachView: View {
 
     private func startEntryAnimation() {
         showHero = false
-        showSummary = false
         visibleRecommendationCount = 0
         recommendationAnimationTask?.cancel()
 
@@ -431,8 +378,6 @@ struct StudyCoachView: View {
         Task { @MainActor in
             try? await Task.sleep(for: .milliseconds(40))
             showHero = true
-            try? await Task.sleep(for: .milliseconds(90))
-            showSummary = true
         }
 
         recommendationAnimationTask = Task { @MainActor in
