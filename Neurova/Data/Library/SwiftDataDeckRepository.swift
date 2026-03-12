@@ -13,14 +13,14 @@ struct SwiftDataDeckRepository: DeckRepository {
             predicate: #Predicate<Deck> { deck in
                 includeArchived || deck.isArchived == false
             },
-            sortBy: [SortDescriptor(\.createdAt, order: .forward)]
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         return try context.fetch(descriptor)
     }
 
     func decks(for subject: Subject, includeArchived: Bool = false) throws -> [Deck] {
         let descriptor = FetchDescriptor<Deck>(
-            sortBy: [SortDescriptor(\.createdAt, order: .forward)]
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         let allDecks = try context.fetch(descriptor)
         return allDecks.filter { deck in

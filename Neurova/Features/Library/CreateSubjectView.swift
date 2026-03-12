@@ -88,12 +88,18 @@ struct CreateSubjectView: View {
                 }
             }
             .onAppear {
-                isNameFocused = true
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(120))
+                    isNameFocused = true
+                }
             }
             .onChange(of: isNameFocused) { _, isFocused in
                 guard isFocused == false, pendingSaveRequest else { return }
                 pendingSaveRequest = false
                 performSaveAfterKeyboardDismiss()
+            }
+            .onDisappear {
+                pendingSaveRequest = false
             }
         }
     }

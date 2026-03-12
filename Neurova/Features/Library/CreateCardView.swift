@@ -39,20 +39,31 @@ struct CreateCardView: View {
                 .padding(.top, NSpacing.md)
             }
             .background(backgroundView.ignoresSafeArea())
-            .navigationTitle(AppCopy.text(locale, en: "Add Card", es: "Agregar Tarjeta"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(AppCopy.text(locale, en: "Add Card", es: "Agregar Tarjeta"))
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundStyle(NColors.Text.textPrimary)
+                }
+
                 ToolbarItem(placement: .cancellationAction) {
-                    Button(AppCopy.text(locale, en: "Cancel", es: "Cancelar")) {
+                    Button {
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 17, weight: .semibold))
                     }
                     .foregroundStyle(NColors.Text.textSecondary)
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(AppCopy.text(locale, en: "Save", es: "Guardar")) {
+                    Button {
                         onSave(trimmedFront, trimmedBack)
                         dismiss()
+                    } label: {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 17, weight: .bold))
                     }
                     .disabled(trimmedFront.isEmpty || trimmedBack.isEmpty)
                     .foregroundStyle(saveButtonColor)
