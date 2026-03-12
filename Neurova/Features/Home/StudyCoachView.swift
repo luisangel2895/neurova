@@ -75,7 +75,7 @@ struct StudyCoachView: View {
                         .stroke(heroBorder, lineWidth: 1)
                 }
 
-            VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top, spacing: 16) {
                     coachMascot
                         .resizable()
@@ -94,6 +94,7 @@ struct StudyCoachView: View {
                             .foregroundStyle(NColors.Text.textPrimary)
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 20)
                     }
                 }
 
@@ -102,6 +103,7 @@ struct StudyCoachView: View {
                     .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(minHeight: 52, alignment: .topLeading)
+                    .padding(.top, -2)
 
                 HStack(spacing: 10) {
                     coachPill(
