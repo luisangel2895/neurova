@@ -91,7 +91,7 @@ struct SubjectDetailView: View {
                     using: modelContext
                 )
             }
-            .presentationDetents([.fraction(0.5)])
+            .presentationDetents([.fraction(0.4)])
             .presentationDragIndicator(.visible)
         }
         .sheet(item: $editingDeck, onDismiss: {
@@ -107,7 +107,7 @@ struct SubjectDetailView: View {
                     using: modelContext
                 )
             }
-            .presentationDetents([.fraction(0.5)])
+            .presentationDetents([.fraction(0.4)])
             .presentationDragIndicator(.visible)
         }
     }
