@@ -109,6 +109,8 @@ struct GeneratorPreviewView: View {
                             .tracking(1.8)
                             .foregroundStyle(NColors.Text.textTertiary)
 
+                        Spacer(minLength: 0)
+
                         selectionBadge(
                             AppCopy.text(
                                 locale,
@@ -116,17 +118,20 @@ struct GeneratorPreviewView: View {
                                 es: "\(drafts.count) tarjetas"
                             )
                         )
+                        .offset(y: -3)
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                     Text(
                         selectedTab == .location
                             ? AppCopy.text(locale, en: "Choose where these flashcards should live", es: "Elige dónde vivirán estas flashcards")
                             : AppCopy.text(locale, en: "Review every card before saving", es: "Revisa cada tarjeta antes de guardar")
                     )
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundStyle(NColors.Text.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .multilineTextAlignment(.leading)
+                    .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
