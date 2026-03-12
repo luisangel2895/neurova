@@ -11,6 +11,7 @@ struct SubjectDetailView: View {
     @State private var viewModel = SubjectDetailViewModel()
     @State private var isPresentingCreateDeck = false
     @State private var editingDeck: Deck?
+    @State private var hasAnimatedDecksIn = false
 
     var body: some View {
         ScrollView {
@@ -26,13 +27,20 @@ struct SubjectDetailView: View {
                     }
                 } else {
                     LazyVStack(spacing: NSpacing.md) {
-                        ForEach(viewModel.decks, id: \.id) { deck in
+                        ForEach(Array(viewModel.decks.enumerated()), id: \.element.id) { index, deck in
                             NavigationLink {
                                 DeckDetailView(deck: deck)
                             } label: {
                                 deckCard(deck)
                             }
                             .buttonStyle(.plain)
+                            .opacity(hasAnimatedDecksIn ? 1 : 0)
+                            .offset(x: hasAnimatedDecksIn ? 0 : -52)
+                            .animation(
+                                .timingCurve(0.16, 1, 0.3, 1, duration: 0.62)
+                                    .delay(Double(index) * 0.11),
+                                value: hasAnimatedDecksIn
+                            )
                             .contextMenu {
                                 Button {
                                     editingDeck = deck
@@ -66,9 +74,15 @@ struct SubjectDetailView: View {
             .padding(.vertical, NSpacing.md)
         }
         .background(backgroundView.ignoresSafeArea())
-        .navigationTitle(subject.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text(subject.name)
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundStyle(NColors.Text.textPrimary)
+                    .lineLimit(1)
+            }
+
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     isPresentingCreateDeck = true
@@ -81,8 +95,14 @@ struct SubjectDetailView: View {
         }
         .task {
             viewModel.load(subject: subject, using: modelContext)
+            triggerDeckEntranceAnimation()
         }
-        .sheet(isPresented: $isPresentingCreateDeck) {
+        .onChange(of: viewModel.decks.count) { _, _ in
+            triggerDeckEntranceAnimation()
+        }
+        .sheet(isPresented: $isPresentingCreateDeck, onDismiss: {
+            viewModel.load(subject: subject, using: modelContext)
+        }) {
             CreateDeckView { title, description in
                 viewModel.createDeck(
                     in: subject,
@@ -115,54 +135,109 @@ struct SubjectDetailView: View {
     private func deckCard(_ deck: Deck) -> some View {
         let metrics = viewModel.metrics(for: deck)
         let subjectAccentColor = NColors.SubjectIcon.color(for: subject.colorTokenReference)
+        let secondaryTextColor = colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark
+        let cardBackground = colorScheme == .light ? NColors.Neutrals.surface : NColors.Neutrals.surfaceAlt
+        let cardBorder = colorScheme == .light ? Color.black.opacity(0.08) : Color.white.opacity(0.08)
+        let accentBackground = subjectAccentColor.opacity(colorScheme == .light ? 0.12 : 0.18)
 
-        return NCard {
-            VStack(alignment: .leading, spacing: NSpacing.sm) {
-                Text(deck.title)
-                    .font(NTypography.bodyEmphasis.weight(.semibold))
-                    .foregroundStyle(NColors.Text.textPrimary)
-                    .multilineTextAlignment(.leading)
+        return VStack(alignment: .leading, spacing: NSpacing.sm) {
+            HStack(alignment: .top, spacing: NSpacing.sm) {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(accentBackground)
+                    .frame(width: 48, height: 48)
+                    .overlay {
+                        Image(systemName: "square.stack.3d.up.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(subjectAccentColor)
+                    }
 
-                if let description = deck.description {
-                    Text(description)
-                        .font(NTypography.caption)
-                        .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(deck.title)
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundStyle(NColors.Text.textPrimary)
                         .multilineTextAlignment(.leading)
+                        .lineLimit(2)
+
+                    Text(
+                        deck.description?.isEmpty == false
+                            ? deck.description!
+                            : AppCopy.text(locale, en: "No description yet", es: "Aun sin descripcion")
+                    )
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(secondaryTextColor)
+                    .lineLimit(1)
                 }
 
-                HStack(spacing: NSpacing.sm) {
-                    NChip(
-                        AppCopy.countLabel(
-                            locale,
-                            count: metrics.cardCount,
-                            singularEn: "card",
-                            pluralEn: "cards",
-                        singularEs: "tarjeta",
-                        pluralEs: "tarjetas"
-                        ),
-                        isSelected: false
-                    )
-                    NChip(
-                        AppCopy.countLabel(
-                            locale,
-                            count: metrics.dueCount,
-                            singularEn: "ready",
-                            pluralEn: "ready",
-                            singularEs: "lista",
-                            pluralEs: "listas"
-                        ),
-                        isSelected: false
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: NRadius.chip, style: .continuous)
-                            .stroke(
-                                subjectAccentColor.opacity(colorScheme == .light ? 0.72 : 0.95),
-                                lineWidth: 1.25
-                            )
-                    )
-                }
+                Spacer(minLength: 0)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(secondaryTextColor.opacity(0.8))
+                    .padding(.top, 4)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 10) {
+                deckMetricPill(
+                    icon: "square.on.square",
+                    value: "\(metrics.cardCount)",
+                    label: AppCopy.text(locale, en: "Cards", es: "Tarjetas"),
+                    tint: NColors.Brand.neuroBlue
+                )
+
+                deckMetricPill(
+                    icon: "bolt.fill",
+                    value: "\(metrics.dueCount)",
+                    label: AppCopy.text(locale, en: "Ready", es: "Listas"),
+                    tint: subjectAccentColor
+                )
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 16)
+        .background(cardBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(cardBorder, lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(
+            color: colorScheme == .light ? Color.black.opacity(0.05) : Color.black.opacity(0.24),
+            radius: colorScheme == .light ? 18 : 22,
+            x: 0,
+            y: 10
+        )
+    }
+
+    private func deckMetricPill(icon: String, value: String, label: String, tint: Color) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundStyle(tint)
+
+            Text(value)
+                .font(.system(size: 13, weight: .bold, design: .rounded))
+                .foregroundStyle(NColors.Text.textPrimary)
+
+            Text(label)
+                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(NColors.Neutrals.surfaceAlt)
+        .clipShape(Capsule())
+        .overlay {
+            Capsule()
+                .stroke(tint.opacity(colorScheme == .light ? 0.18 : 0.24), lineWidth: 1)
+        }
+    }
+
+    private func triggerDeckEntranceAnimation() {
+        hasAnimatedDecksIn = false
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(70))
+            hasAnimatedDecksIn = true
         }
     }
 
