@@ -14,7 +14,7 @@ struct SwiftDataCardRepository: CardRepository {
             predicate: #Predicate<Card> { card in
                 card.deck?.id == deckID
             },
-            sortBy: [SortDescriptor(\.createdAt, order: .forward)]
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         return try context.fetch(descriptor)
     }

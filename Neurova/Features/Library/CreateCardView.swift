@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct CreateCardView: View {
     @Environment(\.dismiss) private var dismiss
@@ -7,14 +8,12 @@ struct CreateCardView: View {
 
     private let onSave: (String, String) -> Void
 
-    private enum Field: Hashable {
-        case front
-        case back
-    }
-
-    @FocusState private var focusedField: Field?
-    @State private var frontText: String = ""
-    @State private var backText: String = ""
+    @State private var frontText = ""
+    @State private var backText = ""
+    @State private var isSaving = false
+    @State private var isFrontFocused = false
+    @State private var isBackFocused = false
+    @State private var pendingSaveRequest = false
 
     init(onSave: @escaping (String, String) -> Void) {
         self.onSave = onSave
@@ -24,20 +23,15 @@ struct CreateCardView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: NSpacing.md) {
-                    multilineField(
-                        title: AppCopy.text(locale, en: "Front", es: "Frente"),
-                        text: $frontText,
-                        field: .front
-                    )
-                    multilineField(
-                        title: AppCopy.text(locale, en: "Back", es: "Reverso"),
-                        text: $backText,
-                        field: .back
-                    )
+                    previewCard
+                    frontField
+                    backField
                 }
                 .padding(.horizontal, NSpacing.md)
                 .padding(.top, NSpacing.md)
+                .padding(.bottom, NSpacing.md)
             }
+            .scrollIndicators(.hidden)
             .background(backgroundView.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -59,18 +53,29 @@ struct CreateCardView: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button {
-                        onSave(trimmedFront, trimmedBack)
-                        dismiss()
+                        handleSave()
                     } label: {
                         Image(systemName: "checkmark")
                             .font(.system(size: 17, weight: .bold))
                     }
-                    .disabled(trimmedFront.isEmpty || trimmedBack.isEmpty)
-                    .foregroundStyle(saveButtonColor)
+                    .disabled(canSave == false)
+                    .foregroundStyle(canSave ? NColors.Brand.neuroBlue : NColors.Text.textSecondary)
                 }
             }
             .onAppear {
-                focusedField = .front
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(120))
+                    isFrontFocused = true
+                }
+            }
+            .onChange(of: isFrontFocused) { _, _ in
+                handlePendingSaveIfNeeded()
+            }
+            .onChange(of: isBackFocused) { _, _ in
+                handlePendingSaveIfNeeded()
+            }
+            .onDisappear {
+                pendingSaveRequest = false
             }
         }
     }
@@ -83,34 +88,100 @@ struct CreateCardView: View {
         backText.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private var saveButtonColor: Color {
-        trimmedFront.isEmpty || trimmedBack.isEmpty ? NColors.Text.textSecondary : NColors.Brand.neuroBlue
+    private var canSave: Bool {
+        trimmedFront.isEmpty == false && trimmedBack.isEmpty == false && isSaving == false
     }
 
-    private func multilineField(title: String, text: Binding<String>, field: Field) -> some View {
-        VStack(alignment: .leading, spacing: NSpacing.xs) {
-            Text(title)
-                .font(NTypography.caption)
-                .foregroundStyle(colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark)
+    private var secondaryTextColor: Color {
+        colorScheme == .light ? NColors.Home.secondaryTextLight : NColors.Home.secondaryTextDark
+    }
 
-            TextEditor(text: text)
-                .font(NTypography.body)
-                .foregroundStyle(NColors.Text.textPrimary)
-                .autocorrectionDisabled(true)
-                .textInputAutocapitalization(.sentences)
-                .scrollContentBackground(.hidden)
-                .frame(minHeight: 140)
-                .focused($focusedField, equals: field)
-                .padding(NSpacing.sm)
-                .background(NColors.Home.surfaceL1)
-                .overlay(
-                    RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                        .stroke(NColors.Home.cardBorder, lineWidth: 1)
-                )
-                .clipShape(
-                    RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
-                )
+    private var previewCard: some View {
+        NCard {
+            HStack(spacing: NSpacing.sm) {
+                RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                    .fill(NColors.Brand.neuroBlue.opacity(0.14))
+                    .frame(width: 44, height: 44)
+                    .overlay {
+                        Image(systemName: "rectangle.stack.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(NColors.Brand.neuroBlue)
+                    }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(trimmedFront.isEmpty ? AppCopy.text(locale, en: "Card Preview", es: "Vista previa") : trimmedFront)
+                        .font(NTypography.bodyEmphasis.weight(.semibold))
+                        .foregroundStyle(NColors.Text.textPrimary)
+                        .lineLimit(1)
+
+                    Text(trimmedBack.isEmpty ? AppCopy.text(locale, en: "Front + back answer", es: "Frente + respuesta") : trimmedBack)
+                        .font(NTypography.caption)
+                        .foregroundStyle(secondaryTextColor)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
+            }
         }
+    }
+
+    private var frontField: some View {
+        optimizedField(
+            placeholder: AppCopy.text(locale, en: "Front", es: "Frente"),
+            text: $frontText,
+            isFocused: $isFrontFocused,
+            isActive: isFrontFocused,
+            returnKeyType: .next
+        ) {
+            isFrontFocused = false
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(80))
+                isBackFocused = true
+            }
+        }
+    }
+
+    private var backField: some View {
+        optimizedField(
+            placeholder: AppCopy.text(locale, en: "Back", es: "Reverso"),
+            text: $backText,
+            isFocused: $isBackFocused,
+            isActive: isBackFocused,
+            returnKeyType: .done
+        ) {
+            isBackFocused = false
+        }
+    }
+
+    private func optimizedField(
+        placeholder: String,
+        text: Binding<String>,
+        isFocused: Binding<Bool>,
+        isActive: Bool,
+        returnKeyType: UIReturnKeyType,
+        onSubmit: @escaping () -> Void
+    ) -> some View {
+        NOptimizedTextField(
+            placeholder: placeholder,
+            text: text,
+            isFocused: isFocused,
+            returnKeyType: returnKeyType,
+            autocapitalization: .sentences,
+            font: .systemFont(ofSize: 17, weight: .regular),
+            textColor: UIColor(NColors.Text.textPrimary),
+            tintColor: UIColor(NColors.Brand.neuroBlue),
+            onSubmit: onSubmit
+        )
+        .font(NTypography.body)
+        .foregroundStyle(NColors.Text.textPrimary)
+        .padding(.horizontal, NSpacing.md)
+        .frame(height: 48)
+        .background(NColors.Neutrals.surfaceAlt)
+        .overlay(
+            RoundedRectangle(cornerRadius: NRadius.button, style: .continuous)
+                .stroke(isActive ? NColors.Brand.neuroBlue : NColors.Neutrals.border, lineWidth: 1)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: NRadius.button, style: .continuous))
     }
 
     private var backgroundView: some View {
@@ -121,5 +192,41 @@ struct CreateCardView: View {
             startPoint: .top,
             endPoint: .bottom
         )
+    }
+
+    private func handleSave() {
+        guard canSave else { return }
+        pendingSaveRequest = true
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+
+        if isFrontFocused || isBackFocused {
+            isFrontFocused = false
+            isBackFocused = false
+            return
+        }
+
+        pendingSaveRequest = false
+        performSaveAfterKeyboardDismiss()
+    }
+
+    private func handlePendingSaveIfNeeded() {
+        guard pendingSaveRequest, isFrontFocused == false, isBackFocused == false else { return }
+        pendingSaveRequest = false
+        performSaveAfterKeyboardDismiss()
+    }
+
+    @MainActor
+    private func performSaveAfterKeyboardDismiss() {
+        let finalFront = trimmedFront
+        let finalBack = trimmedBack
+
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(220))
+            isSaving = true
+            onSave(finalFront, finalBack)
+            isSaving = false
+            try? await Task.sleep(for: .milliseconds(80))
+            dismiss()
+        }
     }
 }

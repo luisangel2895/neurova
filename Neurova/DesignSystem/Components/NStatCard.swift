@@ -10,22 +10,22 @@ struct NStatCard: View {
 
     var body: some View {
         NCard {
-            VStack(alignment: .leading, spacing: NSpacing.xs + 2) {
+            VStack(spacing: 4) {
                 Image(systemName: systemImage)
                     .font(NTypography.bodyEmphasis)
                     .foregroundStyle(iconColor)
 
-                Spacer(minLength: 0)
-
                 Text(value)
-                    .font(NTypography.title.weight(.bold))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundStyle(NColors.Text.textPrimary)
 
                 Text(label)
                     .font(NTypography.caption)
                     .foregroundStyle(secondaryTextColor)
+                    .multilineTextAlignment(.center)
             }
-            .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
+            .frame(maxWidth: .infinity, minHeight: 60)
+            .frame(maxWidth: .infinity, alignment: .center)
         }
     }
 
