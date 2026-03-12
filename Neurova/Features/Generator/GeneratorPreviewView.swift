@@ -92,18 +92,18 @@ struct GeneratorPreviewView: View {
                         .stroke(heroBorder, lineWidth: 1)
                 }
 
-            HStack(alignment: .top, spacing: 14) {
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .fill(NColors.Brand.neuroBlue.opacity(colorScheme == .light ? 0.14 : 0.18))
-                    .frame(width: 58, height: 58)
-                    .overlay {
-                        Image(systemName: selectedTab == .location ? "sparkles.rectangle.stack.fill" : "rectangle.stack.badge.person.crop.fill")
-                            .font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(NColors.Brand.neuroBlue)
-                    }
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 14) {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(NColors.Brand.neuroBlue.opacity(colorScheme == .light ? 0.14 : 0.18))
+                        .frame(width: 58, height: 58)
+                        .overlay {
+                            Image(systemName: selectedTab == .location ? "sparkles.rectangle.stack.fill" : "rectangle.stack.badge.person.crop.fill")
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundStyle(NColors.Brand.neuroBlue)
+                        }
 
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 8) {
+                    HStack(alignment: .center, spacing: 8) {
                         Text(AppCopy.text(locale, en: "DRAFT READY", es: "BORRADOR LISTO"))
                             .font(.system(size: 11, weight: .bold, design: .rounded))
                             .tracking(1.8)
@@ -118,23 +118,22 @@ struct GeneratorPreviewView: View {
                                 es: "\(drafts.count) tarjetas"
                             )
                         )
-                        .offset(y: -3)
+                        .offset(y: -6)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Text(
-                        selectedTab == .location
-                            ? AppCopy.text(locale, en: "Choose where these flashcards should live", es: "Elige dónde vivirán estas flashcards")
-                            : AppCopy.text(locale, en: "Review every card before saving", es: "Revisa cada tarjeta antes de guardar")
-                    )
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundStyle(NColors.Text.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
                 }
+
+                Text(
+                    selectedTab == .location
+                        ? AppCopy.text(locale, en: "Choose where these flashcards should live", es: "Elige dónde vivirán estas flashcards")
+                        : AppCopy.text(locale, en: "Review every card before saving", es: "Revisa cada tarjeta antes de guardar")
+                )
+                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .foregroundStyle(NColors.Text.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .multilineTextAlignment(.leading)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(16)
