@@ -90,11 +90,11 @@ struct StudyCoachView: View {
                             .foregroundStyle(NColors.Text.textTertiary)
 
                         Text(recommendations.isEmpty ? AppCopy.text(locale, en: "You're all caught up", es: "Estás al día") : AppCopy.text(locale, en: "Your best study move right now", es: "Tu mejor siguiente jugada"))
-                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
                             .foregroundStyle(NColors.Text.textPrimary)
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)
-                            .padding(.top, 20)
+                            .padding(.top, 5)
                     }
                 }
 

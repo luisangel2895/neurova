@@ -4,6 +4,7 @@ import SwiftUI
 struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.locale) private var locale
     @Query(sort: \CloudAccountProfile.updatedAt, order: .reverse) private var profiles: [CloudAccountProfile]
     @Query(sort: \Subject.createdAt, order: .forward) private var subjects: [Subject]
     @Query(sort: \Deck.createdAt, order: .forward) private var decks: [Deck]
@@ -72,7 +73,7 @@ struct ProfileView: View {
                     .zIndex(20)
             }
         }
-        .navigationTitle("Perfil")
+        .navigationTitle(AppCopy.text(locale, en: "Profile", es: "Perfil"))
         .navigationBarTitleDisplayMode(.large)
         .task {
             await runEntryAnimationsIfNeeded()
@@ -81,6 +82,7 @@ struct ProfileView: View {
 
     private var profileSnapshot: ProfileSnapshot {
         ProfileSnapshot(
+            locale: locale,
             profile: profiles.first(where: { $0.key == "primary" }) ?? profiles.first,
             subjects: subjects,
             decks: decks.filter { !$0.isArchived },
@@ -229,7 +231,7 @@ struct ProfileView: View {
 
         return VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .bottom) {
-                Text("Logros")
+                Text(AppCopy.text(locale, en: "Achievements", es: "Logros"))
                     .font(.system(size: 16, weight: .bold, design: .rounded))
                     .foregroundStyle(titleColor)
 
@@ -322,7 +324,7 @@ struct ProfileView: View {
         Button {
             showDeleteConfirmation = true
         } label: {
-            Text("Eliminar cuenta")
+            Text(AppCopy.text(locale, en: "Delete account", es: "Eliminar cuenta"))
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .foregroundStyle(deleteTextColor)
                 .frame(maxWidth: .infinity)
@@ -361,11 +363,11 @@ struct ProfileView: View {
                         }
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Eliminar cuenta")
+                        Text(AppCopy.text(locale, en: "Delete account", es: "Eliminar cuenta"))
                             .font(.system(size: 22, weight: .bold, design: .rounded))
                             .foregroundStyle(titleColor)
 
-                        Text("¿Estás seguro de que deseas eliminar la cuenta? Esto borrará tus datos de Neurova en este dispositivo y en los dispositivos vinculados por iCloud.")
+                        Text(AppCopy.text(locale, en: "Are you sure you want to delete the account? This will erase your Neurova data on this device and on devices linked through iCloud.", es: "¿Estás seguro de que deseas eliminar la cuenta? Esto borrará tus datos de Neurova en este dispositivo y en los dispositivos vinculados por iCloud."))
                             .font(.system(size: 14, weight: .medium, design: .rounded))
                             .foregroundStyle(secondaryTextColor)
                             .fixedSize(horizontal: false, vertical: true)
@@ -384,7 +386,7 @@ struct ProfileView: View {
                         showDeleteConfirmation = false
                         deleteErrorMessage = nil
                     } label: {
-                        Text("Cancelar")
+                        Text(AppCopy.text(locale, en: "Cancel", es: "Cancelar"))
                             .font(.system(size: 16, weight: .semibold, design: .rounded))
                             .foregroundStyle(titleColor)
                             .frame(maxWidth: .infinity)
@@ -410,7 +412,11 @@ struct ProfileView: View {
                                     .tint(.white)
                             }
 
-                            Text(isDeletingAccount ? "Eliminando..." : "Eliminar")
+                            Text(
+                                isDeletingAccount
+                                    ? AppCopy.text(locale, en: "Deleting...", es: "Eliminando...")
+                                    : AppCopy.text(locale, en: "Delete", es: "Eliminar")
+                            )
                                 .font(.system(size: 16, weight: .bold, design: .rounded))
                         }
                         .foregroundStyle(.white)
@@ -786,13 +792,21 @@ struct ProfileView: View {
 
             NotificationCenter.default.post(
                 name: .accountDidReset,
-                object: "La eliminación se aplicó de inmediato en este dispositivo. En otros dispositivos vinculados por iCloud puede tardar unos minutos más en reflejarse."
+                object: AppCopy.text(
+                    locale,
+                    en: "The deletion was applied immediately on this device. On other devices linked through iCloud it may take a few more minutes to appear.",
+                    es: "La eliminación se aplicó de inmediato en este dispositivo. En otros dispositivos vinculados por iCloud puede tardar unos minutos más en reflejarse."
+                )
             )
 
             showDeleteConfirmation = false
             isDeletingAccount = false
         } catch {
-            deleteErrorMessage = "No se pudo completar la eliminación. Inténtalo otra vez."
+            deleteErrorMessage = AppCopy.text(
+                locale,
+                en: "The deletion could not be completed. Please try again.",
+                es: "No se pudo completar la eliminación. Inténtalo otra vez."
+            )
             isDeletingAccount = false
         }
     }
@@ -808,6 +822,7 @@ private struct ProfileSnapshot {
     let earnedAchievementCount: Int
 
     init(
+        locale: Locale,
         profile: CloudAccountProfile?,
         subjects: [Subject],
         decks: [Deck],
@@ -851,27 +866,27 @@ private struct ProfileSnapshot {
 
         let rawName = profile?.displayName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let rawEmail = profile?.email?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        displayName = rawName.isEmpty ? "Angel" : rawName
-        email = rawEmail.isEmpty ? "sin-email@icloud.com" : rawEmail
+        displayName = rawName.isEmpty ? "Neurova" : rawName
+        email = rawEmail.isEmpty ? AppCopy.text(locale, en: "No email shared", es: "Sin correo compartido") : rawEmail
         avatarLetter = String(displayName.prefix(1)).uppercased()
-        memberSinceText = "MIEMBRO DESDE \(Self.memberSinceLabel(for: earliestDate))"
+        memberSinceText = "\(AppCopy.text(locale, en: "MEMBER SINCE", es: "MIEMBRO DESDE")) \(Self.memberSinceLabel(for: earliestDate, locale: locale))"
 
         stats = [
-            ProfileStat(label: "DÍAS ACTIVO", value: "\(activeDayCount)", icon: "calendar", color: Color(red: 0.31, green: 0.53, blue: 0.95)),
-            ProfileStat(label: "XP TOTAL", value: totalXP.formatted(), icon: "bolt", color: Color(red: 0.51, green: 0.29, blue: 0.94)),
-            ProfileStat(label: "RACHA MÁX", value: "\(longestStreak)", icon: "flame", color: Color(red: 0.95, green: 0.53, blue: 0.20)),
-            ProfileStat(label: "PRECISIÓN", value: "\(accuracy)%", icon: "arrow.up.right", color: Color(red: 0.39, green: 0.84, blue: 0.59))
+            ProfileStat(label: AppCopy.text(locale, en: "ACTIVE DAYS", es: "DÍAS ACTIVO"), value: "\(activeDayCount)", icon: "calendar", color: Color(red: 0.31, green: 0.53, blue: 0.95)),
+            ProfileStat(label: AppCopy.text(locale, en: "TOTAL XP", es: "XP TOTAL"), value: totalXP.formatted(), icon: "bolt", color: Color(red: 0.51, green: 0.29, blue: 0.94)),
+            ProfileStat(label: AppCopy.text(locale, en: "BEST STREAK", es: "RACHA MÁX"), value: "\(longestStreak)", icon: "flame", color: Color(red: 0.95, green: 0.53, blue: 0.20)),
+            ProfileStat(label: AppCopy.text(locale, en: "ACCURACY", es: "PRECISIÓN"), value: "\(accuracy)%", icon: "arrow.up.right", color: Color(red: 0.39, green: 0.84, blue: 0.59))
         ]
 
         achievements = [
-            ProfileAchievement(title: "Primera sesión", icon: "star", color: Color(red: 0.88, green: 0.69, blue: 0.19), isEarned: reviewCount > 0),
-            ProfileAchievement(title: "Racha de 7", icon: "flame", color: Color(red: 0.90, green: 0.63, blue: 0.11), isEarned: longestStreak >= 7),
-            ProfileAchievement(title: "100 tarjetas", icon: "square.stack.3d.down.forward", color: Color(red: 0.84, green: 0.63, blue: 0.16), isEarned: reviewCount >= 100),
-            ProfileAchievement(title: "Racha de 30", icon: "crown", color: Color(red: 0.78, green: 0.66, blue: 0.41), isEarned: longestStreak >= 30),
-            ProfileAchievement(title: "500 tarjetas", icon: "trophy", color: Color(red: 0.34, green: 0.78, blue: 0.56), isEarned: reviewCount >= 500),
-            ProfileAchievement(title: "Explorador", icon: "paperplane", color: Color(red: 0.90, green: 0.68, blue: 0.18), isEarned: distinctSubjects >= 5),
-            ProfileAchievement(title: "Guerrero", icon: "shield", color: Color(red: 0.63, green: 0.22, blue: 0.20), isEarned: dueCount >= 50),
-            ProfileAchievement(title: "Maestro", icon: "medal", color: Color(red: 0.66, green: 0.49, blue: 0.91), isEarned: hasStrongDeck)
+            ProfileAchievement(title: AppCopy.text(locale, en: "First session", es: "Primera sesión"), icon: "star", color: Color(red: 0.88, green: 0.69, blue: 0.19), isEarned: reviewCount > 0),
+            ProfileAchievement(title: AppCopy.text(locale, en: "7-day streak", es: "Racha de 7"), icon: "flame", color: Color(red: 0.90, green: 0.63, blue: 0.11), isEarned: longestStreak >= 7),
+            ProfileAchievement(title: AppCopy.text(locale, en: "100 cards", es: "100 tarjetas"), icon: "square.stack.3d.down.forward", color: Color(red: 0.84, green: 0.63, blue: 0.16), isEarned: reviewCount >= 100),
+            ProfileAchievement(title: AppCopy.text(locale, en: "30-day streak", es: "Racha de 30"), icon: "crown", color: Color(red: 0.78, green: 0.66, blue: 0.41), isEarned: longestStreak >= 30),
+            ProfileAchievement(title: AppCopy.text(locale, en: "500 cards", es: "500 tarjetas"), icon: "trophy", color: Color(red: 0.34, green: 0.78, blue: 0.56), isEarned: reviewCount >= 500),
+            ProfileAchievement(title: AppCopy.text(locale, en: "Explorer", es: "Explorador"), icon: "paperplane", color: Color(red: 0.90, green: 0.68, blue: 0.18), isEarned: distinctSubjects >= 5),
+            ProfileAchievement(title: AppCopy.text(locale, en: "Warrior", es: "Guerrero"), icon: "shield", color: Color(red: 0.63, green: 0.22, blue: 0.20), isEarned: dueCount >= 50),
+            ProfileAchievement(title: AppCopy.text(locale, en: "Master", es: "Maestro"), icon: "medal", color: Color(red: 0.66, green: 0.49, blue: 0.91), isEarned: hasStrongDeck)
         ]
         earnedAchievementCount = achievements.filter(\.isEarned).count
     }
@@ -887,9 +902,9 @@ private struct ProfileSnapshot {
         return dates.min() ?? .now
     }
 
-    private static func memberSinceLabel(for date: Date) -> String {
+    private static func memberSinceLabel(for date: Date, locale: Locale) -> String {
         let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: "es_ES")
+        formatter.locale = AppCopy.language(for: locale) == .spanish ? Locale(identifier: "es_ES") : Locale(identifier: "en_US")
         formatter.dateFormat = "MMMM yyyy"
         return formatter.string(from: date).uppercased()
     }

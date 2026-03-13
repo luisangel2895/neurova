@@ -443,6 +443,7 @@ private struct AppSplashView: View {
 }
 
 private struct LightSplashView: View {
+    @Environment(\.locale) private var locale
     let logoVisible: Bool
     let pulsing: Bool
     let exiting: Bool
@@ -516,7 +517,7 @@ private struct LightSplashView: View {
                             .shadow(color: NColors.Splash.lightProgressShadow, radius: 5, x: 0, y: 2)
                     }
 
-                    Text("LOADING")
+                    Text(AppCopy.text(locale, en: "LOADING", es: "CARGANDO"))
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .tracking(4.8)
                         .foregroundStyle(NColors.Splash.lightLabel)
@@ -579,6 +580,7 @@ private struct LightSplashParticle: View {
 }
 
 private struct DarkSplashView: View {
+    @Environment(\.locale) private var locale
     let logoVisible: Bool
     let pulsing: Bool
     let exiting: Bool
@@ -669,7 +671,7 @@ private struct DarkSplashView: View {
                             .shadow(color: NColors.Splash.darkProgressShadow, radius: 7, x: 0, y: 2)
                     }
 
-                    Text("LOADING")
+                    Text(AppCopy.text(locale, en: "LOADING", es: "CARGANDO"))
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .tracking(4.8)
                         .foregroundStyle(NColors.Splash.darkLabel)

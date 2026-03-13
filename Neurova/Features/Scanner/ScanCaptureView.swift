@@ -588,6 +588,7 @@ private struct CSVFlashcardParser {
 
 private struct CameraCaptureView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.locale) private var locale
     @State private var camera = CameraSessionModel()
     @State private var capturedImage: UIImage?
 
@@ -634,7 +635,7 @@ private struct CameraCaptureView: View {
                             self.capturedImage = nil
                             camera.startSession()
                         } label: {
-                            Text("Retake")
+                            Text(AppCopy.text(locale, en: "Retake", es: "Repetir"))
                                 .font(.system(size: 17, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
@@ -647,7 +648,7 @@ private struct CameraCaptureView: View {
                             onImagePicked(capturedImage)
                             dismiss()
                         } label: {
-                            Text("Use Photo")
+                            Text(AppCopy.text(locale, en: "Use Photo", es: "Usar foto"))
                                 .font(.system(size: 17, weight: .bold, design: .rounded))
                                 .foregroundStyle(.black)
                                 .frame(maxWidth: .infinity)
