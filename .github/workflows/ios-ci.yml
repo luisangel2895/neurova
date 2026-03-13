@@ -5,6 +5,7 @@ on:
     branches:
       - main
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     branches:
       - main
   workflow_dispatch:
@@ -20,10 +21,11 @@ env:
   PROJECT_PATH: Neurova.xcodeproj
   SCHEME: Neurova
   DERIVED_DATA_PATH: .build/DerivedData
+  RESULT_BUNDLE_PATH: .build/TestResults
 
 jobs:
-  build-and-test:
-    name: Build and Unit Tests
+  pr-validation:
+    name: PR Validation
     runs-on: macos-latest
     timeout-minutes: 30
 
@@ -40,6 +42,10 @@ jobs:
         run: |
           xcodebuild -version
           swift --version
+
+      - name: Verify shared scheme
+        run: |
+          test -f Neurova.xcodeproj/xcshareddata/xcschemes/Neurova.xcscheme
 
       - name: Create and boot iOS Simulator
         run: |
@@ -86,12 +92,14 @@ jobs:
 
       - name: Build for testing
         run: |
+          mkdir -p "$RESULT_BUNDLE_PATH"
           xcodebuild \
             -project "$PROJECT_PATH" \
             -scheme "$SCHEME" \
             -sdk iphonesimulator \
             -destination "id=$SIMULATOR_UDID" \
             -derivedDataPath "$DERIVED_DATA_PATH" \
+            -resultBundlePath "$RESULT_BUNDLE_PATH/build-for-testing.xcresult" \
             -configuration Debug \
             build-for-testing \
             CODE_SIGNING_ALLOWED=NO
@@ -104,6 +112,15 @@ jobs:
             -sdk iphonesimulator \
             -destination "id=$SIMULATOR_UDID" \
             -derivedDataPath "$DERIVED_DATA_PATH" \
+            -resultBundlePath "$RESULT_BUNDLE_PATH/unit-tests.xcresult" \
             test-without-building \
             -only-testing:NeurovaTests \
             CODE_SIGNING_ALLOWED=NO
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ci-results
+          path: .build/TestResults
+          if-no-files-found: warn
