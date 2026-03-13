@@ -80,7 +80,7 @@ struct StudyCoachView: View {
                     coachMascot
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 118, height: 118)
+                        .frame(width: 100, height: 100)
                         .offset(y: mascotFloatY)
 
                     VStack(alignment: .leading, spacing: 10) {
