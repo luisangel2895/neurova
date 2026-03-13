@@ -9,24 +9,9 @@ It is intentionally separate from the README and focused on operational/engineer
 - Phase 1: repository readiness for CI/CD
 - Phase 2: testing foundation
 - Phase 3: GitHub PR CI hardening
+- Phase 4: Xcode Cloud readiness
 
 ## Remaining phases
-
-### Phase 4: Xcode Cloud readiness
-
-Goal:
-
-- finalize the repo-side preparation for Apple-native CI/CD without configuring Apple UI yet
-
-Pending work:
-
-1. Decide final test layering for:
-   - PR
-   - Beta
-   - Nightly
-2. Decide whether introducing a repository `.xctestplan` now adds real value
-3. Confirm the shared scheme and test scope are ready for Apple-side workflows
-4. Document the exact Xcode Cloud workflows that will later be created manually
 
 ### Phase 5: Apple-side setup
 
@@ -91,8 +76,7 @@ These are not blockers for CI/CD, but they are useful if the project grows.
 
 ## Recommended execution order
 
-1. Finish Phase 4
-2. Perform Apple-side setup from Phase 5
-3. Validate internal beta distribution end-to-end
-4. Add nightly/performance from Phase 6
-5. Revisit branch protection and PR-only discipline when it matches the team workflow
+1. Perform Apple-side setup from Phase 5
+2. Validate internal beta distribution end-to-end
+3. Add nightly/performance from Phase 6
+4. Revisit branch protection and PR-only discipline when it matches the team workflow

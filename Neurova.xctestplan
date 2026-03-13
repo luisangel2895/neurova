@@ -1,0 +1,47 @@
+{
+  "configurations" : [
+    {
+      "id" : "7D95D9DF-5C8D-4E55-BFF0-5C2EA6F59301",
+      "name" : "PR",
+      "options" : {
+
+      }
+    },
+    {
+      "id" : "A4F3B6A6-1D89-4F53-904B-02FB7B6E3A41",
+      "name" : "Beta",
+      "options" : {
+
+      }
+    },
+    {
+      "id" : "5E22B1CA-EB53-449B-BF85-F2D65390A7D0",
+      "name" : "Nightly",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:Neurova.xcodeproj",
+        "identifier" : "0B70FF872F558E0000C2F66D",
+        "name" : "NeurovaTests"
+      }
+    },
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Neurova.xcodeproj",
+        "identifier" : "0B70FF912F558E0000C2F66D",
+        "name" : "NeurovaUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
