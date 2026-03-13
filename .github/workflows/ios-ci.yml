@@ -1,4 +1,4 @@
-name: iOS CI
+name: iOS PR CI
 
 on:
   push:
@@ -17,11 +17,16 @@ concurrency:
   group: ios-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+defaults:
+  run:
+    shell: bash
+
 env:
   PROJECT_PATH: Neurova.xcodeproj
   SCHEME: Neurova
   DERIVED_DATA_PATH: .build/DerivedData
   RESULT_BUNDLE_PATH: .build/TestResults
+  SIMULATOR_NAME: Neurova-CI-Simulator
 
 jobs:
   pr-validation:
@@ -45,7 +50,14 @@ jobs:
 
       - name: Verify shared scheme
         run: |
+          set -euo pipefail
           test -f Neurova.xcodeproj/xcshareddata/xcschemes/Neurova.xcscheme
+
+      - name: Prepare build directories
+        run: |
+          set -euo pipefail
+          rm -rf "$DERIVED_DATA_PATH" "$RESULT_BUNDLE_PATH"
+          mkdir -p "$DERIVED_DATA_PATH" "$RESULT_BUNDLE_PATH"
 
       - name: Create and boot iOS Simulator
         run: |
@@ -81,9 +93,8 @@ jobs:
             exit 1
           fi
 
-          SIM_NAME="Neurova-CI-Simulator"
-          xcrun simctl delete "${SIM_NAME}" || true
-          SIMULATOR_UDID="$(xcrun simctl create "${SIM_NAME}" "${DEVICE_TYPE_ID}" "${RUNTIME_ID}")"
+          xcrun simctl delete "${SIMULATOR_NAME}" || true
+          SIMULATOR_UDID="$(xcrun simctl create "${SIMULATOR_NAME}" "${DEVICE_TYPE_ID}" "${RUNTIME_ID}")"
           xcrun simctl boot "${SIMULATOR_UDID}"
           xcrun simctl bootstatus "${SIMULATOR_UDID}" -b
 
@@ -92,7 +103,7 @@ jobs:
 
       - name: Build for testing
         run: |
-          mkdir -p "$RESULT_BUNDLE_PATH"
+          set -euo pipefail
           xcodebuild \
             -project "$PROJECT_PATH" \
             -scheme "$SCHEME" \
@@ -106,6 +117,7 @@ jobs:
 
       - name: Run unit tests
         run: |
+          set -euo pipefail
           xcodebuild \
             -project "$PROJECT_PATH" \
             -scheme "$SCHEME" \
@@ -117,6 +129,35 @@ jobs:
             -only-testing:NeurovaTests \
             CODE_SIGNING_ALLOWED=NO
 
+      - name: Run UI smoke tests
+        run: |
+          set -euo pipefail
+          xcodebuild \
+            -project "$PROJECT_PATH" \
+            -scheme "$SCHEME" \
+            -sdk iphonesimulator \
+            -destination "id=$SIMULATOR_UDID" \
+            -derivedDataPath "$DERIVED_DATA_PATH" \
+            -resultBundlePath "$RESULT_BUNDLE_PATH/ui-smoke-tests.xcresult" \
+            test-without-building \
+            -only-testing:NeurovaUITests/testLaunchShowsExpectedRootExperience \
+            -only-testing:NeurovaUITests/testOnboardingOrShellExposesPrimaryNavigationElement \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Publish workflow summary
+        if: always()
+        run: |
+          {
+            echo "## iOS PR CI"
+            echo
+            echo "- Shared scheme: \`$SCHEME\`"
+            echo "- Simulator UDID: \`${SIMULATOR_UDID:-unavailable}\`"
+            echo "- Result bundles uploaded from \`$RESULT_BUNDLE_PATH\`"
+            echo "- Test scopes:"
+            echo "  - \`NeurovaTests\`"
+            echo "  - UI smoke subset of \`NeurovaUITests\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -124,3 +165,14 @@ jobs:
           name: ios-ci-results
           path: .build/TestResults
           if-no-files-found: warn
+
+      - name: Delete CI simulator
+        if: always()
+        run: |
+          set -euo pipefail
+          if [[ -n "${SIMULATOR_UDID:-}" ]]; then
+            xcrun simctl shutdown "$SIMULATOR_UDID" || true
+            xcrun simctl delete "$SIMULATOR_UDID" || true
+          else
+            xcrun simctl delete "${SIMULATOR_NAME}" || true
+          fi
