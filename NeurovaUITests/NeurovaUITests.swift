@@ -23,19 +23,59 @@ final class NeurovaUITests: XCTestCase {
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testLaunchShowsExpectedRootExperience() throws {
         let app = XCUIApplication()
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        XCTAssertTrue(
+            rootIndicator(in: app).waitForExistence(timeout: 5),
+            "The app should present either onboarding or the main authenticated shell after launch."
+        )
     }
 
     @MainActor
     func testLaunchPerformance() throws {
-        // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             XCUIApplication().launch()
         }
+    }
+
+    @MainActor
+    func testOnboardingOrShellExposesPrimaryNavigationElement() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        if onboardingIndicator(in: app).waitForExistence(timeout: 3) {
+            let continueButton = app.buttons["Continue"].firstMatch
+            let continuarButton = app.buttons["Continuar"].firstMatch
+            XCTAssertTrue(
+                continueButton.exists || continuarButton.exists,
+                "Onboarding should expose its primary action."
+            )
+            return
+        }
+
+        let libraryTab = app.staticTexts["Library"].firstMatch
+        let bibliotecaTab = app.staticTexts["Biblioteca"].firstMatch
+        XCTAssertTrue(
+            libraryTab.waitForExistence(timeout: 3) || bibliotecaTab.waitForExistence(timeout: 3),
+            "The authenticated shell should expose tab navigation."
+        )
+    }
+
+    private func rootIndicator(in app: XCUIApplication) -> XCUIElement {
+        let candidates = [
+            onboardingIndicator(in: app),
+            app.staticTexts["Home"].firstMatch,
+            app.staticTexts["Inicio"].firstMatch
+        ]
+
+        return candidates.first { $0.exists } ?? candidates[0]
+    }
+
+    private func onboardingIndicator(in app: XCUIApplication) -> XCUIElement {
+        let english = app.staticTexts["Welcome to Neurova"].firstMatch
+        let spanish = app.staticTexts["Bienvenido a Neurova"].firstMatch
+        return english.exists ? english : spanish
     }
 }
