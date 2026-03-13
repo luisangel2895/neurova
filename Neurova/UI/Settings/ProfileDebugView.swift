@@ -2,12 +2,20 @@ import SwiftData
 import SwiftUI
 
 struct ProfileView: View {
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.colorScheme) private var colorScheme
     @Query(sort: \CloudAccountProfile.updatedAt, order: .reverse) private var profiles: [CloudAccountProfile]
     @Query(sort: \Subject.createdAt, order: .forward) private var subjects: [Subject]
     @Query(sort: \Deck.createdAt, order: .forward) private var decks: [Deck]
     @Query(sort: \Card.createdAt, order: .forward) private var cards: [Card]
     @Query(sort: \XPEventEntity.date, order: .forward) private var xpEvents: [XPEventEntity]
+
+    @AppStorage("apple_user_id") private var appleUserID: String = ""
+    @AppStorage("apple_given_name") private var appleGivenName: String = ""
+    @AppStorage("apple_email") private var appleEmail: String = ""
+    @AppStorage("profile_display_name") private var profileDisplayName: String = ""
+    @AppStorage("daily_goal_cards") private var dailyGoalCardsStorage: Int = 20
+    @AppStorage("cloudkit_sync_enabled") private var cloudKitSyncEnabled: Bool = true
 
     @State private var hasAnimatedIn = false
     @State private var showTitle = false
@@ -24,6 +32,9 @@ struct ProfileView: View {
     @State private var showDeleteButton = false
     @State private var showVersion = false
     @State private var shimmerActive = false
+    @State private var showDeleteConfirmation = false
+    @State private var isDeletingAccount = false
+    @State private var deleteErrorMessage: String?
 
     var body: some View {
         ZStack {
@@ -53,6 +64,12 @@ struct ProfileView: View {
                         .padding(.bottom, 136)
                         .frame(maxWidth: .infinity)
                 }
+            }
+
+            if showDeleteConfirmation {
+                deleteConfirmationOverlay
+                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                    .zIndex(20)
             }
         }
         .navigationTitle("Perfil")
@@ -303,7 +320,7 @@ struct ProfileView: View {
 
     private var deleteAccountButton: some View {
         Button {
-            print("borrando cuenta")
+            showDeleteConfirmation = true
         } label: {
             Text("Eliminar cuenta")
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
@@ -320,6 +337,104 @@ struct ProfileView: View {
         .opacity(showDeleteButton ? 1 : 0)
         .offset(y: showDeleteButton ? 0 : 10)
         .animation(Self.easeOutExpo(duration: 0.45), value: showDeleteButton)
+    }
+
+    private var deleteConfirmationOverlay: some View {
+        ZStack {
+            Color.black.opacity(colorScheme == .dark ? 0.52 : 0.28)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    guard !isDeletingAccount else { return }
+                    showDeleteConfirmation = false
+                    deleteErrorMessage = nil
+                }
+
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(alignment: .top, spacing: 12) {
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .fill(deleteAccentFill)
+                        .frame(width: 52, height: 52)
+                        .overlay {
+                            Image(systemName: "trash.fill")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundStyle(deleteAccentText)
+                        }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Eliminar cuenta")
+                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .foregroundStyle(titleColor)
+
+                        Text("¿Estás seguro de que deseas eliminar la cuenta? Esto borrará tus datos de Neurova en este dispositivo y en los dispositivos vinculados por iCloud.")
+                            .font(.system(size: 14, weight: .medium, design: .rounded))
+                            .foregroundStyle(secondaryTextColor)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                if let deleteErrorMessage {
+                    Text(deleteErrorMessage)
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundStyle(Color.red.opacity(0.9))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                HStack(spacing: 12) {
+                    Button {
+                        showDeleteConfirmation = false
+                        deleteErrorMessage = nil
+                    } label: {
+                        Text("Cancelar")
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundStyle(titleColor)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 54)
+                            .background(cancelButtonFill)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .stroke(cancelButtonStroke, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(ProfilePressStyle(pressedScale: 0.98))
+                    .disabled(isDeletingAccount)
+
+                    Button {
+                        Task {
+                            await deleteAccount()
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            if isDeletingAccount {
+                                ProgressView()
+                                    .progressViewStyle(.circular)
+                                    .tint(.white)
+                            }
+
+                            Text(isDeletingAccount ? "Eliminando..." : "Eliminar")
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(deleteGradient)
+                    }
+                    .buttonStyle(ProfilePressStyle(pressedScale: 0.98))
+                    .disabled(isDeletingAccount)
+                }
+            }
+            .padding(22)
+            .frame(maxWidth: 420, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .fill(deleteModalFill)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .stroke(deleteModalStroke, lineWidth: 1)
+            )
+            .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.34 : 0.14), radius: 28, x: 0, y: 18)
+            .padding(.horizontal, 22)
+        }
     }
 
     private var versionLabel: some View {
@@ -474,6 +589,38 @@ struct ProfileView: View {
         Color(red: 0.90, green: 0.31, blue: 0.25)
     }
 
+    private var deleteModalFill: Color {
+        colorScheme == .dark ? Color(red: 0.09, green: 0.11, blue: 0.18) : Color.white.opacity(0.98)
+    }
+
+    private var deleteModalStroke: Color {
+        colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.08)
+    }
+
+    private var deleteAccentFill: Color {
+        colorScheme == .dark ? Color.red.opacity(0.18) : Color.red.opacity(0.12)
+    }
+
+    private var deleteAccentText: Color {
+        colorScheme == .dark ? Color.red.opacity(0.9) : Color.red.opacity(0.82)
+    }
+
+    private var cancelButtonFill: Color {
+        colorScheme == .dark ? Color.white.opacity(0.04) : Color.black.opacity(0.03)
+    }
+
+    private var cancelButtonStroke: Color {
+        colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.07)
+    }
+
+    private var deleteGradient: some ShapeStyle {
+        LinearGradient(
+            colors: [Color(red: 0.97, green: 0.36, blue: 0.35), Color(red: 0.78, green: 0.15, blue: 0.28)],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+    }
+
     private func achievementIconColor(for achievement: ProfileAchievement) -> Color {
         achievement.isEarned ? darkGoldColor : mutedGoldColor
     }
@@ -583,6 +730,71 @@ struct ProfileView: View {
 
     private static func easeOutExpo(duration: Double) -> Animation {
         .timingCurve(0.16, 1, 0.3, 1, duration: duration)
+    }
+
+    @MainActor
+    private func deleteAccount() async {
+        guard isDeletingAccount == false else { return }
+
+        isDeletingAccount = true
+        deleteErrorMessage = nil
+
+        do {
+            for card in cards {
+                modelContext.delete(card)
+            }
+
+            for deck in decks {
+                modelContext.delete(deck)
+            }
+
+            for subject in subjects {
+                modelContext.delete(subject)
+            }
+
+            for event in xpEvents {
+                modelContext.delete(event)
+            }
+
+            for profile in profiles {
+                modelContext.delete(profile)
+            }
+
+            let xpStats = try modelContext.fetch(FetchDescriptor<XPStatsEntity>())
+            for stat in xpStats {
+                modelContext.delete(stat)
+            }
+
+            let preferences = try modelContext.fetch(FetchDescriptor<UserPreferences>())
+            for preference in preferences {
+                modelContext.delete(preference)
+            }
+
+            let scans = try modelContext.fetch(FetchDescriptor<ScanEntity>())
+            for scan in scans {
+                modelContext.delete(scan)
+            }
+
+            try modelContext.save()
+
+            appleUserID = ""
+            appleGivenName = ""
+            appleEmail = ""
+            profileDisplayName = ""
+            dailyGoalCardsStorage = 20
+            cloudKitSyncEnabled = true
+
+            NotificationCenter.default.post(
+                name: .accountDidReset,
+                object: "La eliminación se aplicó de inmediato en este dispositivo. En otros dispositivos vinculados por iCloud puede tardar unos minutos más en reflejarse."
+            )
+
+            showDeleteConfirmation = false
+            isDeletingAccount = false
+        } catch {
+            deleteErrorMessage = "No se pudo completar la eliminación. Inténtalo otra vez."
+            isDeletingAccount = false
+        }
     }
 }
 

@@ -409,6 +409,7 @@ private struct AppSceneContainer: View {
 extension Notification.Name {
     static let appSplashWillExit = Notification.Name("appSplashWillExit")
     static let homeShouldForceRefresh = Notification.Name("homeShouldForceRefresh")
+    static let accountDidReset = Notification.Name("accountDidReset")
 }
 
 private struct AppSplashView: View {
@@ -763,12 +764,14 @@ private struct HomeLaunchGateView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.locale) private var locale
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.colorScheme) private var colorScheme
     let onOpenBootstrap: () -> Void
 
     @State private var isLoading = true
     @State private var hasCompletedOnboarding = false
     @State private var recoveredCloudSession: RecoveredCloudSession?
     @State private var isOnboardingActive = false
+    @State private var accountResetToastMessage: String?
 
     @AppStorage("cloudkit_sync_enabled") private var cloudKitSyncEnabled: Bool = true
     @AppStorage("cloudkit_sync_runtime_active") private var cloudKitSyncRuntimeActive: Bool = true
@@ -820,6 +823,29 @@ private struct HomeLaunchGateView: View {
             guard newValue == .active else { return }
             Task {
                 await refreshLaunchStateAfterForeground()
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .accountDidReset)) { notification in
+            recoveredCloudSession = nil
+            hasCompletedOnboarding = false
+            isLoading = false
+            isOnboardingActive = false
+
+            accountResetToastMessage = notification.object as? String
+
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(4))
+                withAnimation(.easeOut(duration: 0.28)) {
+                    accountResetToastMessage = nil
+                }
+            }
+        }
+        .overlay(alignment: .bottom) {
+            if let accountResetToastMessage {
+                accountResetToast(message: accountResetToastMessage)
+                    .padding(.horizontal, 22)
+                    .padding(.bottom, 24)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
     }
@@ -1000,6 +1026,43 @@ private struct HomeLaunchGateView: View {
             }
             try? await Task.sleep(nanoseconds: 1_500_000_000)
         }
+    }
+
+    private func accountResetToast(message: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(NColors.Brand.neuroBlue.opacity(0.16))
+                .frame(width: 46, height: 46)
+                .overlay {
+                    Image(systemName: "checkmark.shield.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(NColors.Brand.neuroBlue)
+                }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(AppCopy.text(locale, en: "Account removed", es: "Cuenta eliminada"))
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(NColors.Text.textPrimary)
+
+                Text(message)
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(NColors.Text.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(colorScheme == .dark ? NColors.Neutrals.surfaceAlt : NColors.Neutrals.surface)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.08), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.28 : 0.14), radius: 18, x: 0, y: 10)
     }
 }
 
