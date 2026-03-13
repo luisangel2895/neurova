@@ -213,7 +213,9 @@ struct SettingsView: View {
     }
 
     private var privacySection: some View {
-        Button(action: {}) {
+        NavigationLink {
+            PrivacyView()
+        } label: {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 13, style: .continuous)
@@ -242,6 +244,7 @@ struct SettingsView: View {
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
             .shadow(color: sectionShadow, radius: colorScheme == .dark ? 14 : 8, x: 0, y: 6)
         }
+        .buttonStyle(.plain)
         .buttonStyle(PressScaleStyle(pressedScale: 0.985))
         .opacity(showPrivacySection ? 1 : 0)
         .offset(y: showPrivacySection ? 0 : 18)
