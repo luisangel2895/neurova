@@ -109,7 +109,7 @@ struct PrivacyView: View {
                         .foregroundStyle(heroEyebrow)
 
                     Text(locale.identifier.hasPrefix("en") ? "Your flashcards stay private by design." : "Tus flashcards se mantienen privadas por diseño.")
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(size: 20, weight: .bold, design: .rounded))
                         .foregroundStyle(heroTitle)
                         .fixedSize(horizontal: false, vertical: true)
                 }
