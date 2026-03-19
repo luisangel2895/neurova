@@ -383,10 +383,11 @@ struct StudyCoachView: View {
         }
 
         recommendationAnimationTask = Task { @MainActor in
+            guard recommendations.isEmpty == false else { return }
             try? await Task.sleep(for: .milliseconds(180))
-            for count in 1...recommendations.count {
+            for index in recommendations.indices {
                 if Task.isCancelled { return }
-                visibleRecommendationCount = count
+                visibleRecommendationCount = index + 1
                 try? await Task.sleep(for: .milliseconds(110))
             }
         }
