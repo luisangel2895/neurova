@@ -125,6 +125,8 @@ jobs:
             -destination "id=$SIMULATOR_UDID" \
             -derivedDataPath "$DERIVED_DATA_PATH" \
             -resultBundlePath "$RESULT_BUNDLE_PATH/unit-tests.xcresult" \
+            -parallel-testing-enabled NO \
+            -maximum-parallel-testing-workers 1 \
             test-without-building \
             -only-testing:NeurovaTests \
             CODE_SIGNING_ALLOWED=NO
@@ -139,6 +141,8 @@ jobs:
             -destination "id=$SIMULATOR_UDID" \
             -derivedDataPath "$DERIVED_DATA_PATH" \
             -resultBundlePath "$RESULT_BUNDLE_PATH/ui-smoke-tests.xcresult" \
+            -parallel-testing-enabled NO \
+            -maximum-parallel-testing-workers 1 \
             test-without-building \
             -only-testing:NeurovaUITests/testLaunchShowsExpectedRootExperience \
             -only-testing:NeurovaUITests/testOnboardingOrShellExposesPrimaryNavigationElement \
