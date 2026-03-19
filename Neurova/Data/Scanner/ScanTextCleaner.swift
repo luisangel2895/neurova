@@ -3,6 +3,9 @@ import Foundation
 enum ScanTextCleaner {
     static func cleanedText(from rawText: String) -> String {
         let normalizedLines = rawText
+            .replacingOccurrences(of: "\\r\\n", with: "\n")
+            .replacingOccurrences(of: "\\n", with: "\n")
+            .replacingOccurrences(of: "\\r", with: "\n")
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
             .components(separatedBy: .newlines)

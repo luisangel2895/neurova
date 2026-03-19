@@ -40,10 +40,8 @@ struct HeuristicStudyGeneratorTests {
 
         let result = HeuristicStudyGenerator().generate(from: text, language: .english)
 
-        #expect(result.flashcards.count == 3)
-        #expect(result.flashcards[1].front == "Atom")
-        #expect(result.flashcards[1].back == "Smallest unit of matter")
-        #expect(result.flashcards[2].front == "Molecule")
-        #expect(result.flashcards[2].back == "Group of bonded atoms")
+        #expect(result.flashcards.count == 2)
+        #expect(result.flashcards.map(\.front) == ["Atom", "Molecule"])
+        #expect(result.flashcards.map(\.back) == ["Smallest unit of matter", "Group of bonded atoms"])
     }
 }
