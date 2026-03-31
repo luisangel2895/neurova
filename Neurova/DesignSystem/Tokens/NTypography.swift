@@ -1,13 +1,12 @@
 import SwiftUI
 
 enum NTypography {
-    static let display = Font.system(size: 34, weight: .bold, design: .rounded)
-    static let title = Font.system(size: 28, weight: .semibold, design: .rounded)
-    static let headline = Font.system(size: 20, weight: .semibold, design: .rounded)
-    static let body = Font.system(size: 16, weight: .regular, design: .rounded)
-    static let bodyEmphasis = Font.system(size: 16, weight: .medium, design: .rounded)
-    static let caption = Font.system(size: 13, weight: .regular, design: .rounded)
-    static let micro = Font.system(size: 11, weight: .regular, design: .rounded)
+    // All fonts use semantic text styles for automatic Dynamic Type scaling.
+    static let display = Font.system(.largeTitle, design: .rounded, weight: .bold)
+    static let title = Font.system(.title, design: .rounded, weight: .semibold)
+    static let headline = Font.system(.title3, design: .rounded, weight: .semibold)
+    static let body = Font.system(.body, design: .rounded)
+    static let bodyEmphasis = Font.system(.body, design: .rounded, weight: .medium)
+    static let caption = Font.system(.footnote, design: .rounded)
+    static let micro = Font.system(.caption2, design: .rounded)
 }
-
-// Ejemplo: Text("Neurova").font(NTypography.display)
