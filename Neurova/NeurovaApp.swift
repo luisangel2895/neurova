@@ -60,10 +60,7 @@ struct NeurovaApp: App {
                             "CloudKit init failed",
                             "purge=\(purgeSummary)",
                             "domain=\(nsError.domain)",
-                            "code=\(nsError.code)",
-                            "description=\(nsError.localizedDescription)",
-                            "debug=\(String(describing: error))",
-                            "userInfo=\(nsError.userInfo)"
+                            "code=\(nsError.code)"
                         ].joined(separator: " | ")
                         defaults.set(details, forKey: cloudKitLastErrorKey)
                     }
@@ -92,7 +89,12 @@ struct NeurovaApp: App {
                 return fallbackContainer
             }
 
-            fatalError("Failed to create ModelContainer: \(error)")
+            // Last resort: in-memory store so the app can still launch.
+            let inMemory = ModelConfiguration(schema: fullSchema, isStoredInMemoryOnly: true)
+            let defaults = UserDefaults.standard
+            defaults.set(false, forKey: cloudKitRuntimeActiveKey)
+            defaults.set("Emergency in-memory store", forKey: cloudKitLastErrorKey)
+            return try! ModelContainer(for: fullSchema, configurations: [inMemory])
         }
     }()
 
