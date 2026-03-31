@@ -50,6 +50,8 @@ struct NHighlightCard<LeadingContent: View>: View {
                 NSecondaryButton(secondaryActionTitle, action: onSecondaryAction)
                     .padding(.top, NSpacing.sm + 1)
             }
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("\(sectionLabel), \(title)")
         }
     }
 

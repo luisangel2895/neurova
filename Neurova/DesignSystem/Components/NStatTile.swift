@@ -29,6 +29,8 @@ struct NStatTile: View {
                     .foregroundStyle(NColors.Text.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(label): \(value)")
         }
     }
 }

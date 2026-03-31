@@ -54,6 +54,8 @@ struct NButton: View {
         .disabled(isDisabled)
         .allowsHitTesting(!isDisabled)
         .opacity(isDisabled ? 0.45 : 1.0)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(.isButton)
     }
 
     @ViewBuilder

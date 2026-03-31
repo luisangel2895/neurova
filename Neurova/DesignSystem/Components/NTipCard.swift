@@ -39,6 +39,8 @@ struct NTipCard<LeadingContent: View>: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(title): \(bodyText)")
         }
         .task(id: bodyText) {
             await animateBodyText()

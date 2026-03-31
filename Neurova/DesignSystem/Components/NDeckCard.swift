@@ -40,6 +40,8 @@ struct NDeckCard: View {
                     .foregroundStyle(secondaryTextColor)
             }
             .frame(width: 122, height: 92, alignment: .leading)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(title), \(cardCountText)")
         }
     }
 

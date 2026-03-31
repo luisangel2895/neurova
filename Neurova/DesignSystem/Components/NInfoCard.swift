@@ -39,6 +39,8 @@ struct NInfoCard: View {
                 NSecondaryButton(actionTitle, action: onAction)
                     .padding(.top, NSpacing.xs)
             }
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("\(sectionLabel), \(title)")
         }
     }
 

@@ -60,6 +60,9 @@ struct NProgressBar: View {
             }
         }
         .frame(height: height)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Progress")
+        .accessibilityValue("\(Int(progress * 100))%")
         .onAppear {
             displayedProgress = 0
             withAnimation(.easeInOut(duration: animationDuration)) {

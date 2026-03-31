@@ -122,5 +122,6 @@ struct NGradientButton: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
     }
 }

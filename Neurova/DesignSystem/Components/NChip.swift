@@ -23,5 +23,7 @@ struct NChip: View {
             .clipShape(
                 RoundedRectangle(cornerRadius: NRadius.chip, style: .continuous)
             )
+            .accessibilityLabel(title)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

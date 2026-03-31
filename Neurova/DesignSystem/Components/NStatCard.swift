@@ -26,6 +26,8 @@ struct NStatCard: View {
             }
             .frame(maxWidth: .infinity, minHeight: 60)
             .frame(maxWidth: .infinity, alignment: .center)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(label): \(value)")
         }
     }
 

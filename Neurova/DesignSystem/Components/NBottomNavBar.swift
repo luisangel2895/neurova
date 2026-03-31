@@ -124,6 +124,8 @@ struct NBottomNavBar: View {
             .animation(.spring(response: 0.24, dampingFraction: 0.8), value: selectedTab)
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(item.title(for: locale))
+        .accessibilityAddTraits(isActive ? [.isSelected, .isButton] : .isButton)
     }
 
     private var scanButton: some View {
@@ -139,6 +141,7 @@ struct NBottomNavBar: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Scan")
         .shadow(
             color: colorScheme == .light
                 ? NColors.Brand.neuroBlue.opacity(0.22)

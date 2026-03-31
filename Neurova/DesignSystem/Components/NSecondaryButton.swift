@@ -26,5 +26,6 @@ struct NSecondaryButton: View {
                 )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
     }
 }

@@ -43,5 +43,6 @@ struct NEmptyState: View {
         }
         .padding(NSpacing.xl)
         .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }

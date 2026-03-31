@@ -39,5 +39,8 @@ struct NProgressRing: View {
             }
         }
         .frame(width: 92, height: 92)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Progress")
+        .accessibilityValue(centerText ?? "\(Int(progress * 100))%")
     }
 }
