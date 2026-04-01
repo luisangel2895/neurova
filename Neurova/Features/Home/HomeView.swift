@@ -78,16 +78,19 @@ struct HomeView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .homeShouldForceRefresh)) { _ in
             viewModel.load(using: modelContext, forceRefresh: true)
+            animateHeroProgressToCurrentState()
         }
         .onChange(of: locale.identifier) { _, _ in
             viewModel.load(using: modelContext, forceRefresh: true)
         }
         .onChange(of: dailyGoalCardsStorage) { _, _ in
             viewModel.load(using: modelContext, forceRefresh: true)
+            animateHeroProgressToCurrentState()
         }
         .onChange(of: scenePhase) { _, newValue in
             guard newValue == .active else { return }
             viewModel.load(using: modelContext, forceRefresh: true)
+            animateHeroProgressToCurrentState()
         }
         .sheet(isPresented: $isPresentingStudyCoach) {
             StudyCoachView(
@@ -554,6 +557,19 @@ struct HomeView: View {
                     withAnimation(.homeExpo(duration: 0.52)) {
                         visibleDeckCardCount = index + 1
                     }
+                }
+            }
+        }
+    }
+
+    private func animateHeroProgressToCurrentState() {
+        heroProgressTask?.cancel()
+        heroProgressTask = Task {
+            try? await Task.sleep(nanoseconds: 50_000_000)
+            if Task.isCancelled { return }
+            await MainActor.run {
+                withAnimation(.homeExpo(duration: 0.6)) {
+                    animatedHeroProgress = state.progress
                 }
             }
         }
