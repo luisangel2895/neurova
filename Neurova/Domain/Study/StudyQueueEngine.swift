@@ -34,8 +34,8 @@ struct StudyQueueEngine {
         case .markedHard:
             return filtered
                 .sorted { lhs, rhs in
-                    let lhsDue = lhs.isDue
-                    let rhsDue = rhs.isDue
+                    let lhsDue = lhs.nextReviewDate <= now
+                    let rhsDue = rhs.nextReviewDate <= now
                     if lhsDue != rhsDue {
                         return lhsDue && !rhsDue
                     }
@@ -49,7 +49,7 @@ struct StudyQueueEngine {
         }
 
         let urgentLearning = filtered
-            .filter { ($0.learningState == .learning || $0.learningState == .relearning) && $0.isDue }
+            .filter { ($0.learningState == .learning || $0.learningState == .relearning) && $0.nextReviewDate <= now }
             .sorted { lhs, rhs in
                 if lhs.nextReviewDate == rhs.nextReviewDate {
                     return lhs.createdAt < rhs.createdAt
@@ -58,7 +58,7 @@ struct StudyQueueEngine {
             }
 
         let dueReviews = filtered
-            .filter { $0.learningState == .review && $0.isDue }
+            .filter { $0.learningState == .review && $0.nextReviewDate <= now }
             .sorted { lhs, rhs in
                 let lhsOverdue = now.timeIntervalSince(lhs.nextReviewDate)
                 let rhsOverdue = now.timeIntervalSince(rhs.nextReviewDate)
@@ -89,9 +89,7 @@ struct StudyQueueEngine {
         case .all:
             return cards
         case .ready:
-            return cards.filter {
-                $0.isDue || (($0.learningState == .learning || $0.learningState == .relearning) && $0.nextReviewDate <= now)
-            }
+            return cards.filter { $0.nextReviewDate <= now }
         case .new:
             return cards.filter { $0.learningState == .new }
         case .markedHard:
@@ -117,10 +115,11 @@ struct StudyQueueEngine {
     }
 
     private func priorityBucket(for card: Card, now: Date) -> Int {
-        if (card.learningState == .learning || card.learningState == .relearning), card.isDue {
+        let isDue = card.nextReviewDate <= now
+        if (card.learningState == .learning || card.learningState == .relearning), isDue {
             return 0
         }
-        if card.learningState == .review, card.isDue {
+        if card.learningState == .review, isDue {
             return 1
         }
         if card.learningState == .new {
