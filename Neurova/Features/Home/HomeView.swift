@@ -565,10 +565,17 @@ struct HomeView: View {
     private func animateHeroProgressToCurrentState() {
         heroProgressTask?.cancel()
         heroProgressTask = Task {
-            try? await Task.sleep(nanoseconds: 50_000_000)
-            if Task.isCancelled { return }
+            // Animate ring down to zero
             await MainActor.run {
-                withAnimation(.homeExpo(duration: 0.6)) {
+                withAnimation(.easeIn(duration: 0.25)) {
+                    animatedHeroProgress = 0
+                }
+            }
+            try? await Task.sleep(nanoseconds: 300_000_000)
+            if Task.isCancelled { return }
+            // Animate ring back up to the new progress value
+            await MainActor.run {
+                withAnimation(.homeExpo(duration: 1.0)) {
                     animatedHeroProgress = state.progress
                 }
             }
