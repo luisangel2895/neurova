@@ -188,11 +188,10 @@ struct HeuristicStudyGenerator {
         let separators = [":", " - ", " – ", " — "]
 
         for separator in separators {
-            let parts = normalizedLine.components(separatedBy: separator)
-            guard parts.count == 2 else { continue }
+            guard let separatorRange = normalizedLine.range(of: separator) else { continue }
 
-            let left = normalizeDefinitionFragment(parts[0])
-            let right = normalizeDefinitionFragment(parts[1])
+            let left = normalizeDefinitionFragment(String(normalizedLine[normalizedLine.startIndex..<separatorRange.lowerBound]))
+            let right = normalizeDefinitionFragment(String(normalizedLine[separatorRange.upperBound...]))
 
             guard left.isEmpty == false, right.isEmpty == false else { continue }
             guard left.count <= 80, right.count >= 3 else { continue }
