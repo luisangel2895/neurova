@@ -120,22 +120,19 @@ struct ReviewServiceTests {
     @Test
     func easyReviewGrantsMoreXPThanAgain() throws {
         let container = try makeContainer()
-        let easyContext = ModelContext(container)
-        let easyCard = makeCard(in: easyContext)
+        let context = ModelContext(container)
+
+        let easyCard = makeCard(in: context)
         let service = ReviewService()
+        _ = try service.review(card: easyCard, quality: .easy, in: context)
 
-        _ = try service.review(card: easyCard, quality: .easy, in: easyContext)
+        let againCard = makeCard(in: context)
+        _ = try service.review(card: againCard, quality: .again, in: context)
 
-        let againContext = ModelContext(container)
-        let againCard = makeCard(in: againContext)
-        _ = try service.review(card: againCard, quality: .again, in: againContext)
+        let events = try context.fetch(FetchDescriptor<XPEventEntity>())
+        let easyXP = events.first { $0.eventTypeRaw == XPEventType.reviewEasy.rawValue }?.xpDelta ?? 0
+        let againXP = events.first { $0.eventTypeRaw == XPEventType.reviewAgain.rawValue }?.xpDelta ?? 0
 
-        let easyEvents = try easyContext.fetch(FetchDescriptor<XPEventEntity>())
-        let againEvents = try againContext.fetch(FetchDescriptor<XPEventEntity>())
-
-        let easyXP = easyEvents.first?.xpDelta ?? 0
-        let againXP = againEvents.first?.xpDelta ?? 0
-
-        #expect(easyXP > againXP)
+        #expect(easyXP > againXP) // easy=15, again=0
     }
 }
