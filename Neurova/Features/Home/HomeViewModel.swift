@@ -2,7 +2,6 @@ import Combine
 import Foundation
 import SwiftData
 
-@MainActor
 final class HomeViewModel: ObservableObject {
     @Published var state: HomeState
     @Published var isLoading = false
