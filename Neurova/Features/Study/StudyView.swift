@@ -531,7 +531,8 @@ struct StudyView: View {
             cardRotation = 90
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.225) {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(225))
             isShowingBack.toggle()
             cardRotation = -90
 
@@ -539,9 +540,8 @@ struct StudyView: View {
                 cardRotation = 0
             }
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.225) {
-                isTransitioning = false
-            }
+            try? await Task.sleep(for: .milliseconds(225))
+            isTransitioning = false
         }
     }
 
@@ -599,7 +599,8 @@ struct StudyView: View {
                 currentCardOpacity = 0
             }
 
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.36) {
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(360))
                 sessionEndTime = .now
                 outgoingCard = nil
                 outgoingCardOffset = 0
@@ -622,7 +623,8 @@ struct StudyView: View {
             currentCardOpacity = 1
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.38) {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(380))
             outgoingCard = nil
             outgoingCardOffset = 0
             outgoingCardOpacity = 1
