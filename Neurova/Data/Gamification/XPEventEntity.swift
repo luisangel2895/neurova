@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class XPEventEntity {
-    var id: UUID = UUID()
+    @Attribute(.unique) var id: UUID = UUID()
     var date: Date = Date()
     var deckId: UUID?
     var cardId: UUID?

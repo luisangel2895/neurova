@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class XPStatsEntity {
-    var key: String = "global"
+    @Attribute(.unique) var key: String = "global"
     var totalXP: Int = 0
 
     init(key: String = "global", totalXP: Int = 0) {
