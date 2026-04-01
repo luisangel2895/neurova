@@ -107,7 +107,7 @@ struct ReviewService {
                 mode: .learning,
                 steps: LearningSteps.learning,
                 stepIndex: 0,
-                addLapse: true
+                addLapse: false
             )
         case .hard:
             // Keep the existing product policy: first hard review returns in 10 minutes.
