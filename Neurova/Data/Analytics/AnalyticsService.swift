@@ -70,10 +70,11 @@ struct AnalyticsService {
 
     private func dateRange(lastDays: Int, endingOn date: Date) throws -> Range<Date> {
         let safeDays = max(lastDays, 1)
-        let end = date
-        guard let start = calendar.date(byAdding: .day, value: -(safeDays - 1), to: end) else {
+        let endDay = calendar.startOfDay(for: date)
+        guard let rangeEnd = calendar.date(byAdding: .day, value: 1, to: endDay),
+              let rangeStart = calendar.date(byAdding: .day, value: -(safeDays - 1), to: endDay) else {
             throw NSError(domain: "AnalyticsService", code: 1)
         }
-        return start..<end.addingTimeInterval(1)
+        return rangeStart..<rangeEnd
     }
 }
