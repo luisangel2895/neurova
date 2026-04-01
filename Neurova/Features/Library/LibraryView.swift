@@ -9,6 +9,7 @@ struct LibraryView: View {
     @State private var viewModel = LibraryViewModel()
     @State private var isPresentingCreateSubject = false
     @State private var editingSubject: Subject?
+    @State private var subjectToDelete: Subject?
 
     @State private var showHeader = false
     @State private var showAddButton = false
@@ -78,6 +79,29 @@ struct LibraryView: View {
                 )
             }
         }
+        .alert(
+            AppCopy.text(locale, en: "Delete Subject?", es: "¿Eliminar materia?"),
+            isPresented: Binding(
+                get: { subjectToDelete != nil },
+                set: { if !$0 { subjectToDelete = nil } }
+            )
+        ) {
+            Button(AppCopy.text(locale, en: "Cancel", es: "Cancelar"), role: .cancel) {
+                subjectToDelete = nil
+            }
+            Button(AppCopy.text(locale, en: "Delete", es: "Eliminar"), role: .destructive) {
+                if let subject = subjectToDelete {
+                    viewModel.deleteSubject(subject, using: modelContext)
+                    subjectToDelete = nil
+                }
+            }
+        } message: {
+            Text(AppCopy.text(
+                locale,
+                en: "This will permanently delete the subject and all its decks and cards.",
+                es: "Esto eliminará permanentemente la materia y todos sus mazos y tarjetas."
+            ))
+        }
     }
 
     private var addButton: some View {
@@ -130,7 +154,7 @@ struct LibraryView: View {
                     Divider()
 
                     Button(role: .destructive) {
-                        viewModel.deleteSubject(subject, using: modelContext)
+                        subjectToDelete = subject
                     } label: {
                         Label(
                             AppCopy.text(locale, en: "Delete", es: "Eliminar"),

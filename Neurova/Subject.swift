@@ -8,7 +8,7 @@ final class Subject {
     var createdAt: Date = Date()
     var systemImageName: String?
     var colorTokenReference: String?
-    @Relationship(deleteRule: .nullify, inverse: \Deck.subject)
+    @Relationship(deleteRule: .cascade, inverse: \Deck.subject)
     var decks: [Deck]?
 
     init(
