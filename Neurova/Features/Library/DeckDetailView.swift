@@ -169,7 +169,7 @@ struct DeckDetailView: View {
             } else if isCardListVisible {
                 ScrollView {
                     LazyVStack(spacing: NSpacing.xs) {
-                        ForEach(Array(viewModel.cards.enumerated()), id: \.offset) { index, card in
+                        ForEach(Array(viewModel.cards.enumerated()), id: \.element.id) { index, card in
                             cardRow(card, index: index)
                                 .opacity(hasAnimatedCardsIn ? 1 : 0)
                                 .offset(x: hasAnimatedCardsIn ? 0 : -48)
