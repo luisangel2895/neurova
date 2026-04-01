@@ -108,7 +108,7 @@ struct InsightsView: View {
             VStack(alignment: .leading, spacing: 14) {
                 labelRow(
                     icon: "target",
-                    color: Color(red: 0.67, green: 0.37, blue: 0.95),
+                    color: NColors.Insights.goalPurple,
                     title: AppCopy.text(locale, en: "Goal", es: "Meta")
                 )
 
@@ -203,7 +203,7 @@ struct InsightsView: View {
         .frame(maxWidth: .infinity)
         .frame(height: 84)
         .background(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: NRadius.card, style: .continuous)
                 .fill(cellFill)
         )
         .opacity(difficultyVisible(at: index) ? 1 : 0)
@@ -291,7 +291,7 @@ struct InsightsView: View {
         VStack(spacing: 8) {
             Spacer(minLength: 0)
 
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: NRadius.small, style: .continuous)
                 .fill(bar.isToday ? AnyShapeStyle(splashGradient) : AnyShapeStyle(progressTrackColor.opacity(0.7)))
                 .frame(width: 30, height: animatedBarHeight(at: index, maxHeight: 72))
 
@@ -311,11 +311,11 @@ struct InsightsView: View {
             .padding(18)
             .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
             .background(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                RoundedRectangle(cornerRadius: NRadius.large, style: .continuous)
                     .fill(background)
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                RoundedRectangle(cornerRadius: NRadius.large, style: .continuous)
                     .stroke(cardBorder, lineWidth: 1)
             )
             .shadow(color: cardShadowPrimary, radius: 22, x: 0, y: 14)
@@ -365,7 +365,7 @@ struct InsightsView: View {
         [
             .init(
                 icon: "flame",
-                color: Color(red: 0.98, green: 0.56, blue: 0.23),
+                color: NColors.Insights.streakOrange,
                 value: "\(viewModel.currentStreak)",
                 label: AppCopy.text(locale, en: "STREAK", es: "RACHA")
             ),
@@ -377,7 +377,7 @@ struct InsightsView: View {
             ),
             .init(
                 icon: "cube.transparent",
-                color: Color(red: 0.49, green: 0.35, blue: 0.96),
+                color: NColors.Insights.newCardPurple,
                 value: "\(viewModel.totalNewCards)",
                 label: AppCopy.text(locale, en: "NEW", es: "NUEVO")
             )
@@ -746,128 +746,18 @@ struct InsightsView: View {
         min(max(value, 0), 1)
     }
 
-    private var primaryText: Color {
-        colorScheme == .light ? Color.black.opacity(0.96) : Color.white.opacity(0.96)
-    }
-
-    private var secondaryText: Color {
-        colorScheme == .light ? Color.black.opacity(0.42) : Color.white.opacity(0.44)
-    }
-
-    private var baseCardFill: LinearGradient {
-        if colorScheme == .light {
-            return LinearGradient(
-                colors: [
-                    Color.white.opacity(0.58),
-                    Color.white.opacity(0.48)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-
-        return LinearGradient(
-            colors: [
-                Color(red: 0.09, green: 0.10, blue: 0.15),
-                Color(red: 0.07, green: 0.08, blue: 0.12)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    private var topLeftCardFill: LinearGradient {
-        if colorScheme == .light {
-            return LinearGradient(
-                colors: [
-                    Color(red: 0.97, green: 0.97, blue: 0.99),
-                    Color(red: 0.92, green: 0.93, blue: 0.98)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-
-        return LinearGradient(
-            colors: [
-                Color(red: 0.10, green: 0.11, blue: 0.17),
-                Color(red: 0.09, green: 0.10, blue: 0.14)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    private var topRightCardFill: LinearGradient {
-        if colorScheme == .light {
-            return LinearGradient(
-                colors: [
-                    Color(red: 0.96, green: 0.95, blue: 0.98),
-                    Color(red: 0.93, green: 0.92, blue: 0.97)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-        }
-
-        return LinearGradient(
-            colors: [
-                Color(red: 0.12, green: 0.11, blue: 0.18),
-                Color(red: 0.09, green: 0.09, blue: 0.14)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    private var cardBorder: Color {
-        colorScheme == .light
-            ? Color.black.opacity(0.07)
-            : Color.white.opacity(0.08)
-    }
-
-    private var cardShadowPrimary: Color {
-        colorScheme == .light ? Color.black.opacity(0.05) : Color.black.opacity(0.28)
-    }
-
-    private var cardShadowSecondary: Color {
-        colorScheme == .light ? Color.white.opacity(0.55) : Color.white.opacity(0.02)
-    }
-
-    private var cellFill: Color {
-        colorScheme == .light ? Color.white.opacity(0.34) : Color.white.opacity(0.025)
-    }
-
-    private var progressTrackColor: Color {
-        colorScheme == .light ? Color.black.opacity(0.07) : Color.white.opacity(0.05)
-    }
-
-    private var splashGradient: LinearGradient {
-        LinearGradient(
-            colors: [
-                Color(red: 0.31, green: 0.58, blue: 0.99),
-                Color(red: 0.54, green: 0.30, blue: 0.95)
-            ],
-            startPoint: .leading,
-            endPoint: .trailing
-        )
-    }
-
-    private var backgroundView: LinearGradient {
-        LinearGradient(
-            colors: colorScheme == .light
-                ? [
-                    Color(red: 0.96, green: 0.96, blue: 0.97),
-                    Color(red: 0.93, green: 0.93, blue: 0.95)
-                ]
-                : [
-                    Color(red: 0.03, green: 0.04, blue: 0.08),
-                    Color(red: 0.02, green: 0.03, blue: 0.07)
-                ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
+    private var primaryText: Color { NColors.Insights.primaryText(for: colorScheme) }
+    private var secondaryText: Color { NColors.Insights.secondaryText(for: colorScheme) }
+    private var baseCardFill: LinearGradient { NColors.Insights.baseCardFill(for: colorScheme) }
+    private var topLeftCardFill: LinearGradient { NColors.Insights.topLeftCardFill(for: colorScheme) }
+    private var topRightCardFill: LinearGradient { NColors.Insights.topRightCardFill(for: colorScheme) }
+    private var cardBorder: Color { NColors.Insights.cardBorder(for: colorScheme) }
+    private var cardShadowPrimary: Color { NColors.Insights.cardShadowPrimary(for: colorScheme) }
+    private var cardShadowSecondary: Color { NColors.Insights.cardShadowSecondary(for: colorScheme) }
+    private var cellFill: Color { NColors.Insights.cellFill(for: colorScheme) }
+    private var progressTrackColor: Color { NColors.Insights.progressTrack(for: colorScheme) }
+    private var splashGradient: LinearGradient { NColors.Insights.splashGradient }
+    private var backgroundView: LinearGradient { NColors.Insights.background(for: colorScheme) }
 }
 
 private struct StatItem {

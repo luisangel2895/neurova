@@ -597,6 +597,86 @@ enum NColors {
         }
     }
 
+    enum Insights {
+        static let goalPurple = Color(red: 0.67, green: 0.37, blue: 0.95)
+        static let streakOrange = Color(red: 0.98, green: 0.56, blue: 0.23)
+        static let newCardPurple = Color(red: 0.49, green: 0.35, blue: 0.96)
+
+        static let splashGradient = LinearGradient(
+            colors: [Color(red: 0.31, green: 0.58, blue: 0.99), Color(red: 0.54, green: 0.30, blue: 0.95)],
+            startPoint: .leading,
+            endPoint: .trailing
+        )
+
+        static func primaryText(for scheme: ColorScheme) -> Color {
+            scheme == .light ? Color.black.opacity(0.96) : Color.white.opacity(0.96)
+        }
+
+        static func secondaryText(for scheme: ColorScheme) -> Color {
+            scheme == .light ? Color.black.opacity(0.42) : Color.white.opacity(0.44)
+        }
+
+        static func progressTrack(for scheme: ColorScheme) -> Color {
+            scheme == .light ? Color.black.opacity(0.07) : Color.white.opacity(0.05)
+        }
+
+        static func cellFill(for scheme: ColorScheme) -> Color {
+            scheme == .light ? Color.white.opacity(0.34) : Color.white.opacity(0.025)
+        }
+
+        static func cardBorder(for scheme: ColorScheme) -> Color {
+            scheme == .light ? Color.black.opacity(0.07) : Color.white.opacity(0.08)
+        }
+
+        static func cardShadowPrimary(for scheme: ColorScheme) -> Color {
+            scheme == .light ? Color.black.opacity(0.05) : Color.black.opacity(0.28)
+        }
+
+        static func cardShadowSecondary(for scheme: ColorScheme) -> Color {
+            scheme == .light ? Color.white.opacity(0.55) : Color.white.opacity(0.02)
+        }
+
+        static func baseCardFill(for scheme: ColorScheme) -> LinearGradient {
+            LinearGradient(
+                colors: scheme == .light
+                    ? [Color.white.opacity(0.58), Color.white.opacity(0.48)]
+                    : [Color(red: 0.09, green: 0.10, blue: 0.15), Color(red: 0.07, green: 0.08, blue: 0.12)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+
+        static func topLeftCardFill(for scheme: ColorScheme) -> LinearGradient {
+            LinearGradient(
+                colors: scheme == .light
+                    ? [Color(red: 0.97, green: 0.97, blue: 0.99), Color(red: 0.92, green: 0.93, blue: 0.98)]
+                    : [Color(red: 0.10, green: 0.11, blue: 0.17), Color(red: 0.09, green: 0.10, blue: 0.14)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+
+        static func topRightCardFill(for scheme: ColorScheme) -> LinearGradient {
+            LinearGradient(
+                colors: scheme == .light
+                    ? [Color(red: 0.96, green: 0.95, blue: 0.98), Color(red: 0.93, green: 0.92, blue: 0.97)]
+                    : [Color(red: 0.12, green: 0.11, blue: 0.18), Color(red: 0.09, green: 0.09, blue: 0.14)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+
+        static func background(for scheme: ColorScheme) -> LinearGradient {
+            LinearGradient(
+                colors: scheme == .light
+                    ? [Color(red: 0.96, green: 0.96, blue: 0.97), Color(red: 0.93, green: 0.93, blue: 0.95)]
+                    : [Color(red: 0.03, green: 0.04, blue: 0.08), Color(red: 0.02, green: 0.03, blue: 0.07)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        }
+    }
+
     static let neuroGradient = LinearGradient(
         colors: [Brand.neuroBlue, Brand.neuralMint],
         startPoint: .topLeading,
