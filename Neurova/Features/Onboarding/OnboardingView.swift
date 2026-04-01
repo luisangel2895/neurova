@@ -105,7 +105,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: NSpacing.sm) {
             Text(AppCopy.text(locale, en: "Welcome to Neurova", es: "Bienvenido a Neurova"))
                 .font(.system(size: 30, weight: .bold, design: .rounded))
-                .foregroundStyle(primaryTitleColor)
+                .foregroundStyle(NColors.Onboarding.title)
                 .lineLimit(1)
 
             if showsOnboardingProgressStyle {
@@ -116,7 +116,7 @@ struct OnboardingView: View {
 
             Text(stepSubtitle)
                 .font(.system(size: 15, weight: .regular, design: .rounded))
-                .foregroundStyle(welcomeHeaderSubtitleColor)
+                .foregroundStyle(NColors.Onboarding.headerSubtitle)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
                 .allowsTightening(true)
@@ -207,30 +207,30 @@ struct OnboardingView: View {
     private var dailyGoalCard: some View {
         VStack(spacing: 16) {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(dailyGoalInfoCardBackground)
+                .fill(NColors.Onboarding.infoBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(dailyGoalInfoCardBorder, lineWidth: 1)
+                        .stroke(NColors.Onboarding.infoBorder, lineWidth: 1)
                 )
                 .frame(height: 85)
                 .overlay(alignment: .leading) {
                     HStack(spacing: 16) {
                         Circle()
-                            .fill(dailyGoalInfoIconBackground)
+                            .fill(NColors.Onboarding.infoIconBackground)
                             .frame(width: 36, height: 36)
                             .overlay(
                                 Image(systemName: "scope")
                                     .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(dailyGoalInfoIconColor)
+                                    .foregroundStyle(NColors.Onboarding.infoIconColor)
                             )
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(AppCopy.text(locale, en: "Your daily goal", es: "Tu meta diaria"))
                                 .font(.system(size: 16, weight: .bold, design: .rounded))
-                                .foregroundStyle(primaryTitleColor)
+                                .foregroundStyle(NColors.Onboarding.title)
                             Text(AppCopy.text(locale, en: "How many cards do you want to review each day?", es: "¿Cuántas tarjetas quieres repasar cada día?"))
                                 .font(.system(size: 14, weight: .regular, design: .rounded))
-                                .foregroundStyle(dailyGoalSecondaryText)
+                                .foregroundStyle(NColors.Onboarding.infoSecondaryText)
                                 .lineLimit(2)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -252,20 +252,20 @@ struct OnboardingView: View {
             }
 
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(dailyGoalHintBackground)
+                .fill(NColors.Onboarding.hintBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(dailyGoalHintBorder, lineWidth: 1)
+                        .stroke(NColors.Onboarding.hintBorder, lineWidth: 1)
                 )
                 .frame(height: 40)
                 .overlay {
                     HStack(spacing: 8) {
                         Image(systemName: "flame")
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(dailyGoalInfoIconColor)
+                            .foregroundStyle(NColors.Onboarding.infoIconColor)
                         Text(AppCopy.text(locale, en: "Recommended: 20 cards to start", es: "Recomendado: 20 tarjetas para empezar"))
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .foregroundStyle(dailyGoalHintText)
+                            .foregroundStyle(NColors.Onboarding.hintText)
                             .lineLimit(1)
                             .minimumScaleFactor(0.9)
                     }
@@ -279,17 +279,17 @@ struct OnboardingView: View {
             selectedDailyGoal = goal
         } label: {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(isSelected ? dailyGoalOptionSelectedBackground : dailyGoalOptionBackground)
+                .fill(isSelected ? NColors.Onboarding.optionSelectedBackground : NColors.Onboarding.optionBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(isSelected ? dailyGoalOptionSelectedBorder : dailyGoalOptionBorder, lineWidth: isSelected ? 2 : 1)
+                        .stroke(isSelected ? NColors.Onboarding.optionSelectedBorder : NColors.Onboarding.optionBorder, lineWidth: isSelected ? 2 : 1)
                 )
                 .frame(maxWidth: .infinity)
                 .frame(height: 170)
                 .overlay(alignment: .topTrailing) {
                     if isSelected {
                         Circle()
-                            .fill(dailyGoalCheckBackground)
+                            .fill(NColors.Onboarding.checkBackground)
                             .frame(width: 22, height: 22)
                             .overlay(
                                 Image(systemName: "checkmark")
@@ -303,19 +303,19 @@ struct OnboardingView: View {
                 .overlay {
                     VStack(spacing: 10) {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(dailyGoalIconBadgeBackground)
+                            .fill(NColors.Onboarding.iconBadgeBackground)
                             .frame(width: 48, height: 48)
                             .overlay(
                                 Image(systemName: icon)
                                     .font(.system(size: 19, weight: .semibold))
-                                    .foregroundStyle(dailyGoalIconColor)
+                                    .foregroundStyle(NColors.Onboarding.iconColor)
                             )
                         Text("\(goal)")
                             .font(.system(size: 22, weight: .bold, design: .rounded))
-                            .foregroundStyle(primaryTitleColor)
+                            .foregroundStyle(NColors.Onboarding.title)
                         Text(title)
                             .font(.system(size: 12.5, weight: .semibold, design: .rounded))
-                            .foregroundStyle(isSelected ? dailyGoalSelectedLabelColor : dailyGoalSecondaryText)
+                            .foregroundStyle(isSelected ? NColors.Onboarding.selectedLabel : NColors.Onboarding.infoSecondaryText)
                     }
                 }
         }
@@ -325,30 +325,30 @@ struct OnboardingView: View {
     private var subjectStepView: some View {
         VStack(spacing: 16) {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(subjectInfoCardBackground)
+                .fill(NColors.Onboarding.infoBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(subjectInfoCardBorder, lineWidth: 1)
+                        .stroke(NColors.Onboarding.infoBorder, lineWidth: 1)
                 )
                 .frame(height: 85)
                 .overlay(alignment: .leading) {
                     HStack(spacing: 16) {
                         Circle()
-                            .fill(subjectInfoIconBackground)
+                            .fill(NColors.Onboarding.infoIconBackground)
                             .frame(width: 36, height: 36)
                             .overlay(
                                 Image(systemName: "graduationcap")
                                     .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(subjectInfoIconColor)
+                                    .foregroundStyle(NColors.Onboarding.cardIconColor)
                             )
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(AppCopy.text(locale, en: "Create your first subject", es: "Crea tu primera materia"))
                                 .font(.system(size: 16, weight: .bold, design: .rounded))
-                                .foregroundStyle(primaryTitleColor)
+                                .foregroundStyle(NColors.Onboarding.title)
                             Text(AppCopy.text(locale, en: "Organize your studies by subject for better tracking.", es: "Organiza tus estudios por materias para un mejor seguimiento."))
                                 .font(.system(size: 14, weight: .regular, design: .rounded))
-                                .foregroundStyle(subjectSecondaryText)
+                                .foregroundStyle(NColors.Onboarding.cardBodyText)
                                 .lineLimit(2)
                         }
                         Spacer(minLength: 0)
@@ -378,7 +378,7 @@ struct OnboardingView: View {
 
             Text(AppCopy.text(locale, en: "You can create more subjects later", es: "Podrás crear más materias después"))
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(subjectSecondaryText)
+                .foregroundStyle(NColors.Onboarding.cardBodyText)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.top, 2)
         }
@@ -390,27 +390,27 @@ struct OnboardingView: View {
             subjectName = title
         } label: {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(isSelected ? subjectOptionSelectedBackground : subjectOptionBackground)
+                .fill(isSelected ? NColors.Onboarding.optionSelectedBackground : NColors.Onboarding.optionBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(isSelected ? subjectOptionSelectedBorder : subjectOptionBorder, lineWidth: isSelected ? 2 : 1)
+                        .stroke(isSelected ? NColors.Onboarding.optionSelectedBorder : NColors.Onboarding.optionBorder, lineWidth: isSelected ? 2 : 1)
                 )
                 .frame(maxWidth: .infinity)
                 .frame(height: 82)
                 .overlay {
                     HStack(spacing: 12) {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(subjectIconBadgeBackground)
+                            .fill(NColors.Onboarding.iconBadgeBackground)
                             .frame(width: 40, height: 40)
                             .overlay(
                                 Image(systemName: icon)
                                     .font(.system(size: 16, weight: .regular))
-                                    .foregroundStyle(subjectIconColor)
+                                    .foregroundStyle(NColors.Onboarding.iconColor)
                             )
 
                         Text(title)
                             .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .foregroundStyle(isSelected ? subjectSelectedText : subjectOptionText)
+                            .foregroundStyle(isSelected ? NColors.Onboarding.subjectSelectedText : NColors.Onboarding.subjectOptionText)
                             .lineLimit(1)
                             .minimumScaleFactor(0.85)
                         Spacer(minLength: 0)
@@ -424,30 +424,30 @@ struct OnboardingView: View {
     private var deckStepView: some View {
         VStack(spacing: 16) {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(deckInfoCardBackground)
+                .fill(NColors.Onboarding.infoBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(deckInfoCardBorder, lineWidth: 1)
+                        .stroke(NColors.Onboarding.infoBorder, lineWidth: 1)
                 )
                 .frame(height: 85)
                 .overlay(alignment: .leading) {
                     HStack(spacing: 16) {
                         Circle()
-                            .fill(deckInfoIconBackground)
+                            .fill(NColors.Onboarding.infoIconBackground)
                             .frame(width: 36, height: 36)
                             .overlay(
                                 Image(systemName: "square.stack.3d.down.forward")
                                     .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(deckInfoIconColor)
+                                    .foregroundStyle(NColors.Onboarding.cardIconColor)
                             )
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(AppCopy.text(locale, en: "Create your first deck", es: "Crea tu primer mazo"))
                                 .font(.system(size: 16, weight: .bold, design: .rounded))
-                                .foregroundStyle(primaryTitleColor)
+                                .foregroundStyle(NColors.Onboarding.title)
                             Text(AppCopy.text(locale, en: "Decks group cards around a specific topic inside your subject.", es: "Los mazos agrupan tarjetas sobre un tema específico dentro de tu materia."))
                                 .font(.system(size: 14, weight: .regular, design: .rounded))
-                                .foregroundStyle(deckSecondaryText)
+                                .foregroundStyle(NColors.Onboarding.cardBodyText)
                                 .lineLimit(2)
                         }
                         Spacer(minLength: 0)
@@ -466,50 +466,50 @@ struct OnboardingView: View {
             }
             .padding(.horizontal, 16)
             .frame(height: 64)
-            .background(deckInputBackground)
+            .background(NColors.Onboarding.deckInputBackground)
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(isDeckInputFocused ? deckInputActiveBorder : deckInputBorder, lineWidth: isDeckInputFocused ? 1.6 : 1)
+                    .stroke(isDeckInputFocused ? NColors.Onboarding.deckInputActiveBorder : NColors.Onboarding.deckInputBorder, lineWidth: isDeckInputFocused ? 1.6 : 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(deckPreviewBackground)
+                .fill(NColors.Onboarding.deckPreviewBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(deckPreviewBorder, lineWidth: 1)
+                        .stroke(NColors.Onboarding.deckPreviewBorder, lineWidth: 1)
                 )
                 .frame(height: 96)
                 .overlay(alignment: .leading) {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(spacing: 10) {
                             Circle()
-                                .fill(deckPreviewIconBackground)
+                                .fill(NColors.Onboarding.deckPreviewIconBackground)
                                 .frame(width: 36, height: 36)
                                 .overlay(
                                     Image(systemName: "square.stack.3d.down.forward.fill")
                                         .font(.system(size: 15, weight: .semibold))
-                                        .foregroundStyle(deckPreviewIconColor)
+                                        .foregroundStyle(NColors.Onboarding.deckPreviewIconColor)
                                 )
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(deckTitleDisplay)
                                     .font(.system(size: 16, weight: .bold, design: .rounded))
-                                    .foregroundStyle(primaryTitleColor)
+                                    .foregroundStyle(NColors.Onboarding.title)
                                     .lineLimit(1)
                                 Text(AppCopy.text(locale, en: "0 cards · New", es: "0 tarjetas · Nuevo"))
                                     .font(.system(size: 14, weight: .regular, design: .rounded))
-                                    .foregroundStyle(deckSecondaryText)
+                                    .foregroundStyle(NColors.Onboarding.cardBodyText)
                                     .lineLimit(1)
                             }
                             Spacer(minLength: 0)
                         }
 
                         HStack(spacing: 8) {
-                            Capsule().fill(deckPreviewSkeleton).frame(height: 4)
-                            Capsule().fill(deckPreviewSkeleton).frame(height: 4)
-                            Capsule().fill(deckPreviewSkeleton).frame(height: 4)
-                            Capsule().fill(deckPreviewSkeleton).frame(height: 4)
+                            Capsule().fill(NColors.Onboarding.deckPreviewSkeleton).frame(height: 4)
+                            Capsule().fill(NColors.Onboarding.deckPreviewSkeleton).frame(height: 4)
+                            Capsule().fill(NColors.Onboarding.deckPreviewSkeleton).frame(height: 4)
+                            Capsule().fill(NColors.Onboarding.deckPreviewSkeleton).frame(height: 4)
                         }
                     }
                     .padding(.horizontal, 14)
@@ -519,7 +519,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(AppCopy.text(locale, en: "Or choose a suggestion:", es: "O elige una sugerencia:"))
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(deckSecondaryText)
+                    .foregroundStyle(NColors.Onboarding.cardBodyText)
 
                 HStack(spacing: 8) {
                     deckSuggestionChip(
@@ -560,17 +560,17 @@ struct OnboardingView: View {
         } label: {
             Text(label)
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundStyle(isSelected ? deckSuggestionSelectedText : deckSuggestionText)
+                .foregroundStyle(isSelected ? NColors.Onboarding.deckSuggestionSelectedText : NColors.Onboarding.deckSuggestionText)
                 .lineLimit(1)
                 .padding(.horizontal, 14)
                 .frame(height: 38)
                 .background(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(deckSuggestionBackground)
+                        .fill(NColors.Onboarding.deckSuggestionBackground)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(isSelected ? deckSuggestionSelectedBorder : deckSuggestionBorder, lineWidth: isSelected ? 1.5 : 1)
+                        .stroke(isSelected ? NColors.Onboarding.deckSuggestionSelectedBorder : NColors.Onboarding.deckSuggestionBorder, lineWidth: isSelected ? 1.5 : 1)
                 )
         }
         .buttonStyle(.plain)
@@ -609,33 +609,33 @@ struct OnboardingView: View {
 
     private var welcomeInfoCard: some View {
         RoundedRectangle(cornerRadius: 24, style: .continuous)
-            .fill(welcomeCardBackground)
+            .fill(NColors.Onboarding.cardBackground)
             .overlay(
                 RoundedRectangle(cornerRadius: 24, style: .continuous)
-                    .stroke(welcomeCardBorder, lineWidth: 1)
+                    .stroke(NColors.Onboarding.cardBorder, lineWidth: 1)
             )
             .frame(height: 85)
             .overlay(
                 HStack(alignment: .center, spacing: 16) {
                     Circle()
-                        .fill(welcomeCardIconBackground)
+                        .fill(NColors.Onboarding.cardIconBackground)
                         .frame(width: 36, height: 36)
                         .overlay(
                             Image(systemName: "book")
                                 .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(welcomeCardIconColor)
+                                .foregroundStyle(NColors.Onboarding.cardIconColor)
                         )
 
                     VStack(alignment: .leading, spacing: 6) {
                         Text(AppCopy.text(locale, en: "Your study control center", es: "Tu centro de estudio"))
                             .font(.system(size: 16, weight: .bold, design: .rounded))
-                            .foregroundStyle(primaryTitleColor)
+                            .foregroundStyle(NColors.Onboarding.title)
                             .lineLimit(1)
                             .minimumScaleFactor(0.9)
 
                         Text(AppCopy.text(locale, en: "Set up your daily goal and create your first deck in less than a minute.", es: "Configura tu meta diaria y crea tu primer deck en menos de un minuto."))
                             .font(.system(size: 14, weight: .regular, design: .rounded))
-                            .foregroundStyle(welcomeCardBodyTextColor)
+                            .foregroundStyle(NColors.Onboarding.cardBodyText)
                             .lineLimit(2)
                     }
 
@@ -651,10 +651,10 @@ struct OnboardingView: View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 12, weight: .regular))
-                .foregroundStyle(welcomeChipIconColor)
+                .foregroundStyle(NColors.Onboarding.chipIcon)
             Text(text)
                 .font(.system(size: 13, weight: .regular, design: .rounded))
-                .foregroundStyle(welcomeChipTextColor)
+                .foregroundStyle(NColors.Onboarding.chipText)
                 .lineLimit(1)
                 .minimumScaleFactor(0.9)
         }
@@ -663,11 +663,11 @@ struct OnboardingView: View {
         .padding(.horizontal, 0)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(welcomeChipBackground)
+                .fill(NColors.Onboarding.chipBackground)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(welcomeChipBorder, lineWidth: 1)
+                .stroke(NColors.Onboarding.chipBorder, lineWidth: 1)
         )
     }
 
@@ -681,11 +681,11 @@ struct OnboardingView: View {
 
                 ZStack(alignment: .leading) {
                     Capsule()
-                        .fill(welcomeProgressTrackColor)
+                        .fill(NColors.Onboarding.progressTrack)
                         .frame(height: 5)
 
                     Capsule()
-                        .fill(welcomeProgressActiveGradient)
+                        .fill(NColors.Onboarding.progressGradient(for: colorScheme))
                         .frame(width: activeWidth, height: 5)
                         .overlay {
                             Capsule()
@@ -716,7 +716,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: NSpacing.md) {
                 Text(title)
                     .font(.system(size: 16, weight: .bold, design: .rounded))
-                    .foregroundStyle(primaryTitleColor)
+                    .foregroundStyle(NColors.Onboarding.title)
 
                 NOptimizedInputField(
                     placeholder: placeholder,
@@ -724,11 +724,11 @@ struct OnboardingView: View {
                     returnKeyType: .done,
                     autocapitalization: .sentences,
                     font: .systemFont(ofSize: 15, weight: .regular),
-                    textColor: UIColor(primaryTitleColor),
+                    textColor: UIColor(NColors.Onboarding.title),
                     tintColor: UIColor(NColors.Brand.neuroBlue)
                 )
                 .font(.system(size: 15, weight: .regular, design: .rounded))
-                .foregroundStyle(primaryTitleColor)
+                .foregroundStyle(NColors.Onboarding.title)
                 .padding(.horizontal, NSpacing.md)
                 .frame(height: 48)
                 .background(NColors.Neutrals.surfaceAlt)
@@ -744,30 +744,30 @@ struct OnboardingView: View {
     private var firstCardEditor: some View {
         VStack(spacing: 12) {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(firstCardInfoBackground)
+                .fill(NColors.Onboarding.infoBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(firstCardInfoBorder, lineWidth: 1)
+                        .stroke(NColors.Onboarding.infoBorder, lineWidth: 1)
                 )
                 .frame(height: 100)
                 .overlay(alignment: .leading) {
                     HStack(spacing: 16) {
                         Circle()
-                            .fill(firstCardInfoIconBackground)
+                            .fill(NColors.Onboarding.infoIconBackground)
                             .frame(width: 36, height: 36)
                             .overlay(
                                 Image(systemName: "rectangle.stack.badge.plus")
                                     .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(firstCardInfoIconColor)
+                                    .foregroundStyle(NColors.Onboarding.cardIconColor)
                             )
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(AppCopy.text(locale, en: "Create your first card", es: "Crea tu primera tarjeta"))
                                 .font(.system(size: 16, weight: .bold, design: .rounded))
-                                .foregroundStyle(primaryTitleColor)
+                                .foregroundStyle(NColors.Onboarding.title)
                             Text(AppCopy.text(locale, en: "Write the front and back of your first flashcard to start studying.", es: "Escribe el frente y reverso de tu primera flashcard para empezar a estudiar."))
                                 .font(.system(size: 14, weight: .regular, design: .rounded))
-                                .foregroundStyle(firstCardSecondaryText)
+                                .foregroundStyle(NColors.Onboarding.infoSecondaryText)
                                 .lineLimit(3)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -780,7 +780,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(AppCopy.text(locale, en: "FRONT", es: "FRENTE"))
                     .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundStyle(firstCardFrontLabel)
+                    .foregroundStyle(NColors.Onboarding.firstCardFrontLabel)
                     .tracking(0.8)
 
                 NOptimizedTextField(
@@ -790,16 +790,16 @@ struct OnboardingView: View {
                     returnKeyType: .done,
                     autocapitalization: .sentences,
                     font: .systemFont(ofSize: 16, weight: .medium),
-                    textColor: UIColor(primaryTitleColor),
+                    textColor: UIColor(NColors.Onboarding.title),
                     tintColor: UIColor(NColors.Brand.neuroBlue),
                     onSubmit: { isFirstCardFrontFocused = false }
                 )
                 .padding(.horizontal, 16)
                 .frame(height: 58)
-                .background(firstCardInputBackground)
+                .background(NColors.Onboarding.firstCardInputBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(isFirstCardFrontFocused ? firstCardInputActiveBorder : firstCardInputBorder, lineWidth: isFirstCardFrontFocused ? 1.6 : 1)
+                        .stroke(isFirstCardFrontFocused ? NColors.Onboarding.firstCardInputActiveBorder : NColors.Onboarding.firstCardInputBorder, lineWidth: isFirstCardFrontFocused ? 1.6 : 1)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
@@ -807,7 +807,7 @@ struct OnboardingView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text(AppCopy.text(locale, en: "BACK", es: "REVERSO"))
                     .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundStyle(firstCardBackLabel)
+                    .foregroundStyle(NColors.Onboarding.firstCardBackLabel)
                     .tracking(0.8)
 
                 NOptimizedTextField(
@@ -817,16 +817,16 @@ struct OnboardingView: View {
                     returnKeyType: .done,
                     autocapitalization: .sentences,
                     font: .systemFont(ofSize: 16, weight: .medium),
-                    textColor: UIColor(primaryTitleColor),
+                    textColor: UIColor(NColors.Onboarding.title),
                     tintColor: UIColor(NColors.Brand.neuroBlue),
                     onSubmit: { isFirstCardBackFocused = false }
                 )
                 .padding(.horizontal, 16)
                 .frame(height: 58)
-                .background(firstCardInputBackground)
+                .background(NColors.Onboarding.firstCardInputBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(isFirstCardBackFocused ? firstCardInputActiveBorder : firstCardInputBorder, lineWidth: isFirstCardBackFocused ? 1.6 : 1)
+                        .stroke(isFirstCardBackFocused ? NColors.Onboarding.firstCardInputActiveBorder : NColors.Onboarding.firstCardInputBorder, lineWidth: isFirstCardBackFocused ? 1.6 : 1)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
@@ -846,24 +846,24 @@ struct OnboardingView: View {
 
             Text(AppCopy.text(locale, en: "Your first card is about to be born! 🎉", es: "¡Tu primera tarjeta está a punto de nacer! 🎉"))
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(firstCardSecondaryText)
+                .foregroundStyle(NColors.Onboarding.infoSecondaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
 
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(firstCardTipBackground)
+                .fill(NColors.Onboarding.firstCardTipBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(firstCardTipBorder, lineWidth: 1)
+                        .stroke(NColors.Onboarding.firstCardTipBorder, lineWidth: 1)
                 )
                 .frame(minHeight: 56)
                 .overlay(alignment: .leading) {
                     HStack(alignment: .center, spacing: 8) {
                         Image(systemName: "lightbulb")
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(firstCardTipIcon)
+                            .foregroundStyle(NColors.Onboarding.firstCardTipIcon)
                         Text(AppCopy.text(locale, en: "Tip: simple, concrete questions improve retention.", es: "Tip: preguntas simples y concretas mejoran la retención."))
                             .font(.system(size: 14, weight: .semibold, design: .rounded))
-                            .foregroundStyle(firstCardTipText)
+                            .foregroundStyle(NColors.Onboarding.firstCardTipText)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
                             .fixedSize(horizontal: false, vertical: true)
@@ -878,30 +878,30 @@ struct OnboardingView: View {
     private var accountStepCard: some View {
         VStack(spacing: 16) {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(accountInfoBackground)
+                .fill(NColors.Onboarding.infoBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(accountInfoBorder, lineWidth: 1)
+                        .stroke(NColors.Onboarding.infoBorder, lineWidth: 1)
                 )
                 .frame(height: 95)
                 .overlay(alignment: .leading) {
                     HStack(spacing: 16) {
                         Circle()
-                            .fill(accountInfoIconBackground)
+                            .fill(NColors.Onboarding.infoIconBackground)
                             .frame(width: 36, height: 36)
                             .overlay(
                                 Image(systemName: "shield")
                                     .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(accountInfoIconColor)
+                                    .foregroundStyle(NColors.Onboarding.cardIconColor)
                             )
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text(AppCopy.text(locale, en: "Sign in with Apple", es: "Inicia sesión con Apple"))
                                 .font(.system(size: 16, weight: .bold, design: .rounded))
-                                .foregroundStyle(primaryTitleColor)
+                                .foregroundStyle(NColors.Onboarding.title)
                             Text(AppCopy.text(locale, en: "Required to sync your progress and protect your data.", es: "Obligatorio para sincronizar tu progreso y proteger tus datos."))
                                 .font(.system(size: 14, weight: .regular, design: .rounded))
-                                .foregroundStyle(accountSecondaryText)
+                                .foregroundStyle(NColors.Onboarding.infoSecondaryText)
                                 .lineLimit(2)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -925,7 +925,7 @@ struct OnboardingView: View {
 
             Text(AppCopy.text(locale, en: "One tap to protect your progress and access it from any device.", es: "Un solo toque para proteger tu progreso y acceder desde cualquier dispositivo."))
                 .font(.system(size: 14, weight: .regular, design: .rounded))
-                .foregroundStyle(accountSecondaryText)
+                .foregroundStyle(NColors.Onboarding.infoSecondaryText)
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
                 .fixedSize(horizontal: false, vertical: true)
@@ -956,7 +956,7 @@ struct OnboardingView: View {
                         .controlSize(.small)
                     Text(AppCopy.text(locale, en: "Signing in…", es: "Iniciando sesión…"))
                         .font(.system(size: 13, weight: .regular, design: .rounded))
-                        .foregroundStyle(accountSecondaryText)
+                        .foregroundStyle(NColors.Onboarding.infoSecondaryText)
                 }
                 .padding(.top, NSpacing.xs)
             }
@@ -965,26 +965,26 @@ struct OnboardingView: View {
 
     private func accountFeatureRow(icon: String, text: String, maxLines: Int = 1, minHeight: CGFloat = 50) -> some View {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(accountFeatureBackground)
+            .fill(NColors.Onboarding.accountFeatureBackground)
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(accountFeatureBorder, lineWidth: 1)
+                    .stroke(NColors.Onboarding.accountFeatureBorder, lineWidth: 1)
             )
             .frame(minHeight: minHeight)
             .overlay(alignment: .leading) {
                 HStack(alignment: .center, spacing: 12) {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(accountFeatureIconBackground)
+                        .fill(NColors.Onboarding.accountFeatureIconBackground)
                         .frame(width: 30, height: 30)
                         .overlay(
                             Image(systemName: icon)
                                 .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(accountFeatureIconColor)
+                                .foregroundStyle(NColors.Onboarding.accountFeatureIconColor)
                         )
 
                     Text(text)
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundStyle(accountSecondaryText)
+                        .foregroundStyle(NColors.Onboarding.infoSecondaryText)
                         .lineLimit(maxLines)
                         .fixedSize(horizontal: false, vertical: true)
                         .minimumScaleFactor(0.9)
@@ -997,30 +997,30 @@ struct OnboardingView: View {
     private var doneStepCard: some View {
         VStack(spacing: 16) {
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(doneInfoBackground)
+                .fill(NColors.Onboarding.infoBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(doneInfoBorder, lineWidth: 1)
+                        .stroke(NColors.Onboarding.infoBorder, lineWidth: 1)
                 )
                 .frame(height: 90)
                 .overlay(alignment: .leading) {
                     HStack(spacing: 12) {
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(doneInfoIconBackground)
+                            .fill(NColors.Onboarding.infoIconBackground)
                             .frame(width: 32, height: 32)
                             .overlay(
                                 Image(systemName: "wand.and.stars")
                                     .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(doneInfoIconColor)
+                                    .foregroundStyle(NColors.Onboarding.cardIconColor)
                             )
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text(AppCopy.text(locale, en: "All set!", es: "¡Todo listo!"))
                                 .font(.system(size: 16, weight: .bold, design: .rounded))
-                                .foregroundStyle(primaryTitleColor)
+                                .foregroundStyle(NColors.Onboarding.title)
                             Text(AppCopy.text(locale, en: "Your account is configured and ready to start.", es: "Tu cuenta está configurada y lista para comenzar."))
                                 .font(.system(size: 14, weight: .regular, design: .rounded))
-                                .foregroundStyle(welcomeHeaderSubtitleColor)
+                                .foregroundStyle(NColors.Onboarding.headerSubtitle)
                                 .lineLimit(2)
                         }
                         Spacer(minLength: 0)
@@ -1029,7 +1029,7 @@ struct OnboardingView: View {
                 }
 
             Circle()
-                .fill(welcomeProgressActiveGradient)
+                .fill(NColors.Onboarding.progressGradient(for: colorScheme))
                 .frame(width: 90, height: 90)
                 .overlay(
                     Image(systemName: "checkmark.circle")
@@ -1064,7 +1064,7 @@ struct OnboardingView: View {
 
             Text(AppCopy.text(locale, en: "You are about to master your learning! 🚀", es: "¡Estás a punto de dominar tu aprendizaje! 🚀"))
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
-                .foregroundStyle(welcomeHeaderSubtitleColor)
+                .foregroundStyle(NColors.Onboarding.headerSubtitle)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 2)
@@ -1073,30 +1073,30 @@ struct OnboardingView: View {
 
     private func doneStatTile(icon: String, value: String, label: String) -> some View {
         RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(doneStatBackground)
+            .fill(NColors.Onboarding.doneStatBackground)
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(doneStatBorder, lineWidth: 1)
+                    .stroke(NColors.Onboarding.doneStatBorder, lineWidth: 1)
             )
             .frame(maxWidth: .infinity)
             .frame(height: 116)
             .overlay {
                 VStack(spacing: 8) {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(doneInfoIconBackground)
+                        .fill(NColors.Onboarding.infoIconBackground)
                         .frame(width: 32, height: 32)
                         .overlay(
                             Image(systemName: icon)
                                 .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(doneInfoIconColor)
+                                .foregroundStyle(NColors.Onboarding.cardIconColor)
                         )
                     Text(value)
                         .font(.system(size: 34, weight: .bold, design: .rounded))
                         .minimumScaleFactor(0.8)
-                        .foregroundStyle(primaryTitleColor)
+                        .foregroundStyle(NColors.Onboarding.title)
                     Text(label)
                         .font(.system(size: 14, weight: .regular, design: .rounded))
-                        .foregroundStyle(welcomeHeaderSubtitleColor)
+                        .foregroundStyle(NColors.Onboarding.headerSubtitle)
                 }
                 .padding(.horizontal, 8)
             }
@@ -1110,7 +1110,7 @@ struct OnboardingView: View {
                     .foregroundStyle(NColors.Text.textPrimary)
                 Text(message)
                     .font(NTypography.body)
-                    .foregroundStyle(secondaryTextColor)
+                    .foregroundStyle(NColors.Onboarding.secondaryText)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -1451,463 +1451,6 @@ struct OnboardingView: View {
         )
     }
 
-    private var secondaryTextColor: Color {
-        NColors.Onboarding.secondaryText
-    }
-
-    private var welcomeHeaderSubtitleColor: Color {
-        NColors.Onboarding.headerSubtitle
-    }
-
-    private var primaryTitleColor: Color {
-        NColors.Onboarding.title
-    }
-
-    private var welcomeCardBackground: Color {
-        NColors.Onboarding.cardBackground
-    }
-
-    private var welcomeCardBorder: Color {
-        NColors.Onboarding.cardBorder
-    }
-
-    private var welcomeCardIconBackground: Color {
-        NColors.Onboarding.cardIconBackground
-    }
-
-    private var welcomeCardIconColor: Color {
-        NColors.Onboarding.cardIconColor
-    }
-
-    private var welcomeChipBackground: Color {
-        NColors.Onboarding.chipBackground
-    }
-
-    private var welcomeChipBorder: Color {
-        NColors.Onboarding.chipBorder
-    }
-
-    private var welcomeChipTextColor: Color {
-        NColors.Onboarding.chipText
-    }
-
-    private var welcomeChipIconColor: Color {
-        NColors.Onboarding.chipIcon
-    }
-
-    private var welcomeProgressTrackColor: Color {
-        NColors.Onboarding.progressTrack
-    }
-
-    private var welcomeProgressActiveGradient: LinearGradient {
-        NColors.Onboarding.progressGradient(for: colorScheme)
-    }
-
-    private var welcomeCardBodyTextColor: Color {
-        NColors.Onboarding.cardBodyText
-    }
-
-    private var dailyGoalInfoCardBackground: Color {
-        NColors.Onboarding.infoBackground
-    }
-
-    private var dailyGoalInfoCardBorder: Color {
-        NColors.Onboarding.infoBorder
-    }
-
-    private var dailyGoalInfoIconBackground: Color {
-        NColors.Onboarding.infoIconBackground
-    }
-
-    private var dailyGoalInfoIconColor: Color {
-        NColors.Onboarding.infoIconColor
-    }
-
-    private var dailyGoalSecondaryText: Color {
-        NColors.Onboarding.infoSecondaryText
-    }
-
-    private var dailyGoalOptionBackground: Color {
-        NColors.Onboarding.optionBackground
-    }
-
-    private var dailyGoalOptionBorder: Color {
-        NColors.Onboarding.optionBorder
-    }
-
-    private var dailyGoalOptionSelectedBackground: Color {
-        NColors.Onboarding.optionSelectedBackground
-    }
-
-    private var dailyGoalOptionSelectedBorder: Color {
-        NColors.Onboarding.optionSelectedBorder
-    }
-
-    private var dailyGoalIconBadgeBackground: Color {
-        NColors.Onboarding.iconBadgeBackground
-    }
-
-    private var dailyGoalIconColor: Color {
-        NColors.Onboarding.iconColor
-    }
-
-    private var dailyGoalSelectedLabelColor: Color {
-        NColors.Onboarding.selectedLabel
-    }
-
-    private var dailyGoalCheckBackground: Color {
-        NColors.Onboarding.checkBackground
-    }
-
-    private var dailyGoalHintBackground: Color {
-        NColors.Onboarding.hintBackground
-    }
-
-    private var dailyGoalHintBorder: Color {
-        NColors.Onboarding.hintBorder
-    }
-
-    private var dailyGoalHintText: Color {
-        NColors.Onboarding.hintText
-    }
-
-    private var subjectInfoCardBackground: Color {
-        NColors.Onboarding.infoBackground
-    }
-
-    private var subjectInfoCardBorder: Color {
-        NColors.Onboarding.infoBorder
-    }
-
-    private var subjectInfoIconBackground: Color {
-        NColors.Onboarding.infoIconBackground
-    }
-
-    private var subjectInfoIconColor: Color {
-        NColors.Onboarding.cardIconColor
-    }
-
-    private var subjectSecondaryText: Color {
-        NColors.Onboarding.cardBodyText
-    }
-
-    private var subjectOptionBackground: Color {
-        NColors.Onboarding.optionBackground
-    }
-
-    private var subjectOptionBorder: Color {
-        NColors.Onboarding.optionBorder
-    }
-
-    private var subjectOptionSelectedBackground: Color {
-        NColors.Onboarding.optionSelectedBackground
-    }
-
-    private var subjectOptionSelectedBorder: Color {
-        NColors.Onboarding.optionSelectedBorder
-    }
-
-    private var subjectIconBadgeBackground: Color {
-        NColors.Onboarding.iconBadgeBackground
-    }
-
-    private var subjectIconColor: Color {
-        NColors.Onboarding.iconColor
-    }
-
-    private var subjectOptionText: Color {
-        NColors.Onboarding.subjectOptionText
-    }
-
-    private var subjectSelectedText: Color {
-        NColors.Onboarding.subjectSelectedText
-    }
-
-    private var deckInfoCardBackground: Color {
-        NColors.Onboarding.infoBackground
-    }
-
-    private var deckInfoCardBorder: Color {
-        NColors.Onboarding.infoBorder
-    }
-
-    private var deckInfoIconBackground: Color {
-        NColors.Onboarding.infoIconBackground
-    }
-
-    private var deckInfoIconColor: Color {
-        NColors.Onboarding.cardIconColor
-    }
-
-    private var deckSecondaryText: Color {
-        NColors.Onboarding.cardBodyText
-    }
-
-    private var deckInputBackground: Color {
-        NColors.Onboarding.deckInputBackground
-    }
-
-    private var deckInputBorder: Color {
-        NColors.Onboarding.deckInputBorder
-    }
-
-    private var deckInputActiveBorder: Color {
-        NColors.Onboarding.deckInputActiveBorder
-    }
-
-    private var deckPreviewBackground: Color {
-        NColors.Onboarding.deckPreviewBackground
-    }
-
-    private var deckPreviewBorder: Color {
-        NColors.Onboarding.deckPreviewBorder
-    }
-
-    private var deckPreviewIconBackground: Color {
-        NColors.Onboarding.deckPreviewIconBackground
-    }
-
-    private var deckPreviewIconColor: Color {
-        NColors.Onboarding.deckPreviewIconColor
-    }
-
-    private var deckPreviewSkeleton: Color {
-        NColors.Onboarding.deckPreviewSkeleton
-    }
-
-    private var deckSuggestionBackground: Color {
-        NColors.Onboarding.deckSuggestionBackground
-    }
-
-    private var deckSuggestionBorder: Color {
-        NColors.Onboarding.deckSuggestionBorder
-    }
-
-    private var deckSuggestionSelectedBorder: Color {
-        NColors.Onboarding.deckSuggestionSelectedBorder
-    }
-
-    private var deckSuggestionText: Color {
-        NColors.Onboarding.deckSuggestionText
-    }
-
-    private var deckSuggestionSelectedText: Color {
-        NColors.Onboarding.deckSuggestionSelectedText
-    }
-
-    private var firstCardInfoBackground: Color {
-        NColors.Onboarding.infoBackground
-    }
-
-    private var firstCardInfoBorder: Color {
-        NColors.Onboarding.infoBorder
-    }
-
-    private var firstCardInfoIconBackground: Color {
-        NColors.Onboarding.infoIconBackground
-    }
-
-    private var firstCardInfoIconColor: Color {
-        NColors.Onboarding.cardIconColor
-    }
-
-    private var firstCardSecondaryText: Color {
-        NColors.Onboarding.infoSecondaryText
-    }
-
-    private var firstCardFrontLabel: Color {
-        NColors.Onboarding.firstCardFrontLabel
-    }
-
-    private var firstCardBackLabel: Color {
-        NColors.Onboarding.firstCardBackLabel
-    }
-
-    private var firstCardInputBackground: Color {
-        NColors.Onboarding.firstCardInputBackground
-    }
-
-    private var firstCardInputBorder: Color {
-        NColors.Onboarding.firstCardInputBorder
-    }
-
-    private var firstCardInputActiveBorder: Color {
-        NColors.Onboarding.firstCardInputActiveBorder
-    }
-
-    private var firstCardTipBackground: Color {
-        NColors.Onboarding.firstCardTipBackground
-    }
-
-    private var firstCardTipBorder: Color {
-        NColors.Onboarding.firstCardTipBorder
-    }
-
-    private var firstCardTipIcon: Color {
-        NColors.Onboarding.firstCardTipIcon
-    }
-
-    private var firstCardTipText: Color {
-        NColors.Onboarding.firstCardTipText
-    }
-
-    private var accountInfoBackground: Color {
-        NColors.Onboarding.infoBackground
-    }
-
-    private var accountInfoBorder: Color {
-        NColors.Onboarding.infoBorder
-    }
-
-    private var accountInfoIconBackground: Color {
-        NColors.Onboarding.infoIconBackground
-    }
-
-    private var accountInfoIconColor: Color {
-        NColors.Onboarding.cardIconColor
-    }
-
-    private var accountSecondaryText: Color {
-        NColors.Onboarding.infoSecondaryText
-    }
-
-    private var accountFeatureBackground: Color {
-        NColors.Onboarding.accountFeatureBackground
-    }
-
-    private var accountFeatureBorder: Color {
-        NColors.Onboarding.accountFeatureBorder
-    }
-
-    private var accountFeatureIconBackground: Color {
-        NColors.Onboarding.accountFeatureIconBackground
-    }
-
-    private var accountFeatureIconColor: Color {
-        NColors.Onboarding.accountFeatureIconColor
-    }
-
-    private var doneInfoBackground: Color {
-        NColors.Onboarding.infoBackground
-    }
-
-    private var doneInfoBorder: Color {
-        NColors.Onboarding.infoBorder
-    }
-
-    private var doneInfoIconBackground: Color {
-        NColors.Onboarding.infoIconBackground
-    }
-
-    private var doneInfoIconColor: Color {
-        NColors.Onboarding.cardIconColor
-    }
-
-    private var doneStatBackground: Color {
-        NColors.Onboarding.doneStatBackground
-    }
-
-    private var doneStatBorder: Color {
-        NColors.Onboarding.doneStatBorder
-    }
-}
-
-private struct OnboardingDeckTextField: UIViewRepresentable {
-    let placeholder: String
-    @Binding var text: String
-    @Binding var isFocused: Bool
-    let isDark: Bool
-    let onSubmit: () -> Void
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-
-    func makeUIView(context: Context) -> UITextField {
-        KeyboardWarmup.prepareServicesIfNeeded()
-
-        let textField = UITextField(frame: .zero)
-        textField.delegate = context.coordinator
-        textField.returnKeyType = .done
-        textField.autocorrectionType = .no
-        textField.autocapitalizationType = .words
-        textField.spellCheckingType = .no
-        textField.smartDashesType = .no
-        textField.smartQuotesType = .no
-        textField.smartInsertDeleteType = .no
-        textField.textContentType = .none
-        textField.clearButtonMode = .never
-        textField.adjustsFontForContentSizeCategory = true
-        textField.font = .systemFont(ofSize: 15, weight: .regular)
-        textField.text = text
-        textField.placeholder = placeholder
-        textField.textColor = uiTextColor
-        textField.tintColor = NColors.Onboarding.textFieldTint
-        textField.addTarget(context.coordinator, action: #selector(Coordinator.textDidChange(_:)), for: .editingChanged)
-        return textField
-    }
-
-    func updateUIView(_ uiView: UITextField, context: Context) {
-        if uiView.text != text {
-            uiView.text = text
-        }
-        if uiView.placeholder != placeholder {
-            uiView.placeholder = placeholder
-        }
-        uiView.textColor = uiTextColor
-
-        if isFocused, uiView.isFirstResponder == false {
-            uiView.becomeFirstResponder()
-        } else if isFocused == false, uiView.isFirstResponder {
-            uiView.resignFirstResponder()
-        }
-    }
-
-    private var uiTextColor: UIColor {
-        NColors.Onboarding.uiTextColor
-    }
-
-    final class Coordinator: NSObject, UITextFieldDelegate {
-        private var parent: OnboardingDeckTextField
-
-        init(_ parent: OnboardingDeckTextField) {
-            self.parent = parent
-        }
-
-        @objc
-        func textDidChange(_ textField: UITextField) {
-            parent.text = textField.text ?? ""
-        }
-
-        func textFieldDidBeginEditing(_ textField: UITextField) {
-            parent.isFocused = true
-            let end = textField.endOfDocument
-            textField.selectedTextRange = textField.textRange(from: end, to: end)
-        }
-
-        func textFieldDidEndEditing(_ textField: UITextField) {
-            parent.isFocused = false
-        }
-
-        func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-            parent.onSubmit()
-            parent.isFocused = false
-            textField.resignFirstResponder()
-            return false
-        }
-    }
-}
-
-private enum KeyboardWarmup {
-    private static var hasPrepared = false
-
-    static func prepareServicesIfNeeded() {
-        guard hasPrepared == false else { return }
-        hasPrepared = true
-
-        _ = UITextInputMode.activeInputModes
-        _ = UITextChecker()
-    }
 }
 
 #Preview("Onboarding Light") {
