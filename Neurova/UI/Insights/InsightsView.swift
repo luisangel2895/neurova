@@ -54,7 +54,7 @@ struct InsightsView: View {
 
     private var header: some View {
         Text(AppCopy.text(locale, en: "This week", es: "Esta semana"))
-            .font(.system(size: 15, weight: .semibold, design: .rounded))
+            .font(NTypography.caption.weight(.semibold))
             .foregroundStyle(secondaryText)
             .opacity(showHeaderSubtitle ? 1 : 0)
     }
@@ -83,18 +83,18 @@ struct InsightsView: View {
 
                 HStack(alignment: .lastTextBaseline, spacing: 4) {
                     Text("\(viewModel.totalXP)")
-                        .font(.system(size: 22, weight: .black, design: .rounded))
+                        .font(NTypography.headline.weight(.black))
                         .foregroundStyle(primaryText)
 
                     Text("XP")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .font(NTypography.caption.weight(.bold))
                         .foregroundStyle(secondaryText)
                 }
 
                 progressTrack(progress: animatedXPProgress, fill: splashGradient)
 
                 Text("\(viewModel.xpToNextLevel) \(AppCopy.text(locale, en: "XP to level up", es: "XP para subir"))")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(NTypography.caption.weight(.semibold))
                     .foregroundStyle(secondaryText)
             }
         }
@@ -114,18 +114,18 @@ struct InsightsView: View {
 
                 HStack(alignment: .lastTextBaseline, spacing: 2) {
                     Text("\(viewModel.todayProgress)")
-                        .font(.system(size: 22, weight: .black, design: .rounded))
+                        .font(NTypography.headline.weight(.black))
                         .foregroundStyle(primaryText)
 
                     Text("/\(viewModel.dailyGoal)")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .font(NTypography.caption.weight(.bold))
                         .foregroundStyle(secondaryText)
                 }
 
                 progressTrack(progress: animatedGoalProgress, fill: splashGradient)
 
                 Text(AppCopy.text(locale, en: "cards today", es: "tarjetas hoy"))
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(NTypography.caption.weight(.semibold))
                     .foregroundStyle(secondaryText)
             }
         }
@@ -145,17 +145,17 @@ struct InsightsView: View {
         insightCard(background: baseCardFill, minHeight: 102) {
             VStack(spacing: 10) {
                 Image(systemName: item.icon)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(NTypography.bodyEmphasis.weight(.semibold))
                     .foregroundStyle(item.color)
 
                 Text(item.value)
-                    .font(.system(size: 20, weight: .black, design: .rounded))
+                    .font(NTypography.headline.weight(.black))
                     .foregroundStyle(primaryText)
                     .opacity(numberVisible(at: index) ? 1 : 0)
                     .scaleEffect(numberVisible(at: index) ? 1 : 0.5)
 
                 Text(item.label)
-                    .font(.system(size: 13, weight: .black, design: .rounded))
+                    .font(NTypography.caption.weight(.black))
                     .foregroundStyle(secondaryText)
                     .kerning(0.3)
             }
@@ -188,15 +188,15 @@ struct InsightsView: View {
     private func difficultyCell(item: DifficultyItem, index: Int) -> some View {
         VStack(spacing: 8) {
             Image(systemName: item.icon)
-                .font(.system(size: 16, weight: .semibold))
+                .font(NTypography.body.weight(.semibold))
                 .foregroundStyle(item.color)
 
             Text(item.value)
-                .font(.system(size: 18, weight: .black, design: .rounded))
+                .font(NTypography.bodyEmphasis.weight(.black))
                 .foregroundStyle(primaryText)
 
             Text(item.label)
-                .font(.system(size: 12, weight: .black, design: .rounded))
+                .font(NTypography.micro.weight(.black))
                 .foregroundStyle(secondaryText)
                 .kerning(0.2)
         }
@@ -234,11 +234,11 @@ struct InsightsView: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 12) {
                     Text(row.shortTitle)
-                        .font(.system(size: 16, weight: .black, design: .rounded))
+                        .font(NTypography.body.weight(.black))
                         .foregroundStyle(primaryText)
 
                     Text(row.label)
-                        .font(.system(size: 14, weight: .black, design: .rounded))
+                        .font(NTypography.caption.weight(.black))
                         .foregroundStyle(row.color)
                         .kerning(0.2)
                 }
@@ -259,7 +259,7 @@ struct InsightsView: View {
             Spacer(minLength: 8)
 
             Text("\(row.score)")
-                .font(.system(size: 18, weight: .black, design: .rounded))
+                .font(NTypography.bodyEmphasis.weight(.black))
                 .foregroundStyle(row.color)
                 .scaleEffect(scoreVisible(at: index) ? 1 : 0)
         }
@@ -296,7 +296,7 @@ struct InsightsView: View {
                 .frame(width: 30, height: animatedBarHeight(at: index, maxHeight: 72))
 
             Text(bar.label)
-                .font(.system(size: 13, weight: .black, design: .rounded))
+                .font(NTypography.caption.weight(.black))
                 .foregroundStyle(bar.isToday ? NColors.Brand.neuroBlue : secondaryText)
         }
         .frame(maxWidth: .infinity)
@@ -325,11 +325,11 @@ struct InsightsView: View {
     private func labelRow(icon: String, color: Color, title: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon)
-                .font(.system(size: 14, weight: .bold))
+                .font(NTypography.caption.weight(.bold))
                 .foregroundStyle(color)
 
             Text(title.uppercased())
-                .font(.system(size: 13, weight: .black, design: .rounded))
+                .font(NTypography.caption.weight(.black))
                 .foregroundStyle(secondaryText)
                 .kerning(0.35)
         }
@@ -338,11 +338,11 @@ struct InsightsView: View {
     private func sectionTitle(_ title: String, subtitle: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .font(.system(size: 18, weight: .black, design: .rounded))
+                .font(NTypography.bodyEmphasis.weight(.black))
                 .foregroundStyle(primaryText)
 
             Text(subtitle)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(NTypography.caption.weight(.semibold))
                 .foregroundStyle(secondaryText)
         }
     }
