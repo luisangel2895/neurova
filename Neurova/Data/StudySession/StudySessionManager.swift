@@ -106,6 +106,11 @@ final class StudySessionManager {
 
         queue.removeFirst()
 
+        // Re-queue "again" cards so the user sees them again later in the session
+        if quality == .again {
+            queue.append(currentCard)
+        }
+
         if queue.isEmpty {
             sessionEndTime = reviewDate
         }

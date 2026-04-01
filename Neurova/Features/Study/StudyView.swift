@@ -566,7 +566,7 @@ struct StudyView: View {
                 correctCount += 1
             }
 
-            advanceToNextCard(removingCurrent: true)
+            advanceToNextCard(removingCurrent: quality != .again)
         } catch {
             // Keep v1 silent; error handling can be surfaced later if needed.
         }
