@@ -9,7 +9,7 @@ final class Deck {
     var createdAt: Date = Date()
     var isArchived: Bool = false
     var subject: Subject?
-    @Relationship(deleteRule: .nullify, inverse: \Card.deck)
+    @Relationship(deleteRule: .cascade, inverse: \Card.deck)
     var cards: [Card]?
 
     init(
