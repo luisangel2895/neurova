@@ -48,6 +48,7 @@ struct SM2EngineTests {
         #expect(result.repetition == 0)
         #expect(result.interval == 1)
         #expect(result.lapses == 3)
-        #expect(result.easinessFactor == 1.3)
+        // On lapse, EF is preserved (not degraded) per SM-2 spec
+        #expect(result.easinessFactor == 1.4)
     }
 }

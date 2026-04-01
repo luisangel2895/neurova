@@ -60,7 +60,8 @@ struct ReviewServiceTests {
         _ = try service.review(card: card, quality: .again, in: context)
 
         #expect(card.learningState == .learning)
-        #expect(card.lapses == 1)
+        // New cards don't count lapses — only graduated cards that are forgotten do
+        #expect(card.lapses == 0)
         #expect(card.learningStepIndex == 0)
     }
 
