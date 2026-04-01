@@ -17,7 +17,7 @@ final class MockDeckRepository: DeckRepository {
 
     func createDeck(in subject: Subject, title: String, description: String?) throws -> Deck {
         if shouldThrow { throw MockError.forced }
-        let deck = Deck(title: title, description: description)
+        let deck = Deck(subject: subject, title: title, description: description)
         storedDecks.append(deck)
         return deck
     }

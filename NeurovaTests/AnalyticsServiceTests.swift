@@ -19,7 +19,8 @@ struct AnalyticsServiceTests {
         ]
 
         let deckRepo = MockDeckRepository()
-        let deck = Deck(title: "Biology")
+        let subject = Subject(name: "Science")
+        let deck = Deck(subject: subject, title: "Biology")
         deckRepo.storedDecks = [deck]
 
         // Patch deckId to match
@@ -77,9 +78,10 @@ struct AnalyticsServiceTests {
         let analyticsRepo = MockAnalyticsRepository()
         let deckRepo = MockDeckRepository()
 
+        let subject = Subject(name: "Test")
         var deckCounts: [UUID: [XPEventType: Int]] = [:]
         for i in 0..<5 {
-            let deck = Deck(title: "Deck \(i)")
+            let deck = Deck(subject: subject, title: "Deck \(i)")
             deckRepo.storedDecks.append(deck)
             deckCounts[deck.id] = [.reviewAgain: (i + 1) * 3]
         }
