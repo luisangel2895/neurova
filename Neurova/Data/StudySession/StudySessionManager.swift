@@ -56,7 +56,7 @@ final class StudySessionManager {
         totalReviewed = 0
         xpEarned = 0
         sessionStartTime = queue.isEmpty ? nil : startDate
-        sessionEndTime = queue.isEmpty ? startDate : nil
+        sessionEndTime = nil
     }
 
     func nextCard() -> Card? {
