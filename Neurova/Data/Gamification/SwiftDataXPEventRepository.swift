@@ -99,7 +99,18 @@ struct SwiftDataXPEventRepository: XPEventRepository {
             }
         )
 
-        if let existing = try context.fetch(descriptor).first {
+        let results = try context.fetch(descriptor)
+
+        // Deduplicate if CloudKit sync created multiple "global" records
+        if results.count > 1 {
+            let primary = results[0]
+            for duplicate in results.dropFirst() {
+                context.delete(duplicate)
+            }
+            return primary
+        }
+
+        if let existing = results.first {
             return existing
         }
 

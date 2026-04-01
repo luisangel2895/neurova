@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 final class UserPreferences {
-    @Attribute(.unique) var key: String = "global"
+    var key: String = "global"
     var dailyGoalCards: Int = 20
     var hasCompletedOnboarding: Bool = false
     var preferredThemeRaw: String?

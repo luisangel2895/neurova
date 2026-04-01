@@ -80,7 +80,19 @@ struct StreakService {
             }
         )
 
-        if let existing = try context.fetch(descriptor).first {
+        let results = try context.fetch(descriptor)
+
+        // Deduplicate if CloudKit sync created multiple "global" records
+        if results.count > 1 {
+            let primary = results[0]
+            for duplicate in results.dropFirst() {
+                context.delete(duplicate)
+            }
+            try context.save()
+            return primary
+        }
+
+        if let existing = results.first {
             return existing
         }
 
