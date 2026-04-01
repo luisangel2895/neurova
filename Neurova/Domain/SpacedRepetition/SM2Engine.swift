@@ -18,20 +18,22 @@ final class SM2Engine: SpacedRepetitionEngine {
         let previousLapses = previous?.lapses ?? 0
         let score = quality.sm2Score
 
-        let updatedEasinessFactor = max(
-            Constants.minimumEasinessFactor,
-            previousEasinessFactor + sm2Delta(for: score)
-        )
-
         let repetition: Int
         let interval: Int
         let lapses: Int
+        let updatedEasinessFactor: Double
 
         if score < 3 {
+            // On lapse, preserve the previous easiness factor per SM-2 spec
+            updatedEasinessFactor = previousEasinessFactor
             repetition = 0
             interval = Constants.firstInterval
             lapses = previousLapses + 1
         } else {
+            updatedEasinessFactor = max(
+                Constants.minimumEasinessFactor,
+                previousEasinessFactor + sm2Delta(for: score)
+            )
             repetition = previousRepetition + 1
             lapses = previousLapses
 
