@@ -81,7 +81,15 @@ struct SwiftDataXPEventRepository: XPEventRepository {
     }
 
     func todayReviewCount(on date: Date = .now, calendar: Calendar = .current) throws -> Int {
-        try todayEvents(on: date, calendar: calendar).count
+        let reviewTypes: Set<String> = [
+            XPEventType.reviewAgain.rawValue,
+            XPEventType.reviewHard.rawValue,
+            XPEventType.reviewGood.rawValue,
+            XPEventType.reviewEasy.rawValue
+        ]
+        return try todayEvents(on: date, calendar: calendar)
+            .filter { reviewTypes.contains($0.eventTypeRaw) }
+            .count
     }
 
     private func fetchOrCreateStatsEntity() throws -> XPStatsEntity {
