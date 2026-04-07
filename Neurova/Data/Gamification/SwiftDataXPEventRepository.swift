@@ -103,10 +103,11 @@ struct SwiftDataXPEventRepository: XPEventRepository {
 
         // Deduplicate if CloudKit sync created multiple "global" records
         if results.count > 1 {
-            let primary = results[0]
-            for duplicate in results.dropFirst() {
+            let primary = results.max(by: { $0.totalXP < $1.totalXP }) ?? results[0]
+            for duplicate in results where duplicate !== primary {
                 context.delete(duplicate)
             }
+            try context.save()
             return primary
         }
 
