@@ -66,3 +66,9 @@ identifier_name:
 nesting:
   type_level: 3
   function_level: 3
+
+force_cast:
+  severity: warning
+
+force_try:
+  severity: warning
