@@ -94,7 +94,11 @@ struct NeurovaApp: App {
             let defaults = UserDefaults.standard
             defaults.set(false, forKey: cloudKitRuntimeActiveKey)
             defaults.set("Emergency in-memory store", forKey: cloudKitLastErrorKey)
-            return try! ModelContainer(for: fullSchema, configurations: [inMemory])
+            do {
+                return try ModelContainer(for: fullSchema, configurations: [inMemory])
+            } catch {
+                fatalError("Neurova cannot initialize even an in-memory store: \(error.localizedDescription)")
+            }
         }
     }()
 
