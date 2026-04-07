@@ -8,6 +8,8 @@ excluded:
 disabled_rules:
   - trailing_comma
   - opening_brace
+  - multiple_closures_with_trailing_closure
+  - large_tuple
 
 opt_in_rules:
   - closure_spacing
@@ -15,28 +17,31 @@ opt_in_rules:
   - explicit_init
   - fatal_error_message
   - first_where
-  - force_unwrapping
-  - implicitly_unwrapped_optional
   - overridden_super_call
   - private_outlet
   - redundant_nil_coalescing
   - vertical_whitespace_closing_braces
+  - static_over_final_class
 
 line_length:
-  warning: 140
-  error: 200
+  warning: 200
+  error: 350
 
 type_body_length:
-  warning: 400
-  error: 600
+  warning: 800
+  error: 1400
 
 file_length:
-  warning: 500
-  error: 1000
+  warning: 1000
+  error: 1500
 
 function_body_length:
-  warning: 60
-  error: 100
+  warning: 100
+  error: 160
+
+function_parameter_count:
+  warning: 6
+  error: 8
 
 cyclomatic_complexity:
   warning: 15
@@ -54,6 +59,9 @@ identifier_name:
     - x
     - y
     - i
+    - w
+    - h
+    - t
 
 nesting:
   type_level: 3
