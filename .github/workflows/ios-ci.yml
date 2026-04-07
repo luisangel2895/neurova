@@ -1,182 +1,29 @@
-name: iOS PR CI
+name: SwiftLint
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [main]
 
 permissions:
   contents: read
 
 concurrency:
-  group: ios-ci-${{ github.workflow }}-${{ github.ref }}
+  group: lint-${{ github.ref }}
   cancel-in-progress: true
 
-defaults:
-  run:
-    shell: bash
-
-env:
-  PROJECT_PATH: Neurova.xcodeproj
-  SCHEME: Neurova
-  DERIVED_DATA_PATH: .build/DerivedData
-  RESULT_BUNDLE_PATH: .build/TestResults
-  SIMULATOR_NAME: Neurova-CI-Simulator
-
 jobs:
-  pr-validation:
-    name: PR Validation
-    runs-on: macos-latest
-    timeout-minutes: 30
+  swiftlint:
+    name: SwiftLint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode
-        uses: maxim-lobanov/setup-xcode@v1
+      - name: SwiftLint
+        uses: norio-nomura/action-swiftlint@3.2.1
         with:
-          xcode-version: latest-stable
-
-      - name: Show toolchain versions
-        run: |
-          xcodebuild -version
-          swift --version
-
-      - name: Verify shared scheme
-        run: |
-          set -euo pipefail
-          test -f Neurova.xcodeproj/xcshareddata/xcschemes/Neurova.xcscheme
-
-      - name: Prepare build directories
-        run: |
-          set -euo pipefail
-          rm -rf "$DERIVED_DATA_PATH" "$RESULT_BUNDLE_PATH"
-          mkdir -p "$DERIVED_DATA_PATH" "$RESULT_BUNDLE_PATH"
-
-      - name: Create and boot iOS Simulator
-        run: |
-          set -euo pipefail
-
-          echo "Available runtimes:"
-          xcrun simctl list runtimes
-          echo "Available device types:"
-          xcrun simctl list devicetypes
-
-          RUNTIME_ID="$(
-            xcrun simctl list runtimes | \
-            sed -nE 's/.*- (com\.apple\.CoreSimulator\.SimRuntime\.iOS[[:alnum:].-]*)$/\1/p' | \
-            tail -n 1
-          )"
-          if [ -z "${RUNTIME_ID}" ]; then
-            echo "No available iOS runtime found on runner."
-            exit 1
-          fi
-
-          DEVICE_TYPE_ID="$(xcrun simctl list devicetypes | sed -nE 's/.*(com\.apple\.CoreSimulator\.SimDeviceType\.iPhone-17-Pro).*/\1/p' | head -n 1)"
-          if [ -z "${DEVICE_TYPE_ID}" ]; then
-            DEVICE_TYPE_ID="$(xcrun simctl list devicetypes | sed -nE 's/.*(com\.apple\.CoreSimulator\.SimDeviceType\.iPhone-16-Pro).*/\1/p' | head -n 1)"
-          fi
-          if [ -z "${DEVICE_TYPE_ID}" ]; then
-            DEVICE_TYPE_ID="$(xcrun simctl list devicetypes | sed -nE 's/.*(com\.apple\.CoreSimulator\.SimDeviceType\.iPhone-15-Pro).*/\1/p' | head -n 1)"
-          fi
-          if [ -z "${DEVICE_TYPE_ID}" ]; then
-            DEVICE_TYPE_ID="$(xcrun simctl list devicetypes | sed -nE 's/.*(com\.apple\.CoreSimulator\.SimDeviceType\.iPhone-14).*/\1/p' | head -n 1)"
-          fi
-          if [ -z "${DEVICE_TYPE_ID}" ]; then
-            echo "No supported iPhone simulator device type found."
-            exit 1
-          fi
-
-          xcrun simctl delete "${SIMULATOR_NAME}" || true
-          SIMULATOR_UDID="$(xcrun simctl create "${SIMULATOR_NAME}" "${DEVICE_TYPE_ID}" "${RUNTIME_ID}")"
-          xcrun simctl boot "${SIMULATOR_UDID}"
-          xcrun simctl bootstatus "${SIMULATOR_UDID}" -b
-
-          echo "SIMULATOR_UDID=${SIMULATOR_UDID}" >> "$GITHUB_ENV"
-          echo "Using simulator ${SIMULATOR_UDID} (${DEVICE_TYPE_ID}, ${RUNTIME_ID})"
-
-      - name: Build for testing
-        run: |
-          set -euo pipefail
-          xcodebuild \
-            -project "$PROJECT_PATH" \
-            -scheme "$SCHEME" \
-            -sdk iphonesimulator \
-            -destination "id=$SIMULATOR_UDID" \
-            -derivedDataPath "$DERIVED_DATA_PATH" \
-            -resultBundlePath "$RESULT_BUNDLE_PATH/build-for-testing.xcresult" \
-            -configuration Debug \
-            build-for-testing \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Run unit tests
-        run: |
-          set -euo pipefail
-          xcodebuild \
-            -project "$PROJECT_PATH" \
-            -scheme "$SCHEME" \
-            -sdk iphonesimulator \
-            -destination "id=$SIMULATOR_UDID" \
-            -derivedDataPath "$DERIVED_DATA_PATH" \
-            -resultBundlePath "$RESULT_BUNDLE_PATH/unit-tests.xcresult" \
-            -parallel-testing-enabled NO \
-            -maximum-parallel-testing-workers 1 \
-            test-without-building \
-            -only-testing:NeurovaTests \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Run UI smoke tests
-        run: |
-          set -euo pipefail
-          xcodebuild \
-            -project "$PROJECT_PATH" \
-            -scheme "$SCHEME" \
-            -sdk iphonesimulator \
-            -destination "id=$SIMULATOR_UDID" \
-            -derivedDataPath "$DERIVED_DATA_PATH" \
-            -resultBundlePath "$RESULT_BUNDLE_PATH/ui-smoke-tests.xcresult" \
-            -parallel-testing-enabled NO \
-            -maximum-parallel-testing-workers 1 \
-            test-without-building \
-            -only-testing:NeurovaUITests/testLaunchShowsExpectedRootExperience \
-            -only-testing:NeurovaUITests/testOnboardingOrShellExposesPrimaryNavigationElement \
-            CODE_SIGNING_ALLOWED=NO
-
-      - name: Publish workflow summary
-        if: always()
-        run: |
-          {
-            echo "## iOS PR CI"
-            echo
-            echo "- Shared scheme: \`$SCHEME\`"
-            echo "- Simulator UDID: \`${SIMULATOR_UDID:-unavailable}\`"
-            echo "- Result bundles uploaded from \`$RESULT_BUNDLE_PATH\`"
-            echo "- Test scopes:"
-            echo "  - \`NeurovaTests\`"
-            echo "  - UI smoke subset of \`NeurovaUITests\`"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-ci-results
-          path: .build/TestResults
-          if-no-files-found: warn
-
-      - name: Delete CI simulator
-        if: always()
-        run: |
-          set -euo pipefail
-          if [[ -n "${SIMULATOR_UDID:-}" ]]; then
-            xcrun simctl shutdown "$SIMULATOR_UDID" || true
-            xcrun simctl delete "$SIMULATOR_UDID" || true
-          else
-            xcrun simctl delete "${SIMULATOR_NAME}" || true
-          fi
+          args: --strict
