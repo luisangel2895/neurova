@@ -45,7 +45,7 @@ enum ScanTextCleaner {
         }
 
         let words = line.split(separator: " ")
-        guard words.count > 0, words.count <= 8 else {
+        guard !words.isEmpty, words.count <= 8 else {
             return false
         }
 
