@@ -362,6 +362,12 @@ struct StudyView: View {
 
                 HStack(spacing: 10) {
                     reviewButton(
+                        title: AppCopy.text(locale, en: "Again", es: "Otra vez"),
+                        subtitle: AppCopy.text(locale, en: "~1 min", es: "~1 min"),
+                        quality: .again,
+                        titleColor: NColors.Study.reviewAgain
+                    )
+                    reviewButton(
                         title: AppCopy.text(locale, en: "Hard", es: "Difícil"),
                         subtitle: AppCopy.text(locale, en: "<1 min", es: "<1 min"),
                         quality: .hard,
@@ -586,6 +592,7 @@ struct StudyView: View {
             queue.removeFirst()
             queue.append(card)
         }
+        // When queue.count == 1 and "Again": card stays as queue[0], animation replays it
 
         isShowingBack = false
         selectedQuality = .good

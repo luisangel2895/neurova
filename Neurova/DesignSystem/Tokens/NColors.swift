@@ -197,6 +197,7 @@ enum NColors {
             light: RGBA(0.90, 0.93, 0.98),
             dark: RGBA(0.16, 0.18, 0.27)
         )
+        static let reviewAgain = Color(red: 0.93, green: 0.55, blue: 0.20)
         static let reviewHard = Color(red: 0.86, green: 0.35, blue: 0.35)
         static let reviewGood = Color(red: 0.26, green: 0.49, blue: 0.89)
         static let reviewEasy = Color(red: 0.30, green: 0.69, blue: 0.37)
