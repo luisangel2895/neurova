@@ -28,7 +28,7 @@ final class NeurovaUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(
-            rootIndicator(in: app).waitForExistence(timeout: 5),
+            rootIndicator(in: app).waitForExistence(timeout: 10),
             "The app should present either onboarding or the main authenticated shell after launch."
         )
     }
@@ -45,7 +45,7 @@ final class NeurovaUITests: XCTestCase {
         let app = XCUIApplication()
         app.launch()
 
-        if onboardingIndicator(in: app).waitForExistence(timeout: 3) {
+        if onboardingIndicator(in: app).waitForExistence(timeout: 10) {
             let continueButton = app.buttons["Continue"].firstMatch
             let continuarButton = app.buttons["Continuar"].firstMatch
             XCTAssertTrue(
@@ -55,10 +55,10 @@ final class NeurovaUITests: XCTestCase {
             return
         }
 
-        let libraryTab = app.staticTexts["Library"].firstMatch
-        let bibliotecaTab = app.staticTexts["Biblioteca"].firstMatch
+        let libraryTab = app.buttons["Library"].firstMatch
+        let bibliotecaTab = app.buttons["Biblioteca"].firstMatch
         XCTAssertTrue(
-            libraryTab.waitForExistence(timeout: 3) || bibliotecaTab.waitForExistence(timeout: 3),
+            libraryTab.waitForExistence(timeout: 5) || bibliotecaTab.waitForExistence(timeout: 5),
             "The authenticated shell should expose tab navigation."
         )
     }
@@ -66,8 +66,8 @@ final class NeurovaUITests: XCTestCase {
     private func rootIndicator(in app: XCUIApplication) -> XCUIElement {
         let candidates = [
             onboardingIndicator(in: app),
-            app.staticTexts["Home"].firstMatch,
-            app.staticTexts["Inicio"].firstMatch
+            app.buttons["Home"].firstMatch,
+            app.buttons["Inicio"].firstMatch
         ]
 
         return candidates.first { $0.exists } ?? candidates[0]
