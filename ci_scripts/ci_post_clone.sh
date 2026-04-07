@@ -43,16 +43,17 @@ done
 
 # --- Build Number Auto-Increment ---
 # Xcode Cloud sets CI_BUILD_NUMBER automatically.
-# This ensures each TestFlight build has a unique number.
+# Since GENERATE_INFOPLIST_FILE=YES, we must update CURRENT_PROJECT_VERSION
+# in project.pbxproj (not Info.plist) for the build number to take effect.
 if [ -n "${CI_BUILD_NUMBER:-}" ]; then
     echo ""
     echo "[INFO] CI Build Number: $CI_BUILD_NUMBER"
 
-    PLIST_PATH="$CI_PRIMARY_REPOSITORY_PATH/Neurova/Info.plist"
+    PBXPROJ_PATH="$CI_PRIMARY_REPOSITORY_PATH/Neurova.xcodeproj/project.pbxproj"
 
-    if [ -f "$PLIST_PATH" ]; then
-        /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $CI_BUILD_NUMBER" "$PLIST_PATH" 2>/dev/null || true
-        echo "[INFO] Updated CFBundleVersion to $CI_BUILD_NUMBER"
+    if [ -f "$PBXPROJ_PATH" ]; then
+        sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*/CURRENT_PROJECT_VERSION = $CI_BUILD_NUMBER/g" "$PBXPROJ_PATH"
+        echo "[INFO] Updated CURRENT_PROJECT_VERSION to $CI_BUILD_NUMBER in project.pbxproj"
     fi
 fi
 
